@@ -1,0 +1,29 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Site settings{% endblock %}
+{% block content %}
+<h1>Site settings</h1>
+{% if saved == 'ok' %}<div class="msg">Saved.</div>{% elif saved == 'err' %}<div class="msg">Couldn't save — check prices and keep at least one product enabled.</div>{% endif %}
+
+<p class="hint">GA4: {{ ga_id or 'not set (set GA_MEASUREMENT_ID in .env)' }} ·
+  Mail: {{ mail_backend }}{% if mail_backend == 'resend' %} (key {{ 'set' if resend_key else 'MISSING' }}){% endif %},
+  from {{ mail_from }} · Payment: {{ payment_backend }}</p>
+
+<h3>Products &amp; prices (USD)</h3>
+<form method="post" action="{{ url_for('admin.settings_products_save') }}">
+  {% for code, p in products.items() %}
+  <div class="card card--pad" style="margin-bottom:14px">
+    <h3>{{ code }}</h3>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="{{ code }}_enabled" {% if p.enabled %}checked{% endif %}> enabled</label>
+    <div class="form-row"><label>Title</label><input type="text" name="{{ code }}_title" value="{{ p.title }}"></div>
+    <div class="form-row"><label>Subtitle</label><input type="text" name="{{ code }}_subtitle" value="{{ p.subtitle }}"></div>
+    <div style="display:flex; gap:12px">
+      <div class="form-row"><label>Price $</label><input type="number" name="{{ code }}_price_usd" value="{{ p.price_usd }}"></div>
+      <div class="form-row"><label>Old price $ (optional)</label><input type="number" name="{{ code }}_old_price_usd" value="{{ p.old_price_usd or '' }}"></div>
+    </div>
+    <div class="form-row"><label>Features (one per line)</label><textarea name="{{ code }}_features" rows="6">{% for ft in p.features %}{{ ft }}
+{% endfor %}</textarea></div>
+  </div>
+  {% endfor %}
+  <button class="btn btn--primary" type="submit">Save products</button>
+</form>
+{% endblock %}

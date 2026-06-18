@@ -1,0 +1,23 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Actions{% endblock %}
+{% block content %}
+<h1>Actions</h1>
+<div class="periods">
+  {% for d, lbl in periods %}<a href="{{ url_for('admin.actions', days=d, q=q) }}" class="{% if d == days %}is-active{% endif %}">{{ lbl }}</a>{% endfor %}
+</div>
+<form method="get" style="margin:12px 0"><input type="hidden" name="days" value="{{ days }}">
+  <input type="text" name="q" value="{{ q }}" placeholder="filter event type..." style="max-width:280px"></form>
+<p class="hint">total events: {{ total }}</p>
+
+<h3>By type</h3>
+<table class="adm">
+  <tr><th>Type</th><th>Count</th><th>Unique users</th><th>Last</th></tr>
+  {% for s in summary %}<tr><td>{{ s.type }}</td><td>{{ s.n }}</td><td>{{ s.users }}</td><td>{{ s.last }}</td></tr>{% endfor %}
+</table>
+
+<h3>Recent</h3>
+<table class="adm">
+  <tr><th>Time</th><th>Type</th><th>Who</th><th>Device</th><th>Payload</th></tr>
+  {% for e in recent %}<tr><td>{{ e.time }}</td><td>{{ e.type }}</td><td>{{ e.who }}</td><td>{{ e.device }}</td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>{% endfor %}
+</table>
+{% endblock %}

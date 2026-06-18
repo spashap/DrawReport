@@ -49,3 +49,15 @@ def lookup(ip: str | None) -> dict | None:
     except sqlite3.Error:
         return None
     return dict(row) if row else None
+
+
+def country_name(code: str | None) -> str:
+    """Display name for a country code. We store ISO codes; no names DB, so return
+    the code (good enough for the admin dashboards)."""
+    return code or "-"
+
+
+def geo_label(country: str | None, region: str | None) -> str:
+    """'US / California' style label for the admin tables."""
+    parts = [p for p in (country_name(country) if country else None, region) if p and p != "-"]
+    return " / ".join(parts) if parts else "-"

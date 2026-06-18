@@ -1,0 +1,11 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<h1>Clients</h1>
+<table class="adm">
+  <tr><th>#</th><th>Email</th><th>Joined</th><th>Children</th><th>Orders</th><th>Paid</th></tr>
+  {% for c in clients %}
+  <tr><td>{{ c.id }}</td><td>{{ c.email }}</td><td>{{ c.created }}</td><td>{{ c.kids }}</td><td>{{ c.orders }}</td><td>${{ c.usd }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -138,5 +138,17 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
   Live paid→delivered via Gemini pending GEMINI_API_KEY (owner); rendering/status/email/cabinet
   paths all verified by simulation.
 
+## Phase 6 — Admin + analytics — DONE (V0.007)
+
+- `app/admin.py` — password login (HMAC cookie `dr_a`, separate from customer login;
+  empty ADMIN_PASS = 404). Sections: analytics (KPI/funnel/UTM sources/recent events, bots
+  filtered, engaged vs all), visits (devices/sources/geo/visitor list), actions (event histogram
+  + filter), orders (+ resend / regenerate), clients, coupons (create/toggle), settings
+  (products.json editor in USD), emails (outbox list/view). USD revenue, GA4 status (not Yandex),
+  Resend status. `geoip.geo_label/country_name`, `jobs.resend_report_email` added.
+- Admin templates (`_base_admin` sidebar + 9 sections), English-only.
+- **M6 verified:** guard redirects unauthed → /admin/login; wrong pass 401; login sets `dr_a`;
+  all 8 sections render 200; coupon create works.
+
 ### Pending
-Phases 6–9 (admin + analytics, content/blog/legal, PayPal, deploy artifacts).
+Phases 7–9 (content/blog/legal, PayPal, deploy artifacts).

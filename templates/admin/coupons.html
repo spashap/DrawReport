@@ -1,0 +1,20 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Coupons{% endblock %}
+{% block content %}
+<h1>Coupons</h1>
+{% if error %}<div class="msg">{{ error }}</div>{% endif %}
+<form method="post" action="{{ url_for('admin.coupons_create') }}" style="display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin:14px 0">
+  <div><label>Code</label><input type="text" name="code" style="width:160px"></div>
+  <div><label>% off</label><input type="number" name="percent" min="1" max="100" style="width:90px"></div>
+  <label style="display:flex; gap:6px; align-items:center"><input type="checkbox" name="multi_use"> multi-use</label>
+  <button class="btn btn--primary" type="submit">Create</button>
+</form>
+<table class="adm">
+  <tr><th>Code</th><th>% off</th><th>Multi</th><th>Active</th><th>Uses</th><th></th></tr>
+  {% for c in coupons %}
+  <tr><td><b>{{ c.code }}</b></td><td>{{ c.percent_off }}</td><td>{{ 'yes' if c.multi_use else '' }}</td>
+    <td>{{ 'active' if c.active else 'off' }}</td><td>{{ c.uses_count }}</td>
+    <td><form method="post" action="{{ url_for('admin.coupons_toggle', code=c.code) }}"><button class="btn btn--ghost" style="padding:3px 8px;font-size:12px">{{ 'disable' if c.active else 'enable' }}</button></form></td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<h1>Analytics</h1>
+<div class="periods">
+  {% for d, lbl in periods %}<a href="{{ url_for('admin.analytics', days=d, show=show) }}" class="{% if d == days %}is-active{% endif %}">{{ lbl }}</a>{% endfor %}
+  &nbsp;|&nbsp;
+  <a href="{{ url_for('admin.analytics', days=days) }}" class="{% if show != 'all' %}is-active{% endif %}">engaged</a>
+  <a href="{{ url_for('admin.analytics', days=days, show='all') }}" class="{% if show == 'all' %}is-active{% endif %}">all humans</a>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><b>{{ kpi.visitors }}</b><span>visitors</span></div>
+  <div class="kpi"><b>{{ kpi.orders }}</b><span>orders</span></div>
+  <div class="kpi"><b>{{ kpi.paid }}</b><span>paid</span></div>
+  <div class="kpi"><b>${{ kpi.revenue_usd }}</b><span>revenue</span></div>
+  <div class="kpi"><b>{{ kpi.conversion }}</b><span>conversion (paid/visitor)</span></div>
+</div>
+<p class="hint">humans: {{ humans }} · engaged: {{ engaged }} · landing-only: {{ landing_only }} · bots: {{ bots }}
+  · GA4: {{ 'configured' if ga_configured else 'not set' }}</p>
+
+<h3>Funnel</h3>
+<table class="adm">
+  <tr><th>Step</th><th>People</th><th style="width:40%">share</th><th>% of prev</th><th>% of top</th></tr>
+  {% for f in funnel %}
+  <tr><td>{{ f.label }}</td><td><b>{{ f.n }}</b></td>
+    <td><div class="bar"><i style="width: {{ f.pct_top or '0%' }}"></i></div></td>
+    <td>{{ f.pct_prev }}</td><td>{{ f.pct_top }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Sources (UTM)</h3>
+<table class="adm">
+  <tr><th>Source</th><th>Visitors</th><th>Orders</th><th>Paid</th><th>Revenue</th></tr>
+  {% for name, s, members in sources %}
+  <tr><td>{{ name }}</td><td>{{ s.visitors }}</td><td>{{ s.orders }}</td><td>{{ s.paid }}</td><td>${{ s.usd }}</td></tr>
+  {% endfor %}
+</table>
+
+<h3>Recent events</h3>
+<table class="adm">
+  <tr><th>Time</th><th>Type</th><th>Who</th><th>Device</th><th>Geo</th><th>Payload</th></tr>
+  {% for e in events %}
+  <tr><td>{{ e.time }}</td><td>{{ e.type }}</td><td>{{ e.who }}</td><td>{{ e.device }}</td><td>{{ e.geo }}</td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Emails{% endblock %}
+{% block content %}
+<h1>Emails (outbox)</h1>
+<p class="hint">Dev backend writes emails as files in data/outbox/. With Resend configured, real emails are sent instead.</p>
+<table class="adm">
+  <tr><th>When</th><th>To</th><th>Subject</th><th></th></tr>
+  {% for f in files %}
+  <tr><td>{{ f.when }}</td><td>{{ f.to }}</td><td>{{ f.subject }}</td>
+    <td><a href="{{ url_for('admin.email_view', name=f.name) }}" target="_blank">open</a></td></tr>
+  {% else %}
+  <tr><td colspan="4" class="hint">No emails yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

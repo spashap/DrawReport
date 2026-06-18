@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin sign in — DrawReport</title>
+<link rel="stylesheet" href="/static/css/fonts.css">
+<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/components.css">
+</head>
+<body>
+<div class="section"><div class="wrap" style="max-width: 360px; padding: 80px 0">
+  <div class="form-card">
+    <h3>Admin</h3>
+    {% if error %}<div class="err" style="margin-bottom:10px">{{ error }}</div>{% endif %}
+    <form method="post" action="{{ url_for('admin.login_submit') }}">
+      <div class="field"><label for="password">Password</label>
+        <input class="input" type="password" id="password" name="password" autofocus required></div>
+      <button class="btn btn--primary" type="submit" style="width:100%">Sign in</button>
+    </form>
+  </div>
+</div></div>
+</body>
+</html>

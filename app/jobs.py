@@ -121,6 +121,43 @@ def report_pdf_path(conn: sqlite3.Connection, order_id: int) -> Path | None:
     return pdf if pdf.exists() else None
 
 
+def resend_report_email(conn: sqlite3.Connection, order_id: int) -> bool:
+    """Re-send the finished-report email (NO regeneration, no Gemini) - for when the
+    report exists but the email didn't arrive. True if sent."""
+    order = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    row = conn.execute(
+        "SELECT pdf_path, report_json_path, public_token FROM reports WHERE order_id = ?",
+        (order_id,)).fetchone()
+    if order is None or row is None or not row["pdf_path"] or not row["public_token"]:
+        return False
+    pdf_path = settings.BASE_DIR / row["pdf_path"]
+    if not pdf_path.exists():
+        return False
+    locale = order["locale"] or settings.DEFAULT_LOCALE
+    child_name = ""
+    if row["report_json_path"]:
+        try:
+            data = json.loads((settings.BASE_DIR / row["report_json_path"]).read_text(encoding="utf-8"))
+            child_name = (data.get("child") or {}).get("name", "")
+        except (OSError, ValueError):
+            pass
+    if not child_name:
+        child_name = json.loads(order["child_json"] or "{}").get("name", "")
+    drawings_n = conn.execute("SELECT COUNT(*) AS n FROM drawings WHERE order_id = ?",
+                              (order_id,)).fetchone()["n"]
+    base = settings.PUBLIC_BASE_URL.rstrip("/")
+    html = render_email("report_ready.html", locale=locale, child_name=child_name,
+                        report_url=f"{base}/{locale}/r/{row['public_token']}",
+                        cabinet_url=f"{base}/{locale}/cabinet", drawings_count=drawings_n)
+    send_email(order["email"], f"Your report is ready - {settings.SITE_NAME}", html,
+               attachments=[pdf_path], kind="report_ready")
+    if order["status"] != "delivered":
+        conn.execute("UPDATE orders SET status = 'delivered' WHERE id = ?", (order_id,))
+        conn.commit()
+    log.info("order %s: report email RESENT to %s", order_id, order["email"])
+    return True
+
+
 def _handle_insufficient(conn: sqlite3.Connection, order: sqlite3.Row,
                          report, out_dir: Path) -> str:
     order_id = order["id"]
