@@ -1,0 +1,33 @@
+{# Phase 0 base — boots the app + i18n. Phase 1 replaces this with the full
+   design-system layout (header/footer/_analytics). #}
+<!DOCTYPE html>
+<html lang="{{ locale }}" class="{{ palette | default('') }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ site_name }}{% endblock %}</title>
+<meta name="description" content="{% block description %}{{ _('Educational observations about your child from their drawings — a PDF report for parents. Not a diagnosis.') }}{% endblock %}">
+<link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
+{% for loc, href in alt_urls().items() %}
+<link rel="alternate" hreflang="{{ loc }}" href="{{ href }}">
+{% endfor %}
+<link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css">
+<link rel="stylesheet" href="{{ static }}/css/components.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<footer class="foot">
+  <div class="wrap">
+    {% block footer %}
+    <span class="foot__brand">{{ site_name }}</span>
+    {{ _('Educational observation, not medical diagnosis') }} · {{ site_domain }}
+    {% endblock %}
+    <span class="foot-ver">V{{ version }}</span>
+  </div>
+</footer>
+</body>
+</html>

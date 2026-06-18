@@ -1,0 +1,16 @@
+{# Phase 0 placeholder landing — proves i18n + design tokens load.
+   Phase 3 replaces this with the full cinematic landing. #}
+{% extends "_base.html" %}
+{% block title %}{{ site_name }} — {{ _('A report on your child from their drawings') }}{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="text-align:center; padding: 80px 0">
+    <p class="hand" style="color: var(--accent2)">{{ _('Every drawing has a voice') }}</p>
+    <h1>{{ _('Children often say in their drawings what they can’t yet put into words.') }}</h1>
+    <p class="sub" style="max-width: 640px; margin: 16px auto 28px">
+      {{ _('Understand what your child is expressing: their strengths, what to nurture, and how to support them at home — grounded in the developmental stages of children’s art.') }}
+    </p>
+    <a class="btn btn--primary" href="#">{{ _('Get the report') }}</a>
+  </div>
+</div>
+{% endblock %}

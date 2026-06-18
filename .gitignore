@@ -1,0 +1,28 @@
+# secrets — never in git
+.env
+# private key bundles / sample archives anywhere
+*.tar.gz
+# DB-IP geo source (large; geoip.db is built from it on the server)
+scripts/dbip-city-lite-*.csv*
+
+# customer/test data and generated artifacts
+data/
+component-gallery.html
+# sample webp thumbnails — generated at runtime
+static/img/samples/
+
+# private materials (children's drawings with real names, owner source images)
+projectSpec/testDrawings/
+projectSpec/reportSamples/
+data/Images/
+
+# environment
+venv/
+__pycache__/
+*.pyc
+
+# local Claude Code settings
+.claude/
+
+# compiled translations are generated; keep .po, ignore .mo
+translations/**/*.mo

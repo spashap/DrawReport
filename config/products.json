@@ -1,0 +1,31 @@
+{
+  "snapshot": {
+    "enabled": true,
+    "title": "A personal report on your child's drawings",
+    "subtitle": "1–3 drawings from the same period",
+    "price_usd": 29,
+    "drawings_max": 3,
+    "features": [
+      "A warm, personal PDF — about 8 pages",
+      "One consolidated report for 1–3 drawings",
+      "7 areas of development, each with a score and a plain-language explanation",
+      "What you can try at home — after every area",
+      "PDF by email + your private account",
+      "Money-back guarantee within 7 days"
+    ]
+  },
+  "development": {
+    "enabled": false,
+    "title": "A report on development over time",
+    "subtitle": "Comparing drawings “then and now”",
+    "price_usd": 49,
+    "drawings_max": 3,
+    "sets": 2,
+    "features": [
+      "2 sets of drawings, 6+ months apart",
+      "Change over time across each of the 7 areas",
+      "What has grown and what to nurture next",
+      "PDF by email + your private account"
+    ]
+  }
+}
