@@ -174,5 +174,32 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
   exist; stub flow still default; PayPal create fails gracefully without creds. Live sandbox
   end-to-end pending owner's PAYPAL_CLIENT_ID/SECRET (set PAYMENT_BACKEND=paypal, PAYPAL_ENV=sandbox).
 
-### Pending
-Phase 9 (deploy artifacts: systemd/nginx/deploy.sh, runbook).
+## Phase 9 — Deploy artifacts — DONE (V0.010)
+
+- `deploy.sh` + `restart.sh` scoped to `drawreport-web`/`drawreport-worker`, `/var/www/drawreport`
+  (compiles translations, chowns data, restarts only drawreport units). `release.bat` (bump +
+  commit + push; no Vercel export).
+- `scripts/deploy/`: `drawreport-web.service` (gunicorn 127.0.0.1:8002), `drawreport-worker.service`,
+  `nginx-drawreport.conf` (drawreport.com vhost, 50M uploads, X-Real-IP), `provision.sh` (apt
+  WeasyPrint deps + venv + units + nginx + certbot guidance). `DEPLOY.md` runbook (cosmyday-safe,
+  port 8002, DNS, certbot, PayPal webhook, GeoIP/logo notes, adding a locale).
+- **M9 (artifacts) verified:** full route smoke test all OK (`/` redirect, landing, order, login,
+  blog, legal, sample, hosted report, cabinet redirect, admin login, robots, sitemap). **i18n
+  acceptance PASSED** with `LOCALES=en,es`: routing/hreflang/fallback-content/sitemap/Babel dates
+  all switch with no code edits. Actual server provisioning is owner-run (needs DNS + SSH).
+
+---
+
+## STATUS: all 10 phases (M0-M9) complete. Build is feature-complete for owner QA.
+
+### What needs the owner before launch (all behind stubs/placeholders now)
+- `.env` secrets: `GEMINI_API_KEY` (enables live report generation), `RESEND_API_KEY` +
+  `MAIL_BACKEND=resend`, `PAYPAL_CLIENT_ID/SECRET/WEBHOOK_ID` + `PAYMENT_BACKEND=paypal`,
+  `ADMIN_PASS`, `GA_MEASUREMENT_ID`, `PUBLIC_BASE_URL=https://drawreport.com`.
+- Real logo/hero art into `data/Images/` → run `build_logos.py` / `build_hero_image.py`
+  (placeholders ship now).
+- Launch price in `config/products.json` (or the admin Settings editor).
+- DNS for drawreport.com → 5.78.181.152 + run `provision.sh` then `certbot`.
+- Review the DRAFT copy (landing, blog, legal) and have legal reviewed by counsel.
+- Live report quality (M2 owner sign-off) once GEMINI_API_KEY is set: run
+  `scripts/generate_report.py <imgs> --context ...` and review English tone.

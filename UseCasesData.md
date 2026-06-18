@@ -65,6 +65,16 @@ email all switch with **no code edits**; then remove `xx`.
 the *disclaimer phrasings the model uses*, not just the textbook negation. Verified the linter still
 catches real violations (anxiety / "will become an artist" / "you must").
 
+## #10 · i18n acceptance test: use a REAL CLDR locale code, not a fake "xx"
+**Problem:** the i18n doc says "add a stub `xx` locale" to prove multi-language. Setting
+`LOCALES=en,xx` 500s: Flask-Babel calls `babel.Locale.parse("xx")` which raises
+`UnknownLocaleError` (xx isn't a real CLDR locale).
+**Solution:** test with a real code (e.g. `LOCALES=en,es`). Verified: `/es/` renders 200,
+`lang="es"`, hreflang lists en+es, content falls back to English (FAQ/testimonials/samples/
+prompt/report-strings use `_loc()` fallback), sitemap includes `/es/`, and Babel formats dates
+per-locale ("18 de junio de 2026" vs "June 18, 2026") — **all with no code edits**, which is the
+real acceptance criterion. Adding a locale = add `LOCALES` + its catalog/content/prompt, no logic.
+
 ## #8 · Console/encoding: keep script stdout ASCII-safe
 **Problem:** Windows console (cp1252) raises `UnicodeEncodeError` on non-ASCII prints.
 **Solution:** keep project-script console output ASCII; write any non-ASCII to UTF-8 files/logs.

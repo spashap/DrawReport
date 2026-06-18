@@ -1,0 +1,18 @@
+# /etc/systemd/system/drawreport-web.service
+# gunicorn for DrawReport on 127.0.0.1:8002 (nginx proxies drawreport.com here).
+# Separate from cosmyday-api (port 8001) - do not touch that unit.
+[Unit]
+Description=DrawReport web (gunicorn)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/drawreport
+Environment=PATH=/var/www/drawreport/venv/bin
+ExecStart=/var/www/drawreport/venv/bin/gunicorn --workers 2 --timeout 120 --bind 127.0.0.1:8002 run:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

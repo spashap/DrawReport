@@ -1,0 +1,17 @@
+# /etc/systemd/system/drawreport-worker.service
+# Background report worker (paid -> generating -> delivered). One instance.
+[Unit]
+Description=DrawReport report worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/drawreport
+Environment=PATH=/var/www/drawreport/venv/bin
+ExecStart=/var/www/drawreport/venv/bin/python worker.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
