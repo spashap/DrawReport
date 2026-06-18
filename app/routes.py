@@ -5,6 +5,7 @@ Phase 0 ships only the home placeholder; later phases add the landing, order
 flow, cabinet, samples, blog, legal, robots/sitemap on this same blueprint.
 """
 from flask import Blueprint, abort, g, render_template
+from flask_babel import gettext as _
 
 from config import settings
 
@@ -33,3 +34,40 @@ def add_lang(endpoint, values):
 @bp.route("/")
 def index():
     return render_template("landing.html")
+
+
+# --- Stubs: real implementations land in later phases. Defined now so url_for()
+#     resolves everywhere and the nav/links work end to end. ---
+@bp.route("/order")
+def order():
+    return render_template("stub.html", title=_("Place an order"))
+
+
+@bp.route("/login")
+def login():
+    return render_template("stub.html", title=_("Log in"))
+
+
+@bp.route("/cabinet")
+def cabinet():
+    return render_template("stub.html", title=_("Your account"))
+
+
+@bp.route("/blog")
+def blog_index():
+    return render_template("stub.html", title=_("Blog"))
+
+
+@bp.route("/blog/<slug>")
+def blog_post(slug):
+    return render_template("stub.html", title=_("Blog"))
+
+
+@bp.route("/sample/<token>")
+def sample(token):
+    return render_template("stub.html", title=_("Sample report"))
+
+
+@bp.route("/legal/<page>")
+def legal(page):
+    return render_template("stub.html", title=_("Legal"))

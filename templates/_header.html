@@ -1,0 +1,24 @@
+{# Site header: landing, pages, hosted reports. Sticky nav bar. #}
+<header class="site-header">
+  <div class="wrap site-header__row">
+    <a class="logo" href="{{ url_for('main.index') }}" data-goal="header_logo">
+      <picture>
+        <source media="(max-width:560px)" type="image/webp" srcset="{{ static }}/img/logo-icon.webp">
+        <source media="(max-width:560px)" srcset="{{ static }}/img/logo-icon.png">
+        <source type="image/webp" srcset="{{ static }}/img/logo-strip.webp">
+        <img class="logo__img" src="{{ static }}/img/logo-strip.png"
+             alt="{{ site_name }} — a report on your child from their drawings">
+      </picture>
+    </a>
+    <nav class="site-nav">
+      <a href="{{ url_for('main.index') }}#examples" data-goal="header_nav_examples">{{ _('Examples') }}</a>
+      <a href="{{ url_for('main.index') }}#how" data-goal="header_nav_how">{{ _('How it works') }}</a>
+      <a href="{{ url_for('main.index') }}#pricing" data-goal="header_nav_prices">{{ _('Pricing') }}</a>
+      <a href="{{ url_for('main.blog_index') }}" data-goal="header_nav_blog">{{ _('Blog') }}</a>
+    </nav>
+    <div class="site-header__actions">
+      <a class="site-nav__login" href="{{ url_for('main.login') }}" data-goal="header_login">{{ _('Log in') }}</a>
+      <a class="btn" href="{{ url_for('main.order') }}" data-goal="header_order">{{ _('Get the report') }}</a>
+    </div>
+  </div>
+</header>

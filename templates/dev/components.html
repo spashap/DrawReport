@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" class="{{ palette | default('') }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Component gallery — dev</title>
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css">
+<link rel="stylesheet" href="{{ static }}/css/components.css">
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><b>Draw</b><i>Report</i></div>
+    <a class="btn" href="#">Get the report</a>
+  </nav>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <h1>Heading h1 — every drawing has a <span class="hand">voice</span></h1>
+    <p class="sub">This is .sub — a section subheading. Below: every component in the system with dummy data.</p>
+    <div class="note">
+      <svg width="42" height="28" viewBox="0 0 46 30"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      .note — a handwritten note · PDF within the hour · $29
+    </div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>Buttons</h2>
+    <p style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <a class="btn" href="#">.btn — default</a>
+      <a class="btn btn--primary" href="#">.btn--primary — CTA $29</a>
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <h2>Polaroids and badges</h2>
+    <div style="display:flex;gap:64px;flex-wrap:wrap;padding:40px 0">
+      <div class="polaroid polaroid--tilt-l" style="width:242px">
+        <div class="badge badge--corner">creativity 8/10</div>
+        <svg class="polaroid__img" viewBox="0 0 200 150">
+          <rect x="45" y="70" width="70" height="55" fill="none" stroke="var(--accent)" stroke-width="4"/>
+          <path d="M40 70 L80 40 L120 70" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linejoin="round"/>
+          <circle cx="160" cy="28" r="14" fill="none" stroke="var(--badge)" stroke-width="4"/>
+        </svg>
+        <div class="polaroid__cap">"Our House", Mia, age 5</div>
+      </div>
+      <div class="polaroid polaroid--tilt-r" style="width:222px">
+        <div class="badge badge--corner">control 9/10</div>
+        <svg class="polaroid__img" viewBox="0 0 200 150">
+          <path d="M100 128 L100 58" stroke="var(--accent2)" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <circle cx="100" cy="46" r="32" fill="none" stroke="var(--accent2)" stroke-width="5"/>
+          <circle cx="84" cy="38" r="5" fill="var(--accent)"/>
+          <circle cx="112" cy="32" r="5" fill="var(--accent)"/>
+        </svg>
+        <div class="polaroid__cap">"Apple Tree", Liam, age 7</div>
+      </div>
+      <div style="align-self:center">
+        <span class="badge">.badge — standalone</span>&nbsp;&nbsp;
+        <span class="badge badge--flat">sample report</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>Card + score bars (.card / .score-bar)</h2>
+    <div class="card" style="max-width:420px;padding:24px">
+      <h3 style="margin-bottom:16px">Summary scores</h3>
+      {% for name, score in [("Creativity", 8), ("Organization", 7), ("Confidence", 9), ("Logic", 6)] %}
+      <div class="score-bar">
+        <span>{{ name }}</span>
+        <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ score * 10 }}%"></i></div>
+        <b>{{ score }}</b>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <h2>Carousel (.carousel) of cards</h2>
+    <div class="carousel">
+      {% for child, age in [("Mia", "age 5"), ("Sophie", "age 6"), ("Liam", "age 7")] %}
+      <div class="card" style="width:340px;overflow:hidden;position:relative">
+        <span class="badge badge--flat" style="position:absolute;top:12px;right:12px">sample report</span>
+        <div style="padding:18px">
+          <h3>{{ child }}</h3>
+          <div style="color:var(--soft);font-size:14px;margin-bottom:14px">{{ age }}</div>
+          <div class="score-bar">
+            <span>Creativity</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:80%"></i></div>
+            <b>8</b>
+          </div>
+        </div>
+        <a class="btn" style="display:block;border-radius:0" href="#">See the full report &rarr;</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>Steps (.steps / .step)</h2>
+    <div class="steps">
+      <div class="step"><div class="step__n">1</div><h3>Photograph the drawing</h3><p>Any drawing your child has already made works fine.</p></div>
+      <div class="step"><div class="step__n">2</div><h3>Tell us the context</h3><p>Age, what they drew with — a short 2–3 minute form.</p></div>
+      <div class="step"><div class="step__n">3</div><h3>Get your report</h3><p>PDF by email + your private account.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="wrap quote">
+    <div class="quote__text">".quote — it was like really looking at my daughter's drawings for the first time."</div>
+    <div class="quote__who">Maria, Sophie's mom (age 6)</div>
+  </div>
+</div>
+
+<div class="section section--alt">
+  <div class="wrap">
+    <h2>FAQ (.faq, details/summary)</h2>
+    <details class="faq"><summary>Is this a psychological assessment?</summary><p>No. It's an educational observation of developing skills — not a medical or psychological diagnosis.</p></details>
+    <details class="faq"><summary>What age range is it for?</summary><p>Ages 3 to 12 — the report's content takes the developmental stage into account.</p></details>
+  </div>
+</div>
+
+</body>
+</html>
