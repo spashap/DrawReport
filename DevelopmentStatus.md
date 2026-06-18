@@ -162,5 +162,17 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
 - **M7 verified:** blog index (3 cards), blog post (Article schema), missing post 404; legal
   privacy/terms/refund render (privacy contains COPPA), bad page 404; landing shows blog section.
 
+## Phase 8 — PayPal provider — DONE (V0.009)
+
+- `app/paypal.py` — Orders API v2: OAuth token, `create_paypal_order` (creates order, stores
+  `payment_id`, returns approval URL), `capture_order`, `verify_webhook` (signature via PayPal).
+- `payments.create_payment` routes to PayPal when `PAYMENT_BACKEND=paypal` (stub otherwise).
+- Routes: `/pay/paypal/return` (capture → mark_paid → success + session), `/pay/paypal/cancel`,
+  `/pay/paypal/webhook` (root blueprint; verify + mark_paid on PAYMENT.CAPTURE.COMPLETED;
+  idempotent with the return capture).
+- **M8 (code-complete) verified:** app boots with PayPal wired; return/cancel/webhook routes
+  exist; stub flow still default; PayPal create fails gracefully without creds. Live sandbox
+  end-to-end pending owner's PAYPAL_CLIENT_ID/SECRET (set PAYMENT_BACKEND=paypal, PAYPAL_ENV=sandbox).
+
 ### Pending
-Phases 8–9 (PayPal provider, deploy artifacts).
+Phase 9 (deploy artifacts: systemd/nginx/deploy.sh, runbook).

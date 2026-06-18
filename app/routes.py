@@ -268,6 +268,41 @@ def order_success(order_id):
     return render_template("order_success.html", email=order["email"])
 
 
+# --- PayPal return/cancel (Phase 8). Webhook is on bp_root (no locale). ---
+
+def _finish_paid(order_id, result):
+    resp = redirect(url_for("main.order_success", order_id=order_id))
+    if result and result.get("session_token"):
+        resp.set_cookie(SESSION_COOKIE, result["session_token"],
+                        max_age=settings.SESSION_DAYS * 24 * 3600,
+                        httponly=True, samesite="Lax")
+    return resp
+
+
+@bp.get("/pay/paypal/return")
+def paypal_return(order_id=None):
+    order_id = int(request.args.get("order_id") or order_id or 0)
+    order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if order is None:
+        abort(404)
+    from app.paypal import capture_order
+    if order["status"] == "created" and order["payment_id"]:
+        if not capture_order(order["payment_id"]):
+            return render_template("checkout_stub.html", order=order,
+                                   product=settings.get_products()[order["product_code"]]), 402
+    result = mark_paid(order_id)
+    if result and not result["already_paid"]:
+        track_event("order_paid", {"order_id": order_id, "via": "paypal"},
+                    customer_id=result["customer_id"])
+    return _finish_paid(order_id, result)
+
+
+@bp.get("/pay/paypal/cancel")
+def paypal_cancel(order_id=None):
+    order_id = int(request.args.get("order_id") or order_id or 0)
+    return redirect(url_for("main.order"))
+
+
 # --- First-party analytics beacon -----------------------------------------
 
 _GOAL_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_:-")
@@ -284,6 +319,28 @@ def track_beacon():
     if goal and len(goal) <= 64 and set(goal) <= _GOAL_CHARS:
         track_event("click:" + goal)
     return ("", 204)
+
+
+@bp_root.post("/pay/paypal/webhook")
+def paypal_webhook():
+    """PayPal webhook (no locale prefix). Verifies the signature, then marks the
+    order paid on a completed capture. Idempotent with the return-url capture."""
+    import json
+    from app.paypal import verify_webhook
+    body = request.get_data()
+    if not verify_webhook(request.headers, body):
+        return ("", 400)
+    try:
+        event = json.loads(body.decode("utf-8"))
+    except ValueError:
+        return ("", 400)
+    if event.get("event_type") == "PAYMENT.CAPTURE.COMPLETED":
+        custom_id = (((event.get("resource") or {}).get("custom_id"))
+                     or (event.get("resource") or {}).get("supplementary_data", {})
+                     .get("related_ids", {}).get("order_id"))
+        if custom_id and str(custom_id).isdigit():
+            mark_paid(int(custom_id))
+    return ("", 200)
 
 
 # --- Login (email 6-digit code) + cabinet ---------------------------------
