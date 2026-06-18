@@ -120,5 +120,23 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
   redirect to stub checkout → confirm → status `paid`, customer+child created, `dr_s` session cookie
   set, success page, payment_received email in `data/outbox/`. price_cents 2900, locale en.
 
+## Phase 5 — Worker + delivery + auth + cabinet — DONE (V0.006)
+
+- `app/jobs.py` — `run_order`: paid → generating → delivered/insufficient/failed. Locale-aware
+  (prompt/render/emails in order locale), age computed at drawing date (English plurals),
+  `report.json`/`report.html`/`report.pdf` saved, reports row upsert (public_token preserved on
+  regenerate), report_ready (PDF attached) / insufficient / failure(admin alert) emails.
+- `worker.py` — poller (resets stale 'generating' → 'paid' on start), `--once` for tests/cron.
+- Login routes (email → 6-digit code → verify → session), `_dev_code` (localhost owner cheat),
+  logout. Cabinet (orders grouped by child, status pills, drawing thumbs, open report + download
+  PDF, ownership checks), `/cabinet/drawing/<id>` thumb, `/cabinet/order/<id>/report.pdf`.
+  `/r/<token>` extended to DB-backed order reports. `login.html`, `cabinet.html` (English, i18n).
+- `scripts/regenerate_report.py`.
+- **M5 verified:** login (dev code → verify → session → cabinet); cabinet empty + with order;
+  simulated delivered order → cabinet shows ready pill + links, `/r/<token>` renders the report
+  with site header, PDF download returns application/pdf (52 KB). worker `--once` exits cleanly.
+  Live paid→delivered via Gemini pending GEMINI_API_KEY (owner); rendering/status/email/cabinet
+  paths all verified by simulation.
+
 ### Pending
-Phases 5–9 (worker/delivery/cabinet/login routes, admin, content/legal, PayPal, deploy).
+Phases 6–9 (admin + analytics, content/blog/legal, PayPal, deploy artifacts).

@@ -1,0 +1,56 @@
+{% extends "_base.html" %}
+{% block title %}{{ _('Sign in') }} — {{ site_name }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 440px; padding: 50px 0 70px">
+    <div class="form-card">
+      <h3>{{ _('Sign in to your account') }}</h3>
+      <p class="sub" style="font-size: 15px; margin-bottom: 20px">
+        {{ _('No passwords: we’ll email a 6-digit code to the address you used when ordering.') }}
+      </p>
+
+      {% if notice %}<div class="login-notice">{{ notice }}</div>{% endif %}
+      {% if dev_code %}<div class="login-notice" style="background: color-mix(in srgb, var(--amber-soft) 20%, var(--paper))">
+        dev (localhost only): code <b style="font-size: 18px; letter-spacing: 2px">{{ dev_code }}</b></div>{% endif %}
+
+      {% if step == "email" %}
+      <form method="post" action="{{ url_for('main.login') }}">
+        <div class="field">
+          <label for="email">{{ _('Email') }}</label>
+          <div class="ctl">
+            <input class="input{% if error %} input--error{% endif %}" type="email"
+                   id="email" name="email" value="{{ email }}" placeholder="you@example.com"
+                   autocomplete="email" required autofocus>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn--primary" type="submit" style="width: 100%" data-goal="login_request_code">{{ _('Get the code') }}</button>
+      </form>
+
+      {% else %}
+      <form method="post" action="{{ url_for('main.login_verify') }}">
+        <input type="hidden" name="email" value="{{ email }}">
+        <div class="field">
+          <label for="code">{{ _('Code from the email for %(email)s', email=email) }}</label>
+          <div class="ctl">
+            <input class="input code-input{% if error %} input--error{% endif %}" type="text"
+                   id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
+                   pattern="\d{6}" maxlength="6" placeholder="······" required autofocus>
+            {% if error %}<div class="err">{{ error }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn--primary" type="submit" style="width: 100%" data-goal="login_verify">{{ _('Sign in') }}</button>
+      </form>
+      <form method="post" action="{{ url_for('main.login') }}" style="margin-top: 14px; text-align: center">
+        <input type="hidden" name="email" value="{{ email }}">
+        <button class="btn btn--ghost" type="submit" data-goal="login_resend">{{ _('Send the code again') }}</button>
+      </form>
+      {% endif %}
+    </div>
+    <p class="hint" style="text-align: center">
+      {{ _('Haven’t ordered yet?') }} <a href="{{ url_for('main.order') }}" data-goal="login_order">{{ _('Get your first report') }}</a> — {{ _('your account opens automatically.') }}
+    </p>
+  </div>
+</div>
+{% endblock %}

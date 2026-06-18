@@ -12,9 +12,11 @@ from flask import (Blueprint, Response, abort, g, redirect, render_template,
                    request, url_for)
 from flask_babel import gettext as _
 
+from app.auth import (SESSION_COOKIE, AuthError, current_customer, destroy_session,
+                      request_code, verify_code)
 from app.content import get_faq, get_testimonials
 from app.db import get_db
-from app.orders import FormError, validate_and_create_order
+from app.orders import EMAIL_RE, FormError, validate_and_create_order
 from app.payments import create_payment, mark_paid
 from app.samples import get_sample_by_token, get_samples
 from app.track import track_event
@@ -164,6 +166,22 @@ def hosted_report(token):
         drawing = settings.BASE_DIR / sd["drawing"] if sd else None
         specs = [{"path": drawing, "caption": s.caption}] if drawing else []
         return _render_report_page(data, specs, g.lang_code)
+    # DB-backed order report (public, unguessable token)
+    row = get_db().execute(
+        "SELECT o.id, o.locale, r.report_json_path FROM reports r"
+        " JOIN orders o ON o.id = r.order_id WHERE r.public_token = ?", (token,)).fetchone()
+    if row and row["report_json_path"]:
+        jpath = settings.BASE_DIR / row["report_json_path"]
+        if jpath.exists():
+            data = json.loads(jpath.read_text(encoding="utf-8"))
+            drows = get_db().execute(
+                "SELECT file_path FROM drawings WHERE order_id = ? ORDER BY id",
+                (row["id"],)).fetchall()
+            n = len(drows)
+            specs = [{"path": settings.BASE_DIR / d["file_path"],
+                      "caption": f"Drawing {i + 1}" if n > 1 else (data.get("child") or {}).get("name", "")}
+                     for i, d in enumerate(drows)]
+            return _render_report_page(data, specs, row["locale"] or g.lang_code)
     abort(404)
 
 
@@ -267,14 +285,159 @@ def track_beacon():
     return ("", 204)
 
 
-@bp.route("/login")
+# --- Login (email 6-digit code) + cabinet ---------------------------------
+
+@bp.get("/login")
 def login():
-    return render_template("stub.html", title=_("Log in"))
+    if current_customer():
+        return redirect(url_for("main.cabinet"))
+    track_event("login_view")
+    return render_template("login.html", step="email", email="", error=None, notice=None)
 
 
-@bp.route("/cabinet")
+def _dev_code(email):
+    """Dev cheat: on localhost the owner sees the code on the page (no mail yet)."""
+    host = request.host.split(":")[0]
+    if email != settings.DEV_LOGIN_CODE_EMAIL or host not in ("localhost", "127.0.0.1"):
+        return None
+    row = get_db().execute(
+        "SELECT code FROM login_codes WHERE email = ? AND used = 0"
+        " ORDER BY id DESC LIMIT 1", (email,)).fetchone()
+    return row["code"] if row else None
+
+
+@bp.post("/login")
+def login_request_code():
+    email = (request.form.get("email") or "").strip().lower()
+    if not EMAIL_RE.match(email):
+        return render_template("login.html", step="email", email=email,
+                               error=_("Enter a valid email"), notice=None), 400
+    try:
+        request_code(email, g.lang_code)
+    except AuthError as e:
+        return render_template("login.html", step="code", email=email,
+                               error=None, notice=str(e), dev_code=_dev_code(email))
+    track_event("login_code_requested")
+    return render_template("login.html", step="code", email=email, error=None,
+                           notice=_("We sent a 6-digit code to your email. It's valid for "
+                                    "%(m)s minutes.", m=settings.LOGIN_CODE_TTL_MINUTES),
+                           dev_code=_dev_code(email))
+
+
+@bp.post("/login/verify")
+def login_verify():
+    email = (request.form.get("email") or "").strip().lower()
+    code = (request.form.get("code") or "").strip()
+    try:
+        token = verify_code(email, code)
+    except AuthError as e:
+        return render_template("login.html", step="code", email=email,
+                               error=str(e), notice=None, dev_code=_dev_code(email)), 400
+    track_event("login_success")
+    resp = redirect(url_for("main.cabinet"))
+    resp.set_cookie(SESSION_COOKIE, token, max_age=settings.SESSION_DAYS * 24 * 3600,
+                    httponly=True, samesite="Lax")
+    return resp
+
+
+@bp.post("/logout")
+def logout():
+    destroy_session()
+    resp = redirect(url_for("main.index"))
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
+
+
+def _status_labels():
+    # internal failed/generating are shown to the client as "in progress"
+    return {
+        "paid": (_("in progress"), "wait"),
+        "generating": (_("in progress"), "wait"),
+        "failed": (_("in progress"), "wait"),
+        "delivered": (_("ready"), "ready"),
+        "insufficient": (_("we need different photos - we've emailed you"), "warn"),
+    }
+
+
+@bp.get("/cabinet")
 def cabinet():
-    return render_template("stub.html", title=_("Your account"))
+    customer = current_customer()
+    if customer is None:
+        return redirect(url_for("main.login"))
+    import json
+    db = get_db()
+    orders = db.execute(
+        "SELECT o.*, r.public_token, c.name AS child_name FROM orders o"
+        " LEFT JOIN reports r ON r.order_id = o.id"
+        " LEFT JOIN children c ON c.id = o.child_id"
+        " WHERE o.customer_id = ? AND o.status != 'created'"
+        " ORDER BY o.id DESC", (customer["id"],)).fetchall()
+    products = settings.get_products()
+    labels = _status_labels()
+    groups = {}
+    for o in orders:
+        child = json.loads(o["child_json"] or "{}")
+        name = o["child_name"] or child.get("name") or _("Unnamed")
+        grp = groups.setdefault(name, {"name": name, "orders": [], "delivered_n": 0})
+        drawings = db.execute("SELECT id FROM drawings WHERE order_id = ? ORDER BY id",
+                              (o["id"],)).fetchall()
+        label, kind = labels.get(o["status"], (_("in progress"), "wait"))
+        product = products.get(o["product_code"], {})
+        ready = bool(o["status"] == "delivered" and o["public_token"])
+        if ready:
+            grp["delivered_n"] += 1
+        grp["orders"].append({
+            "id": o["id"],
+            "date": (o["paid_at"] or o["created_at"])[:10],
+            "product_title": product.get("title", o["product_code"]),
+            "status_label": label, "status_kind": kind, "ready": ready,
+            "report_url": url_for("main.hosted_report", token=o["public_token"]) if o["public_token"] else None,
+            "pdf_url": url_for("main.cabinet_report_pdf", order_id=o["id"]) if ready else None,
+            "drawing_ids": [d["id"] for d in drawings],
+        })
+    track_event("cabinet_view", customer_id=customer["id"])
+    return render_template("cabinet.html", customer=customer,
+                           groups=list(groups.values()), has_orders=bool(orders))
+
+
+@bp.get("/cabinet/drawing/<int:drawing_id>")
+def cabinet_drawing(drawing_id):
+    customer = current_customer()
+    if customer is None:
+        abort(403)
+    row = get_db().execute(
+        "SELECT d.file_path FROM drawings d JOIN orders o ON o.id = d.order_id"
+        " WHERE d.id = ? AND o.customer_id = ?", (drawing_id, customer["id"])).fetchone()
+    if row is None:
+        abort(404)
+    src = settings.BASE_DIR / row["file_path"]
+    if not src.exists():
+        abort(404)
+    thumb = src.with_name(f"thumb_{src.stem}.jpg")
+    if not thumb.exists() or thumb.stat().st_mtime < src.stat().st_mtime:
+        from pipeline.images import prepare_image
+        thumb.write_bytes(prepare_image(src, max_side=480))
+    return Response(thumb.read_bytes(), mimetype="image/jpeg",
+                    headers={"Cache-Control": "private, max-age=86400"})
+
+
+@bp.get("/cabinet/order/<int:order_id>/report.pdf")
+def cabinet_report_pdf(order_id):
+    customer = current_customer()
+    if customer is None:
+        abort(403)
+    row = get_db().execute(
+        "SELECT r.pdf_path FROM reports r JOIN orders o ON o.id = r.order_id"
+        " WHERE o.id = ? AND o.customer_id = ? AND o.status = 'delivered'",
+        (order_id, customer["id"])).fetchone()
+    if row is None or not row["pdf_path"]:
+        abort(404)
+    pdf = settings.BASE_DIR / row["pdf_path"]
+    if not pdf.exists():
+        abort(404)
+    return Response(pdf.read_bytes(), mimetype="application/pdf",
+                    headers={"Content-Disposition":
+                             f'attachment; filename="drawreport-{order_id}.pdf"'})
 
 
 @bp.route("/blog")

@@ -1,0 +1,60 @@
+{% extends "_base.html" %}
+{% block title %}{{ _('Your account') }} — {{ site_name }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 720px; padding-bottom: 60px">
+
+    <div class="cab-profile">
+      <div>
+        <h2 style="margin: 0">{{ _('Your account') }}</h2>
+        <div class="hint" style="margin-top: 4px">{{ customer.email }}</div>
+      </div>
+      <form method="post" action="{{ url_for('main.logout') }}">
+        <button class="btn btn--ghost" type="submit" data-goal="cabinet_logout">{{ _('Sign out') }}</button>
+      </form>
+    </div>
+
+    {% if not has_orders %}
+    <div class="form-card" style="margin-top: 24px; text-align: center">
+      <p class="sub">{{ _('Nothing here yet — order your first report and it will show up in your account.') }}</p>
+      <a class="btn btn--primary" href="{{ url_for('main.order') }}" style="margin-top: 16px" data-goal="cabinet_order_empty">{{ _('Order a report') }}</a>
+    </div>
+    {% endif %}
+
+    {% for grp in groups %}
+    <section class="cab-child">
+      <h3 class="cab-child__name">{{ grp.name }}</h3>
+
+      {% for o in grp.orders %}
+      <div class="order-card">
+        <div class="order-card__head">
+          <div>
+            <b>{{ o.product_title }}</b>
+            <div class="hint">{{ _('order #%(id)s from %(date)s', id=o.id, date=o.date) }}</div>
+          </div>
+          <span class="status-pill status-pill--{{ o.status_kind }}">{{ o.status_label }}</span>
+        </div>
+        {% if o.drawing_ids %}
+        <div class="order-card__thumbs">
+          {% for did in o.drawing_ids %}
+          <img class="thumb" src="{{ url_for('main.cabinet_drawing', drawing_id=did) }}" alt="{{ _('Drawing %(n)s', n=loop.index) }}" loading="lazy">
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% if o.ready %}
+        <div class="order-card__actions">
+          <a class="btn btn--primary" href="{{ o.report_url }}" data-goal="cabinet_open_report">{{ _('Open the report') }}</a>
+          <a class="btn btn--ghost" href="{{ o.pdf_url }}" data-goal="cabinet_download_pdf">{{ _('Download PDF') }}</a>
+        </div>
+        {% elif o.status_kind == "wait" %}
+        <p class="hint" style="margin-top: 12px">{{ _('The report is usually ready within an hour of payment — we’ll email it and it will appear here.') }}</p>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endfor %}
+
+  </div>
+</div>
+{% endblock %}
