@@ -1,0 +1,50 @@
+{% extends "_base.html" %}
+{% block title %}{{ post.title }} — {{ site_name }}{% endblock %}
+{% block description %}{{ post.description }}{% endblock %}
+{% block og %}
+<link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
+{% for loc, href in alt_urls().items() %}<link rel="alternate" hreflang="{{ loc }}" href="{{ href }}">
+{% endfor %}
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.description }}">
+<meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
+<meta property="og:site_name" content="{{ site_name }}">
+<meta property="og:image" content="{{ public_base_url }}/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ post.title }}">
+<meta name="twitter:description" content="{{ post.description }}">
+<meta name="twitter:image" content="{{ public_base_url }}/static/img/og-default.png">
+{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Article",
+ "headline": {{ post.title | tojson }},
+ "description": {{ post.description | tojson }},
+ "datePublished": "{{ post.date.isoformat() }}",
+ "dateModified": "{{ post.date.isoformat() }}",
+ "inLanguage": "{{ locale }}",
+ "mainEntityOfPage": {"@type": "WebPage", "@id": "{{ public_base_url }}{{ request.path }}"},
+ "author": {"@type": "Organization", "name": "{{ site_name }}"},
+ "publisher": {"@type": "Organization", "name": "{{ site_name }}"}}
+</script>
+{% endblock %}
+{% block body %}
+<div class="section">
+  <article class="wrap prose" style="max-width: 760px">
+    <p class="hint" style="margin-bottom: 6px"><a href="{{ url_for('main.blog_index') }}" data-goal="blogpost_back_blog">{{ _('Blog') }}</a></p>
+    <h1 class="h2">{{ post.title }}</h1>
+    {{ post.html | safe }}
+    <div class="form-card" style="margin-top: 36px; text-align: center">
+      <p style="margin-top: 0">{{ _('Want a calm, educational look at your child’s drawings — from visible details, no diagnosis?') }}
+        <a href="{{ url_for('main.index') }}#examples" data-goal="blogpost_sample">{{ _('See a sample analysis') }}</a>
+        {{ _('or order a report from a photo.') }}</p>
+      <p style="margin-bottom: 0; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="blogpost_order">{{ _('Get a report on a drawing') }}</a>
+        <a class="btn btn--ghost" href="{{ url_for('main.index') }}#examples" data-goal="blogpost_sample_btn">{{ _('See an example') }}</a>
+      </p>
+    </div>
+  </article>
+</div>
+{% endblock %}

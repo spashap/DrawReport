@@ -1,0 +1,10 @@
+{% extends "_base.html" %}
+{% block title %}{{ title }} — {{ site_name }}{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap prose" style="max-width: 760px">
+    <h1 class="h2">{{ title }}</h1>
+    {{ body | safe }}
+  </div>
+</div>
+{% endblock %}

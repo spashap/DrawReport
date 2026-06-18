@@ -150,5 +150,17 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
 - **M6 verified:** guard redirects unauthed → /admin/login; wrong pass 401; login sets `dr_a`;
   all 8 sections render 200; coupon create works.
 
+## Phase 7 — Content: blog + legal — DONE (V0.008)
+
+- `app/blog.py` — per-locale markdown reader (`content/<locale>/blog/*.md`, frontmatter).
+  3 English DRAFT articles (is-a-drawing-a-diagnosis / what-you-can-learn / only-draws-in-black).
+- `blog_index.html` + `blog_post.html` (English, url_for, Article schema, hreflang). Landing blog
+  carousel now populated.
+- `app/legal.py` — US legal pages (privacy w/ **COPPA + children's data**, terms, refund),
+  English DRAFT markdown, flagged for counsel. `legal.html`. Routes wired (blog/blog_post/legal
+  replace the stubs).
+- **M7 verified:** blog index (3 cards), blog post (Article schema), missing post 404; legal
+  privacy/terms/refund render (privacy contains COPPA), bad page 404; landing shows blog section.
+
 ### Pending
-Phases 7–9 (content/blog/legal, PayPal, deploy artifacts).
+Phases 8–9 (PayPal provider, deploy artifacts).

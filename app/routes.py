@@ -14,6 +14,7 @@ from flask_babel import gettext as _
 
 from app.auth import (SESSION_COOKIE, AuthError, current_customer, destroy_session,
                       request_code, verify_code)
+from app.blog import get_posts
 from app.content import get_faq, get_testimonials
 from app.db import get_db
 from app.orders import EMAIL_RE, FormError, validate_and_create_order
@@ -121,7 +122,7 @@ def index():
         samples=get_samples(locale),
         faq=get_faq(locale),
         testimonials=get_testimonials(locale),
-        blog_posts=[],  # wired in Phase 7
+        blog_posts=get_posts(locale),
         min_price=min_price,
         inline_css=_inline_css(),
         schema_jsonld=_schema_jsonld(locale, min_price),
@@ -440,19 +441,28 @@ def cabinet_report_pdf(order_id):
                              f'attachment; filename="drawreport-{order_id}.pdf"'})
 
 
-@bp.route("/blog")
+@bp.get("/blog")
 def blog_index():
-    return render_template("stub.html", title=_("Blog"))
+    return render_template("blog_index.html", posts=get_posts(g.lang_code))
 
 
-@bp.route("/blog/<slug>")
+@bp.get("/blog/<slug>")
 def blog_post(slug):
-    return render_template("stub.html", title=_("Blog"))
+    from app.blog import get_post
+    post = get_post(slug, g.lang_code)
+    if post is None:
+        abort(404)
+    return render_template("blog_post.html", post=post)
 
 
-@bp.route("/legal/<page>")
+@bp.get("/legal/<page>")
 def legal(page):
-    return render_template("stub.html", title=_("Legal"))
+    from app.legal import get_legal
+    entry = get_legal(page, g.lang_code)
+    if entry is None:
+        abort(404)
+    title, body = entry
+    return render_template("legal.html", title=title, body=body)
 
 
 # --- Root (non-locale) routes: robots + sitemap ---------------------------
