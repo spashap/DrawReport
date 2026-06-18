@@ -29,8 +29,9 @@ def create_app() -> Flask:
     def root():
         return redirect(f"/{i18n.resolve_locale()}/", code=302)
 
-    from app.routes import bp
+    from app.routes import bp, bp_root
     app.register_blueprint(bp, url_prefix="/<lang_code>")
+    app.register_blueprint(bp_root)  # robots.txt, sitemap.xml at site root
 
     @app.teardown_appcontext
     def close_db(exc):

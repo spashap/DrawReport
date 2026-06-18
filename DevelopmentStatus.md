@@ -77,5 +77,25 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
   violations. Live Gemini generation pending GEMINI_API_KEY (owner). `regenerate_report.py` deferred
   to Phase 5 (depends on jobs/db).
 
+## Phase 3 — Landing + samples + SEO — DONE (V0.004)
+
+- `templates/landing.html` — full cinematic landing adapted to English DRAFT copy from
+  positioning-en.md (hero hook "say in drawings what they can't put into words", trio
+  strengths/nurture/support, "grounded in developmental stages", no-myths framed positively,
+  how-it-works, reviews rotator, trust, pricing USD, FAQ, blog carousel). url_for routing,
+  `data-goal` analytics attrs, inline critical CSS, GA4 include, hreflang. JS (carousels/rotator/
+  reveal/cta-pop) kept.
+- `app/content.py` — per-locale FAQ + TESTIMONIALS (English DRAFT, American names).
+- `app/samples.py` — per-locale sample registry, SVG-safe thumbnails; built-in sample (Emma R.)
+  ships so the landing always has an example before live generation.
+- `routes.py` — landing route (products/samples/faq/testimonials/schema/inline-css), `/sample/<token>`
+  (SEO wrapper, Article schema), `/r/<token>` (full hosted report via Flask render_template with
+  header), root blueprint `bp_root` for `/robots.txt` + `/sitemap.xml` (per-locale URLs, blocks
+  /admin /cabinet /r/ /order). `templates/sample.html` English.
+- **M3 verified:** `/en/` 200 (81KB, hero hook + $29 CTA + sample card + FAQPage schema + inline
+  css); `/en/sample/sample-emma` + `/en/r/sample-emma` render; robots blocks /admin; sitemap lists
+  /en/ pages. GA4 absent without id, loads with id set. (Hero/logo are placeholder art until owner
+  supplies real images; Lighthouse mobile check pending real deploy.)
+
 ### Pending
-Phases 3–9 (landing, orders, worker/delivery/auth, admin, content/legal, PayPal, deploy). See task list.
+Phases 4–9 (orders/DB/payment, worker/delivery/auth/cabinet, admin, content/legal, PayPal, deploy).

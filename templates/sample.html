@@ -1,0 +1,51 @@
+{% extends "_base.html" %}
+{% block title %}{{ _('Sample child-drawing analysis: %(caption)s — an educational report', caption=s.caption) }} | {{ site_name }}{% endblock %}
+{% block description %}{{ _('A sample educational report on a child’s drawing (%(caption)s): scores across areas of development, observations from visible details, and activities for parents. Not a diagnosis.', caption=s.caption) }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article",
+ "headline": {{ (_('Sample child-drawing analysis: ') ~ s.caption) | tojson }},
+ "inLanguage":"{{ locale }}",
+ "about":"educational analysis of a child's drawing from a photo",
+ "isPartOf":{"@type":"WebSite","name":"{{ site_name }}","url":"{{ public_base_url }}/"},
+ "publisher":{"@type":"Organization","name":"{{ site_name }}"},
+ "image":"{{ public_base_url }}/static/img/og-default.png"}
+</script>
+{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap prose" style="max-width: 760px">
+    <p class="hint" style="margin-bottom: 6px"><a href="{{ url_for('main.index') }}#examples" data-goal="sample_back">{{ _('Examples') }}</a></p>
+    <h1 class="h2">{{ _('Sample child-drawing analysis: %(caption)s', caption=s.caption) }}</h1>
+    <p class="sub">{{ _('This is what a warm, personal DrawReport looks like: scores across areas of development with clear explanations and ideas you can try at home. It’s an observation of what’s visible in the drawing — not a diagnosis.') }}</p>
+
+    <div class="report-card" style="max-width: 460px; margin: 24px auto">
+      <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}{{ _('example · %(n)s drawings', n=s.n_drawings) }}{% else %}{{ _('sample report') }}{% endif %}</span>
+      <div class="report-card__top">
+        <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="{{ _('Child’s drawing — %(caption)s, sample for analysis', caption=s.caption) }}" loading="lazy" width="84" height="84"></div>
+        <div class="report-card__name">{{ s.name }}</div>
+        <div class="report-card__age">{{ s.age_display }}</div>
+      </div>
+      <div class="report-card__body">
+        {% for t in s.top_scores %}
+        <div class="score-bar">
+          <span>{{ t.title }}</span>
+          <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
+          <b>{{ t.score }}</b>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="report-card__quote">“{{ s.quote }}”</div>
+    </div>
+
+    <p style="text-align:center; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+      <a class="btn btn--ghost" href="{{ url_for('main.hosted_report', token=s.token) }}" data-goal="sample_open_full" rel="nofollow">{{ _('Open the full sample report') }} &rarr;</a>
+      <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="sample_order">{{ _('Order a report on your own drawing') }}</a>
+    </p>
+
+    <p class="hint" style="text-align:center; margin-top:18px">
+      {{ _('An educational observation grounded in the developmental stages of children’s art. Not a medical or psychological diagnosis.') }}
+    </p>
+  </div>
+</div>
+{% endblock %}

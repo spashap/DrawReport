@@ -1,16 +1,427 @@
-{# Phase 0 placeholder landing — proves i18n + design tokens load.
-   Phase 3 replaces this with the full cinematic landing. #}
-{% extends "_base.html" %}
-{% block title %}{{ site_name }} — {{ _('A report on your child from their drawings') }}{% endblock %}
-{% block body %}
-<div class="section">
-  <div class="wrap" style="text-align:center; padding: 80px 0">
-    <p class="hand" style="color: var(--accent2)">{{ _('Every drawing has a voice') }}</p>
-    <h1>{{ _('Children often say in their drawings what they can’t yet put into words.') }}</h1>
-    <p class="sub" style="max-width: 640px; margin: 16px auto 28px">
-      {{ _('Understand what your child is expressing: their strengths, what to nurture, and how to support them at home — grounded in the developmental stages of children’s art.') }}
-    </p>
-    <a class="btn btn--primary" href="#">{{ _('Get the report') }}</a>
+{% from "_blog_thumb.html" import thumb %}
+<!DOCTYPE html>
+<html lang="{{ locale }}" class="{{ palette }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ _('What your child\'s drawing says about them — an educational PDF report, not a diagnosis') }} | {{ site_name }}</title>
+<meta name="description" content="{{ _('A photo-based educational report on your child\'s drawing: strengths, interests, emerging skills, and simple activities for home. Not a diagnosis. From $%(price)s, usually ready within the hour.', price=min_price) }}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ _('Hear what your child\'s drawings can tell you about them') }}">
+<meta property="og:description" content="{{ _('A personal PDF report on your child\'s drawings: strengths, interests, emerging skills, and simple activities for home. No diagnoses, no scary interpretations.') }}">
+<meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
+<meta property="og:site_name" content="{{ site_name }}">
+<meta property="og:locale" content="{{ {'en': 'en_US'}.get(locale, locale) }}">
+<meta property="og:image" content="{{ public_base_url }}/static/img/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ _('Hear what your child\'s drawings can tell you about them') }}">
+<meta name="twitter:description" content="{{ _('A personal PDF report on your child\'s drawings: strengths, interests, and activities for home. Not a diagnosis.') }}">
+<meta name="twitter:image" content="{{ public_base_url }}/static/img/og-default.png">
+<link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
+{% for loc, href in alt_urls().items() %}<link rel="alternate" hreflang="{{ loc }}" href="{{ href }}">
+{% endfor %}
+<link rel="icon" type="image/png" href="{{ static }}/img/favico/favicon-96x96.png" sizes="96x96">
+<link rel="icon" type="image/svg+xml" href="{{ static }}/img/favico/favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ static }}/img/favico/apple-touch-icon.png">
+<link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="{{ static }}/img/hero.jpg" type="image/jpeg" fetchpriority="high">
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<style>{{ inline_css | safe }}</style>
+<script type="application/ld+json">{{ schema_jsonld | safe }}</script>
+{% include "_analytics.html" %}
+</head>
+<body>
+
+{% include "_header.html" %}
+
+<!-- 1. HERO: full-bleed photo + frosted card. Cold traffic: clean hook, CTA bonus. -->
+<section class="hero">
+  <div class="hero__in">
+    <div class="hero__card">
+      <span class="hero__eyebrow">{{ _('Every drawing has a voice') }}</span>
+      <h1>{{ _('Children often say in their drawings what they can’t yet put into words.') }}</h1>
+      <p class="lead"><strong>{{ _('Understand what your child is expressing:') }}</strong>
+        {{ _('we’ll show you their strengths, what to nurture, and how to support them at home — grounded in the developmental stages of children’s art.') }}</p>
+      <div class="cta-zone">
+        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="landing_hero_order">{{ _('Get the report — $%(price)s', price=min_price) }}</a><span class="cta-info" tabindex="0" role="button" aria-label="{{ _('What’s inside the report') }}">{{ _('what’s inside') }} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div class="cta-pop">
+          <div class="note">
+            <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+            {{ _('PDF by email within the hour · 1–3 drawings · private account') }}
+          </div>
+          <div class="chips">
+            <span class="chip">{{ _('about 8 pages') }}</span><span class="chip">{{ _('7 areas') }}</span>
+            <span class="chip">{{ _('No diagnoses') }}</span><span class="chip">{{ _('Only you see the drawings') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
-{% endblock %}
+</section>
+
+<!-- 2. What you'll learn -->
+<section class="section" id="inside">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('What you’ll learn from the report') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Sometimes parents look at a drawing and see just a house, a cat, or a stick figure. We help you see more — in your child’s drawings.') }}</div>
+    <div class="card card--pad check-list reveal reveal--d1">
+      <ul>
+        <li>{{ _('The strengths already showing clearly in your child’s drawings') }}</li>
+        <li>{{ _('What they do in their own way — where their personal style shows') }}</li>
+        <li>{{ _('How they work with color, form, detail, and story') }}</li>
+        <li>{{ _('Details you might not have noticed — and what they say about skills') }}</li>
+        <li>{{ _('Growth areas — what to gently nurture next') }}</li>
+        <li>{{ _('What you can try at home to support that development') }}</li>
+      </ul>
+    </div>
+    <p class="scores-note reveal" style="text-align:left; margin-top:18px">{{ _('The report also includes scores across 7 areas of development — each with a clear explanation.') }}</p>
+  </div>
+</section>
+
+<!-- 3. How the conclusion is built -->
+<section class="section section--soft" id="logic">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('How the conclusion is built') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('We look at the details of the drawing and explain what they can show about your child’s habits, interests, and current stage of development.') }}</div>
+    <div class="flow reveal reveal--d1">
+      <div class="card card--pad flow-card">
+        <div class="flow-card__label">{{ _('A visible detail') }}</div>
+        <p>{{ _('The character is drawn large, the lines are confident, with almost no corrections.') }}</p>
+      </div>
+      <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+      <div class="card card--pad flow-card">
+        <div class="flow-card__label">{{ _('What it shows') }}</div>
+        <p>{{ _('This drawing shows confident execution and a good sense of scale.') }}</p>
+      </div>
+      <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+      <div class="card card--pad flow-card">
+        <div class="flow-card__label">{{ _('What to try at home') }}</div>
+        <p>{{ _('Offer a big sheet and a character drawn in one continuous line — 10 minutes, no grading the result.') }}</p>
+      </div>
+    </div>
+    <p class="flow-closing">{{ _('That’s how the report works: not generic phrases, but observation → explanation → a simple action.') }}</p>
+  </div>
+</section>
+
+<!-- 4. Examples -->
+<section class="section" id="examples">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('See the kind of observations parents get') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Open real examples: inside you’ll find the drawing, the context, strengths, observations, and activities for parents.') }}</div>
+    {% if samples %}
+    <div class="carousel-wrap reveal reveal--d1">
+    <button class="car-btn car-btn--prev" type="button" aria-label="{{ _('Previous') }}" data-car="-1" data-goal="landing_samples_prev">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="{{ _('Next') }}" data-car="1" data-goal="landing_samples_next">›</button>
+    <div class="carousel">
+      {% for s in samples %}
+      <article class="report-card">
+        <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}{{ _('example · %(n)s drawings', n=s.n_drawings) }}{% else %}{{ _('sample report') }}{% endif %}</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="{{ _('Drawing') }} — {{ s.caption }}" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">{{ s.name }}</div>
+          <div class="report-card__age">{{ s.age_display }}</div>
+        </div>
+        <div class="report-card__body">
+          {% for t in s.top_scores %}
+          <div class="score-bar">
+            <span>{{ t.title }}</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
+            <b>{{ t.score }}</b>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="report-card__quote">“{{ s.quote }}”</div>
+        <a class="report-card__link" href="{{ url_for('main.sample', token=s.token) }}" data-goal="landing_sample_open_{{ s.token }}">{{ _('See the sample report') }} &rarr;</a>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="car-dots" role="tablist" aria-label="{{ _('Scroll examples') }}"></div>
+    </div>
+    {% endif %}
+    <p class="scores-note reveal">{{ _('Scores describe a particular drawing, not the child as a whole. An average score doesn’t mean a problem — sometimes a direction is simply less visible in the chosen subject.') }}</p>
+  </div>
+</section>
+
+<!-- 5. No myths -->
+<section class="section section--soft" id="no-myths">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('No myths, no scary interpretations') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('We don’t hunt for hidden diagnoses in colors and symbols. We look at the visible skills and the age stage of the drawing.') }}</div>
+    <div class="compare">
+      <div class="card card--pad compare-col compare-col--no reveal reveal--d1">
+        <h3>{{ _('What we don’t do') }}</h3>
+        <ul>
+          <li>{{ _('we don’t diagnose from a drawing') }}</li>
+          <li>{{ _('we don’t say black means depression') }}</li>
+          <li>{{ _('we don’t look for “hidden trauma” in one image') }}</li>
+          <li>{{ _('we don’t judge the child’s personality') }}</li>
+        </ul>
+      </div>
+      <div class="card card--pad compare-col compare-col--yes reveal reveal--d2">
+        <h3>{{ _('What we do') }}</h3>
+        <ul>
+          <li>{{ _('we look at the visible elements: line, form, detail, composition, story, and hand movement') }}</li>
+          <li>{{ _('we take age and context into account') }}</li>
+          <li>{{ _('we show strengths and growth areas') }}</li>
+          <li>{{ _('we give simple activities for home') }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. How it works -->
+<section class="section" id="how">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('How it works') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Three steps — and a personal report lands in your inbox.') }}</div>
+    <div class="steps">
+      <div class="step reveal reveal--d1"><div class="step__n">1</div><h3>{{ _('Upload the drawings') }}</h3><p>{{ _('1–3 drawings your child already made work fine. Nothing needs to be drawn specially.') }}</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n">2</div><h3>{{ _('Add a little context') }}</h3><p>{{ _('Age, materials, the subject and any prompt — the form takes 2–3 minutes.') }}</p></div>
+      <div class="step reveal reveal--d3"><div class="step__n">3</div><h3>{{ _('Get your PDF report') }}</h3><p>{{ _('Usually within the hour. It arrives by email and stays in your private account.') }}</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Reviews -->
+<section class="section section--soft section--strip">
+  <div class="wrap quote-rotator reveal" data-interval="7000">
+    <div class="strip-title">{{ _('What parents unexpectedly noticed about their kids') }}</div>
+    <div class="strip-note">{{ _('Reviews from private testing') }}</div>
+    <button class="car-btn car-btn--prev" type="button" aria-label="{{ _('Previous review') }}" data-rot="-1" data-goal="landing_reviews_prev">‹</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="{{ _('Next review') }}" data-rot="1" data-goal="landing_reviews_next">›</button>
+    <div class="quote-rotator__stage">
+      {% for text, who in testimonials %}
+      <figure class="quote-slim{% if loop.first %} is-active{% endif %}">
+        <blockquote class="quote-slim__text">“{{ text }}”</blockquote>
+        <figcaption class="quote-slim__who">{{ who }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    <div class="rot-dots" role="tablist" aria-label="{{ _('Reviews') }}">
+      {% for t in testimonials %}
+      <button class="rot-dot{% if loop.first %} is-active{% endif %}" type="button"
+              data-dot="{{ loop.index0 }}" aria-label="{{ _('Review %(n)s', n=loop.index) }}" data-goal="landing_reviews_dot"></button>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 8. Trust -->
+<section class="section">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('Why you can trust us') }}</h2>
+    <div class="steps">
+      <div class="step reveal reveal--d1"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Money-back guarantee') }}</h3><p>{{ _('If the report isn’t for you, write within 7 days and we’ll refund you — no fuss.') }}</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Only you see the drawings') }}</h3><p>{{ _('Your child’s work is never published, never used in ads, and never shared with third parties.') }}</p></div>
+      <div class="step reveal reveal--d3"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Observations from visible details') }}</h3><p>{{ _('We don’t invent hidden meanings — every observation is tied to what’s actually visible in the drawing.') }}</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Pricing -->
+<section class="section section--soft" id="pricing">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('Choose your report') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('To start, a report on 1–3 drawings from the same period is available. The over-time development report comes later.') }}</div>
+    <div class="price-grid">
+      {% for code, p in products.items() %}
+      <div class="card price-card{% if not p.enabled %} price-card--soon{% endif %} reveal reveal--d1">
+        {% if not p.enabled %}<span class="badge badge--corner">{{ _('soon') }}</span>{% endif %}
+        <div class="p-title">{{ p.title }}</div>
+        <div class="p-sub">{{ p.subtitle }}</div>
+        <div class="p-prices">
+          {% if p.enabled %}<div class="p-launch">{{ _('Launch price') }}</div>{% endif %}
+          {% if p.old_price_usd %}<span class="p-old">${{ p.old_price_usd }}</span>{% endif %}
+          <span class="p-price">${{ p.price_usd }}</span>
+        </div>
+        <ul class="p-features">
+          {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
+        </ul>
+        {% if p.enabled %}
+        <a class="btn btn--primary" href="{{ url_for('main.order', product=code) }}" data-goal="landing_price_order_{{ code }}">{{ _('Order the report — $%(price)s', price=p.price_usd) }}</a>
+        {% else %}
+        <span class="p-soon-note">{{ _('Available after the MVP launch') }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 10. FAQ -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('Frequently asked questions') }}</h2>
+    <div class="reveal reveal--d1">
+    {% for q, a in faq %}
+    <details class="faq"><summary data-goal="landing_faq_open">{{ q }}</summary><p>{{ a }}</p></details>
+    {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if blog_posts %}
+<!-- 11. Blog -->
+<section class="section section--soft" id="blog">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('Understanding children’s drawings — without myths or scary interpretations') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Calm answers to the questions almost every parent has.') }}</div>
+    <div class="carousel-wrap reveal reveal--d1">
+      <button class="car-btn car-btn--prev" type="button" aria-label="{{ _('Previous') }}" data-car="-1" data-goal="landing_blog_prev">‹</button>
+      <button class="car-btn car-btn--next" type="button" aria-label="{{ _('Next') }}" data-car="1" data-goal="landing_blog_next">›</button>
+      <div class="carousel">
+        {% for p in blog_posts %}
+        <a class="blog-card" href="{{ url_for('main.blog_post', slug=p.slug) }}" data-goal="landing_blog_open_{{ p.slug }}">
+          <div class="blog-card__thumb">{{ thumb(p.slug) }}</div>
+          <div class="blog-card__body">
+            <h3 class="blog-card__title">{{ p.title }}</h3>
+            <p class="blog-card__descr">{{ p.description }}</p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      <div class="car-dots" role="tablist" aria-label="{{ _('Scroll articles') }}"></div>
+    </div>
+    <p style="text-align: center; margin-top: 22px"><a class="btn btn--ghost" href="{{ url_for('main.blog_index') }}" data-goal="landing_blog_all">{{ _('All articles') }} &rarr;</a></p>
+  </div>
+</section>
+{% endif %}
+
+<footer class="foot">
+  <div class="wrap">
+    <span class="foot__brand">{{ site_name }}</span>
+    {{ _('Educational observation, not medical or psychological diagnosis') }}<br>
+    <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a> ·
+    <a href="{{ url_for('main.legal', page='terms') }}">{{ _('Terms') }}</a> ·
+    <a href="{{ url_for('main.legal', page='refund') }}">{{ _('Refunds') }}</a> ·
+    <a href="{{ url_for('main.blog_index') }}">{{ _('Blog') }}</a><br>
+    {{ site_domain }}
+    <span class="foot-ver">V{{ version }}</span>
+  </div>
+</footer>
+
+<script>
+// "What's inside" popup in the hero: click toggles; click outside closes (mobile - no hover)
+document.querySelectorAll(".cta-info").forEach(function (t) {
+  function toggle(e) { e.preventDefault(); e.stopPropagation(); t.closest(".cta-zone").classList.toggle("is-open"); }
+  t.addEventListener("click", toggle);
+  t.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") toggle(e); });
+});
+document.querySelectorAll(".cta-pop").forEach(function (p) {
+  p.addEventListener("click", function (e) { e.stopPropagation(); });
+});
+document.addEventListener("click", function () {
+  document.querySelectorAll(".cta-zone.is-open").forEach(function (z) { z.classList.remove("is-open"); });
+});
+
+// Infinite carousels (examples, blog): the set is cloned x3, start in the middle copy,
+// on scroll the position seamlessly resets to the middle.
+document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
+  var c = wrap.querySelector(".carousel");
+  if (!c || !c.children.length) return;
+  var originals = Array.prototype.slice.call(c.children);
+  var n = originals.length;
+
+  function gapPx() {
+    var s = getComputedStyle(c);
+    return parseFloat(s.columnGap || s.gap) || 16;
+  }
+  var gap = gapPx();
+  function setWidth() {
+    var w = 0;
+    for (var i = 0; i < n; i++) w += originals[i].offsetWidth + gap;
+    return w;
+  }
+
+  for (var k = 0; k < 2; k++) {
+    originals.forEach(function (el) { c.appendChild(el.cloneNode(true)); });
+  }
+  c.style.scrollSnapType = "none";
+  var setW = setWidth();
+  var step = originals[0].offsetWidth + gap;
+  c.scrollLeft = setW;
+
+  var ticking = false;
+  c.addEventListener("scroll", function () {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      if (c.scrollLeft >= setW * 2) c.scrollLeft -= setW;
+      else if (c.scrollLeft < setW) c.scrollLeft += setW;
+      updateDots();
+    });
+  }, { passive: true });
+
+  wrap.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
+    });
+  });
+
+  var dotsBox = wrap.querySelector(".car-dots"), dots = [];
+  if (dotsBox) {
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement("button");
+      d.className = "car-dot" + (i === 0 ? " is-active" : "");
+      d.type = "button"; d.setAttribute("aria-label", "Card " + (i + 1));
+      (function (idx) { d.addEventListener("click", function () {
+        c.scrollTo({ left: setW + idx * step, behavior: "smooth" });
+      }); })(i);
+      dotsBox.appendChild(d); dots.push(d);
+    }
+  }
+  function updateDots() {
+    if (!dots.length) return;
+    var rel = ((c.scrollLeft % setW) + setW) % setW;
+    var active = Math.round(rel / step) % n;
+    dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+  }
+});
+
+// Review rotator: one quote, autoplay + arrows + dots, pause on hover
+document.querySelectorAll(".quote-rotator").forEach(function (r) {
+  var qs = r.querySelectorAll(".quote-slim");
+  var dots = r.querySelectorAll(".rot-dot");
+  if (qs.length < 2) return;
+  var i = 0, timer;
+  function show(n) {
+    qs[i].classList.remove("is-active");
+    if (dots[i]) dots[i].classList.remove("is-active");
+    i = (n + qs.length) % qs.length;
+    qs[i].classList.add("is-active");
+    if (dots[i]) dots[i].classList.add("is-active");
+  }
+  function play() { timer = setInterval(function () { show(i + 1); }, +r.dataset.interval || 7000); }
+  function stop() { clearInterval(timer); }
+  function jump(n) { stop(); show(n); play(); }
+  r.querySelectorAll(".car-btn[data-rot]").forEach(function (b) {
+    b.addEventListener("click", function () { jump(i + (+b.dataset.rot)); });
+  });
+  dots.forEach(function (d) { d.addEventListener("click", function () { jump(+d.dataset.dot); }); });
+  r.addEventListener("mouseenter", stop);
+  r.addEventListener("mouseleave", play);
+  play();
+});
+
+// Reveal on scroll (IntersectionObserver; respects reduce-motion)
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var els = document.querySelectorAll(".reveal");
+  if (reduce || !("IntersectionObserver" in window)) {
+    els.forEach(function (el) { el.classList.add("is-in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>
