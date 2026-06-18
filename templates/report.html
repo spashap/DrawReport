@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ s.report_title }} — {{ report.child.name }}, {{ report.child.age_display }} · {{ site_name }}</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css">
+{% if site_header %}<link rel="stylesheet" href="{{ static }}/css/components.css">{% endif %}
+<link rel="stylesheet" href="{{ static }}/css/report.css">
+</head>
+<body class="report">
+{% if site_header %}{% include "_header.html" %}{% endif %}
+<div class="report-page">
+
+  <!-- Cover -->
+  <div class="r-cover">
+    <div class="r-logo"><b>Draw</b><i>Report</i></div>
+    <h1>{{ s.cover_h1 | safe }}</h1>
+    <div class="r-child">{{ report.child.name }}, {{ report.child.age_display }}</div>
+    <div class="r-date">{{ generated_date }}</div>
+    {% for d in drawings %}
+    <div class="r-polaroid{% if loop.index is even %} r-polaroid--alt{% endif %}">
+      <img src="{{ d.src }}" alt="{{ s.drawing_alt }}: {{ d.caption }}">
+      <div class="cap">{{ d.caption }}</div>
+    </div>
+    {% endfor %}
+    <div class="r-disclaimer">{{ s.cover_disclaimer }}</div>
+  </div>
+
+  <!-- Context -->
+  {% if report.context_summary %}
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_context }}</h2>
+    <div class="r-context">{{ report.context_summary }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Introduction -->
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_intro }}</h2>
+    <p>{{ report.introduction }}</p>
+  </div>
+
+  <!-- Summary scores -->
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_scores }}</h2>
+    <table class="r-scores">
+      {% for d in report.dimensions %}
+      <tr>
+        <td class="name">{{ d.title }}</td>
+        <td><div class="r-bar"><i style="width: {{ d.score * 10 }}%"></i></div></td>
+        <td class="num">{{ d.score }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="r-callout">
+      <div class="r-callout-h">{{ s.callout_h }}</div>
+      <p>{{ s.callout_p }}</p>
+    </div>
+  </div>
+
+  <!-- Direction by direction -->
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_dimensions }}</h2>
+    {% for d in report.dimensions %}
+    <div class="r-dim">
+      <div class="r-dim-head">
+        <span class="r-score-badge">{{ d.score }}/10</span>
+        <h3><span class="num">{{ loop.index }}.</span> {{ d.title }}</h3>
+      </div>
+      <p>{{ d.observation }}</p>
+      {% if d.research_note %}<p class="r-note">{{ d.research_note }}</p>{% endif %}
+      {% if d.activities %}
+      <div class="r-activities">
+        <span class="t">{{ s.activities_label }}</span>
+        <ul>
+          {% for a in d.activities %}<li>{{ a }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Recommendations -->
+  {% if report.recommendations %}
+  <div class="r-section r-list">
+    <h2 class="r-h">{{ s.h_recommendations }}</h2>
+    <ul>
+      {% for r in report.recommendations %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Possible directions (optional) -->
+  {% if report.development_directions %}
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_directions }}</h2>
+    <p class="r-dd-note">{{ s.directions_note }}</p>
+    {% for dd in report.development_directions %}
+    <div class="r-dd"><span class="t">{{ dd.title }}.</span> {{ dd.text }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Conclusion -->
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_conclusion }}</h2>
+    <div class="r-conclusion">{{ report.conclusion }}</div>
+  </div>
+
+  <!-- Appendix: how to read the scores -->
+  <div class="r-section r-appendix">
+    <h2 class="r-h">{{ s.h_appendix }}</h2>
+    <p>{{ s.appendix_intro }}</p>
+    <p class="r-appendix-lead">{{ s.appendix_lead }}</p>
+    <ul class="r-appendix-list">
+      {% for term, body in s.appendix_items %}
+      <li><span class="t">{{ term }}</span> {{ body }}</li>
+      {% endfor %}
+    </ul>
+    <p>{{ s.appendix_outro }}</p>
+  </div>
+
+  <div class="r-footer-disclaimer">
+    {{ s.footer.format(site=site_name, domain=site_domain, date=generated_date) }}
+  </div>
+
+</div>
+</body>
+</html>

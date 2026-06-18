@@ -38,6 +38,44 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
 **App boot verified:** `/` → 302 `/en/`; `/en/` → 200 with hero + `lang="en"`; `/xx/` → 404
 (inactive locale); `/en/nope` → 404; `Accept-Language: es` → `/en/` (es not active).
 
+## Phase 1 — Design system + base layout — DONE (V0.002)
+
+- Copied verbatim: `tokens.css`, `components.css`, `report.css` (+ fonts in P0).
+- `_base.html` full layout (canonical, hreflang loop, OG/Twitter, JSON-LD, font preloads,
+  analytics include, header/footer). `_header.html` (English nav via url_for, logo <picture>,
+  `data-goal` attrs). `_seo_jsonld.html` (English, per-locale inLanguage).
+- `_analytics.html` — **GA4** client snippet (loads only if GA_MEASUREMENT_ID set; never on /admin)
+  + first-party goal + engaged-session beacons to `/t/e` (fed to admin dashboards later).
+- Route stubs (order/login/cabinet/blog/sample/legal) + `stub.html` so url_for resolves everywhere.
+- Scripts: `build_logos.py`, `build_hero_image.py`, `build_og_image.py` (English/Golden Hour),
+  `make_placeholder_assets.py` (placeholder logo/hero/favicon/og), `render_gallery.py`, `bump_version.py`.
+- Self-contained dev gallery (`templates/dev/components.html`, English/USD).
+- **M1 verified:** gallery renders; all pages 200; header/logo/canonical/OG present; GA conditional;
+  beacon present. Placeholder brand assets generated.
+
+## Phase 2 — Report pipeline + template — DONE (V0.003)
+
+- Copied + de-Russified: `pipeline/schema.py` (language-neutral), `pipeline/images.py`.
+- `pipeline/prompt.py` — English prompt, **per-locale** `PROMPTS["en"]` (faithful adaptation of
+  Golos V3.0 §7.4: tone 70/20/10, 6 anchors, mandatory personalization, bridges, forbidden
+  phrasings, age-honest scoring, multi-drawing consolidation, insufficient handling, JSON format).
+  Fixed 7-direction taxonomy (keys immutable, English titles). `system_prompt(locale)`,
+  `build_user_prompt(contexts, common, locale)`, `repair_instruction(locale)`.
+- `pipeline/lint.py` — English banned patterns + allowed contexts, **per-locale**;
+  `find_violations(data, locale)`.
+- `pipeline/gemini.py` — locale flows through (system/user/lint/repair). Optional
+  GOOGLE_GEMINI_BASE_URL proxy. lint→repair loop intact.
+- `pipeline/render.py` — Babel dates (`format_report_date`), per-locale `REPORT_STRINGS`,
+  locale-aware `render_html/render_report_files`. Standalone renderer saves header-free HTML + PDF;
+  the navigable hosted page is rendered by the Flask route (Phase 3/5) with the header.
+- `templates/report.html` — localized via `s` strings dict (renders outside Flask).
+- `pipeline/samples/sample_report.json` — English, American name (Emma R.), 7-direction taxonomy,
+  tone-compliant (lint-clean). Drawing SVG copied.
+- Scripts: `generate_report.py` (CLI, --locale), `render_sample.py`.
+- **M2 partial verified (no API key yet):** sample renders -> 7-page PDF (52 KB), **zero fallback
+  fonts** (all Rubik/Inter/Caveat subsets), `$` ok. Linter clean on sample, catches injected
+  violations. Live Gemini generation pending GEMINI_API_KEY (owner). `regenerate_report.py` deferred
+  to Phase 5 (depends on jobs/db).
+
 ### Pending
-Phases 1–9 (design system, pipeline, landing, orders, worker/delivery/auth, admin, content/legal,
-PayPal, deploy artifacts). See plan + task list.
+Phases 3–9 (landing, orders, worker/delivery/auth, admin, content/legal, PayPal, deploy). See task list.

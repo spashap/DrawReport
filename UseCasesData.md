@@ -54,6 +54,17 @@ email all switch with **no code edits**; then remove `xx`.
 `lang_code` → `g.lang_code` (404 on inactive locale); `url_defaults` re-injects it for
 `endpoint.startswith("main.")`. Admin/static stay outside the locale prefix.
 
+## #9 · Linter allowed-contexts must cover the model's natural disclaimer phrasings
+**Problem:** the English linter flagged "diagnosis" in a clean sample whose conclusion read
+"not a psychological diagnosis" — the allowed-context list only had "not a diagnosis", and the
+80-char window substring check didn't match because "psychological" sits between "not a" and
+"diagnosis".
+**Solution:** add the phrasings the model actually emits to `ALLOWED_CONTEXTS["en"]`:
+"not a psychological diagnosis", "psychological diagnosis", "medical diagnosis", "not a medical".
+**Reusable principle:** when a banned word is also legitimate inside a negated disclaimer, whitelist
+the *disclaimer phrasings the model uses*, not just the textbook negation. Verified the linter still
+catches real violations (anxiety / "will become an artist" / "you must").
+
 ## #8 · Console/encoding: keep script stdout ASCII-safe
 **Problem:** Windows console (cp1252) raises `UnicodeEncodeError` on non-ASCII prints.
 **Solution:** keep project-script console output ASCII; write any non-ASCII to UTF-8 files/logs.
