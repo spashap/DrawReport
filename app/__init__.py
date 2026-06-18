@@ -7,7 +7,8 @@ single composition point.
 from flask import Flask, g, redirect, render_template, request
 from flask_babel import Babel
 
-from app import i18n
+from app import i18n, track
+from app.db import init_db
 from config import settings
 
 babel = Babel()
@@ -23,6 +24,10 @@ def create_app() -> Flask:
     app.config["BABEL_DEFAULT_LOCALE"] = settings.DEFAULT_LOCALE
     app.config["BABEL_TRANSLATION_DIRECTORIES"] = str(settings.TRANSLATIONS_DIR)
     babel.init_app(app, locale_selector=i18n.select_locale)
+
+    init_db()
+    app.before_request(track.before_request)
+    app.after_request(track.after_request)
 
     # Bare "/" -> redirect to the visitor's resolved locale home.
     @app.route("/")

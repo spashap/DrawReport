@@ -97,5 +97,28 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
   /en/ pages. GA4 absent without id, loads with id set. (Hero/logo are placeholder art until owner
   supplies real images; Lighthouse mobile check pending real deploy.)
 
+## Phase 4 — Order flow + DB + payment stub — DONE (V0.005)
+
+- `app/db.py` — full SQLite schema (customers/children/orders/drawings/reports/sessions/
+  login_codes/coupons/events) + idempotent migrations. USD `price_cents`, generic `payment_id`,
+  per-order `locale`. WAL + FK + busy_timeout.
+- `app/track.py` (visitor cookie `dr_v`, first-touch UTM, device parse, `track_event`),
+  `app/geoip.py` (graceful: None if no data/geoip.db).
+- `app/mailer.py` — **Resend** backend (replaces Unisender) + outbox dev backend behind
+  `send_email`; English `_email_base/payment_received/login_code/report_ready/insufficient`.
+- `app/auth.py` — email 6-digit code, 30-day session (`dr_s`), `create_session`/`current_customer`.
+- `config/form_fields.py` — English per-locale field config (gender f/m), `child_to_common` +
+  `drawing_to_story` for the prompt.
+- `app/orders.py` — config-driven validation (English errors, date sanity, coupon), saves files,
+  writes order + drawings; captures order locale.
+- `app/payments.py` — abstraction: `create_payment` (stub now; `PAYMENT_BACKEND=paypal` → Phase 8)
+  + idempotent `mark_paid` (customer/child reuse, session, paid, payment_received email).
+- Templates: `order.html` (field macro, dynamic drawing blocks, USD), `checkout_stub.html`,
+  `order_success.html`. Routes: order GET/POST, stub checkout/confirm, success, `/t/e` beacon
+  (root blueprint). `__init__` wires `init_db` + track hooks; funnel `track_event`s added.
+- **M4 verified:** order form renders (ym selects, fields); POST creates order + saved drawing →
+  redirect to stub checkout → confirm → status `paid`, customer+child created, `dr_s` session cookie
+  set, success page, payment_received email in `data/outbox/`. price_cents 2900, locale en.
+
 ### Pending
-Phases 4–9 (orders/DB/payment, worker/delivery/auth/cabinet, admin, content/legal, PayPal, deploy).
+Phases 5–9 (worker/delivery/cabinet/login routes, admin, content/legal, PayPal, deploy).

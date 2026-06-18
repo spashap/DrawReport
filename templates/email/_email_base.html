@@ -1,0 +1,18 @@
+<!doctype html>
+{# Base for transactional emails. Inline styles only (mail clients don't load CSS).
+   The disclaimer + support contact are required in ALL emails. #}
+<html lang="{{ locale }}">
+<head><meta charset="utf-8"></head>
+<body style="margin:0; padding:24px 18px; background:#ffffff; font-family:Arial,Helvetica,sans-serif; color:#3A2A1C">
+  <div style="max-width:520px; margin:0 auto">
+    <div style="font-size:14px; color:#6E5942; margin-bottom:18px">{{ site_name }}</div>
+    {% block content %}{% endblock %}
+    <hr style="border:none; border-top:1px solid #EADDC4; margin:24px 0 12px">
+    <p style="font-size:12px; color:#A38B6E; line-height:1.55; margin:0">
+      This is an educational observation of the skills visible in a drawing,
+      not a psychological or medical diagnosis.<br>
+      Questions? Just reply to this email - we're happy to help.
+    </p>
+  </div>
+</body>
+</html>

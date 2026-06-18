@@ -1,0 +1,17 @@
+{% extends "_email_base.html" %}
+{# Not enough to work with (insufficient_input from the model). #}
+{% block content %}
+<h2 style="font-size:22px; margin:0 0 14px">We need a little help with the photos</h2>
+<p style="font-size:15px; line-height:1.6; margin:0 0 14px">
+  We looked at what you sent, but unfortunately we can't put together a full report from it yet.
+</p>
+{% if reason %}
+<p style="font-size:14px; line-height:1.6; margin:0 0 14px; background:#FFF8EA;
+   border-radius:10px; padding:12px 16px">{{ reason }}</p>
+{% endif %}
+<p style="font-size:15px; line-height:1.6; margin:0">
+  Just reply to this email with new photos (in daylight, the whole sheet, no glare) and we'll
+  re-run the analysis <b>for free</b>. If you'd prefer, we'll refund you in full - also by
+  replying to this email.
+</p>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "_base.html" %}
+{% block title %}{{ _('Order a report') }} — {{ site_name }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% macro field(f, prefix, values, errors) %}
+  {% set name = prefix ~ f.key %}
+  {% set err = errors.get(name) %}
+  <div class="form-row{% if err %} has-error{% endif %}">
+    <label for="{{ name }}">{{ f.label }}{% if not f.required %} <span class="opt">({{ _('optional') }})</span>{% endif %}</label>
+    {% if f.type == 'ym' %}
+      <div class="ym">
+        <select id="{{ name }}" name="{{ name }}_m">
+          <option value="">{{ _('Month') }}</option>
+          {% for num, mname in months %}<option value="{{ num }}"{% if values.get(name ~ '_m') == num %} selected{% endif %}>{{ mname }}</option>{% endfor %}
+        </select>
+        <select name="{{ name }}_y">
+          <option value="">{{ _('Year') }}</option>
+          {% for y in range(current_year, current_year - f.years_back, -1) %}<option value="{{ y }}"{% if values.get(name ~ '_y') == (y|string) %} selected{% endif %}>{{ y }}</option>{% endfor %}
+        </select>
+      </div>
+    {% elif f.type == 'select' %}
+      <select id="{{ name }}" name="{{ name }}">
+        <option value="">{{ _('Choose') }}</option>
+        {% for val, lbl in f.options %}<option value="{{ val }}"{% if values.get(name) == val %} selected{% endif %}>{{ lbl }}</option>{% endfor %}
+      </select>
+    {% elif f.type == 'textarea' %}
+      <textarea id="{{ name }}" name="{{ name }}" rows="2" placeholder="{{ f.placeholder or '' }}">{{ values.get(name, '') }}</textarea>
+    {% elif f.type == 'combo' %}
+      <input id="{{ name }}" name="{{ name }}" list="{{ name }}_list" autocomplete="off"
+             placeholder="{{ f.placeholder or '' }}" value="{{ values.get(name, '') }}">
+      <datalist id="{{ name }}_list">{% for p in f.presets %}<option value="{{ p }}">{% endfor %}</datalist>
+    {% elif f.type == 'email' %}
+      <input id="{{ name }}" name="{{ name }}" type="email" placeholder="{{ f.placeholder or '' }}" value="{{ values.get(name, '') }}">
+    {% else %}
+      <input id="{{ name }}" name="{{ name }}" type="text" placeholder="{{ f.placeholder or '' }}" value="{{ values.get(name, '') }}">
+    {% endif %}
+    {% if f.hint %}<div class="hint">{{ f.hint }}</div>{% endif %}
+    {% if err %}<div class="field-err">{{ err }}</div>{% endif %}
+  </div>
+{% endmacro %}
+
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 720px">
+    <h1 class="h2">{{ product.title }}</h1>
+    <p class="sub">{{ product.subtitle }} · <strong>${{ product.price_usd }}</strong></p>
+
+    {% if errors.drawings %}<div class="note note--err">{{ errors.drawings }}</div>{% endif %}
+
+    <form class="order-form card card--pad" method="post" action="{{ url_for('main.order') }}"
+          enctype="multipart/form-data" data-goal-submit="order_submit" data-max="{{ drawings_max }}">
+      <input type="hidden" name="product" value="{{ product_code }}">
+
+      <h3>{{ _('About the child') }}</h3>
+      {% for f in child_fields %}{{ field(f, 'child_', values, errors) }}{% endfor %}
+
+      <h3 style="margin-top:8px">{{ _('The drawings') }} <span class="hint" style="display:inline">({{ _('up to %(n)s', n=drawings_max) }})</span></h3>
+      <div id="draw-blocks">
+        {% for i in range(1, drawings_max + 1) %}
+        <div class="draw-block{% if i > 1 %} is-hidden{% endif %}" data-block="{{ i }}">
+          <div class="draw-block__head">{{ _('Drawing %(n)s', n=i) }}</div>
+          <div class="form-row{% if errors.get('d' ~ i ~ '_file') %} has-error{% endif %}">
+            <label for="d{{ i }}_file">{{ _('Photo of the drawing') }}</label>
+            <input id="d{{ i }}_file" name="d{{ i }}_file" type="file" accept="image/*,.heic,.heif">
+            {% if errors.get('d' ~ i ~ '_file') %}<div class="field-err">{{ errors.get('d' ~ i ~ '_file') }}</div>{% endif %}
+          </div>
+          {% for f in drawing_fields %}{{ field(f, 'd' ~ i ~ '_', values, errors) }}{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="btn btn--ghost" id="add-draw" data-goal="order_add_drawing">+ {{ _('Add another drawing') }}</button>
+
+      <h3 style="margin-top:18px">{{ _('Delivery') }}</h3>
+      {{ field(email_field, '', values, errors) }}
+      {{ field(coupon_field, '', values, errors) }}
+
+      <div class="order-submit">
+        <button type="submit" class="btn btn--primary" data-goal="order_pay">{{ _('Continue to payment — $%(price)s', price=product.price_usd) }}</button>
+        <p class="hint">{{ _('Educational observation, not a diagnosis. Money-back guarantee within 7 days.') }}</p>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Reveal drawing blocks one at a time, up to the max (sequential, no gaps).
+(function () {
+  var wrap = document.getElementById("draw-blocks");
+  var addBtn = document.getElementById("add-draw");
+  if (!wrap || !addBtn) return;
+  var blocks = Array.prototype.slice.call(wrap.querySelectorAll(".draw-block"));
+  function visibleCount() { return blocks.filter(function (b) { return !b.classList.contains("is-hidden"); }).length; }
+  function sync() { addBtn.style.display = visibleCount() >= blocks.length ? "none" : ""; }
+  addBtn.addEventListener("click", function () {
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].classList.contains("is-hidden")) { blocks[i].classList.remove("is-hidden"); break; }
+    }
+    sync();
+  });
+  sync();
+})();
+// Beacon: user started the form (funnel granularity)
+var started = false;
+document.querySelector(".order-form").addEventListener("input", function () {
+  if (started) return; started = true;
+  try { navigator.sendBeacon("/t/e", new URLSearchParams({ g: "form_started" })); } catch (e) {}
+}, { once: false });
+</script>
+{% endblock %}

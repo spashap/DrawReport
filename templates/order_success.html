@@ -1,0 +1,17 @@
+{% extends "_base.html" %}
+{% block title %}{{ _('Thank you') }} — {{ site_name }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block body %}
+<div class="section">
+  <div class="wrap" style="max-width: 560px; text-align:center">
+    <h1 class="h2">{{ _('Thank you — your payment went through') }}</h1>
+    <p class="sub" style="margin-top:12px">
+      {{ _('We’re preparing your report now. It usually arrives within the hour at') }}
+      <strong>{{ email }}</strong>.
+    </p>
+    <p style="margin-top:18px">{{ _('It will also be waiting in your account:') }}</p>
+    <p><a class="btn btn--primary" href="{{ url_for('main.cabinet') }}" data-goal="success_cabinet">{{ _('Go to your account') }}</a></p>
+    <p class="hint" style="margin-top:18px">{{ _('Educational observation, not a diagnosis.') }}</p>
+  </div>
+</div>
+{% endblock %}

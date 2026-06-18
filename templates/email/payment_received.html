@@ -1,0 +1,22 @@
+{% extends "_email_base.html" %}
+{# Payment received: confirmation + sets the wait + account access. No attachments. #}
+{% block content %}
+<h2 style="font-size:22px; margin:0 0 14px">Payment received</h2>
+<p style="font-size:15px; line-height:1.6; margin:0 0 14px">
+  Thank you! Your payment went through - we're already preparing the report.
+  It will arrive at this address in a separate email, usually within 10-15 minutes.
+</p>
+<p style="font-size:15px; line-height:1.6; margin:0 0 18px">
+  The report will always be available in your account. To open it any time, from any
+  device, sign in with this same email address - a login code will be sent to your inbox:
+</p>
+<p style="text-align:center; margin:0 0 18px">
+  <a href="{{ login_url }}" style="display:inline-block; background:#3E4E78; color:#ffffff;
+     text-decoration:none; font-size:15px; font-weight:bold; padding:12px 28px; border-radius:10px">
+    Sign in to your account
+  </a>
+</p>
+<p style="font-size:13px; color:#6E5942; line-height:1.6; margin:0">
+  Your account: <a href="{{ login_url }}" style="color:#3E4E78">{{ login_url }}</a>
+</p>
+{% endblock %}
