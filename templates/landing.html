@@ -318,67 +318,51 @@ document.addEventListener("click", function () {
   document.querySelectorAll(".cta-zone.is-open").forEach(function (z) { z.classList.remove("is-open"); });
 });
 
-// Infinite carousels (examples, blog): the set is cloned x3, start in the middle copy,
-// on scroll the position seamlessly resets to the middle.
+// Finite carousels (examples, blog): one dot per real card, no cloning — so the
+// dot count always matches the number of samples / blog posts (Golos behaviour).
 document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
   var c = wrap.querySelector(".carousel");
   if (!c || !c.children.length) return;
-  var originals = Array.prototype.slice.call(c.children);
-  var n = originals.length;
+  var cards = Array.prototype.slice.call(c.children);
+  var n = cards.length;
+  var dotsBox = wrap.querySelector(".car-dots");
+  var arrows = wrap.querySelectorAll(".car-btn[data-car]");
 
   function gapPx() {
     var s = getComputedStyle(c);
     return parseFloat(s.columnGap || s.gap) || 16;
   }
-  var gap = gapPx();
-  function setWidth() {
-    var w = 0;
-    for (var i = 0; i < n; i++) w += originals[i].offsetWidth + gap;
-    return w;
-  }
+  var step = cards[0].offsetWidth + gapPx();
 
-  for (var k = 0; k < 2; k++) {
-    originals.forEach(function (el) { c.appendChild(el.cloneNode(true)); });
-  }
-  c.style.scrollSnapType = "none";
-  var setW = setWidth();
-  var step = originals[0].offsetWidth + gap;
-  c.scrollLeft = setW;
-
-  var ticking = false;
-  c.addEventListener("scroll", function () {
-    if (ticking) return; ticking = true;
-    requestAnimationFrame(function () {
-      ticking = false;
-      if (c.scrollLeft >= setW * 2) c.scrollLeft -= setW;
-      else if (c.scrollLeft < setW) c.scrollLeft += setW;
-      updateDots();
-    });
-  }, { passive: true });
-
-  wrap.querySelectorAll(".car-btn[data-car]").forEach(function (b) {
+  arrows.forEach(function (b) {
     b.addEventListener("click", function () {
       c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
     });
   });
 
-  var dotsBox = wrap.querySelector(".car-dots"), dots = [];
-  if (dotsBox) {
+  // one dot per card (only when there's more than one)
+  var dots = [];
+  if (dotsBox && n > 1) {
     for (var i = 0; i < n; i++) {
       var d = document.createElement("button");
       d.className = "car-dot" + (i === 0 ? " is-active" : "");
       d.type = "button"; d.setAttribute("aria-label", "Card " + (i + 1));
       (function (idx) { d.addEventListener("click", function () {
-        c.scrollTo({ left: setW + idx * step, behavior: "smooth" });
+        c.scrollTo({ left: idx * step, behavior: "smooth" });
       }); })(i);
       dotsBox.appendChild(d); dots.push(d);
     }
   }
   function updateDots() {
     if (!dots.length) return;
-    var rel = ((c.scrollLeft % setW) + setW) % setW;
-    var active = Math.round(rel / step) % n;
+    var active = Math.max(0, Math.min(n - 1, Math.round(c.scrollLeft / step)));
     dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+  }
+  c.addEventListener("scroll", function () { requestAnimationFrame(updateDots); }, { passive: true });
+
+  // nothing to scroll -> hide the arrows (and any lone dot)
+  if (c.scrollWidth <= c.clientWidth + 2) {
+    arrows.forEach(function (b) { b.style.display = "none"; });
   }
 });
 
