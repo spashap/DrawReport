@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# restart.sh - restart the DrawReport services. Run as root from the app folder:
-#   cd /var/www/DrawReport && ./restart.sh
+# restart.sh — restart the DrawReport services. Run as root:
+#     cd /var/www/drawreportDeploy && bash restart.sh
 set -euo pipefail
 [ "$(id -u)" -eq 0 ] || { echo "ERROR: run as root"; exit 1; }
 

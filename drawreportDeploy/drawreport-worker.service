@@ -7,9 +7,8 @@ After=network.target
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/drawreport
-Environment=PATH=/var/www/drawreport/venv/bin
-ExecStart=/var/www/drawreport/venv/bin/python worker.py
+WorkingDirectory=/var/www/DrawReport
+ExecStart=/var/www/DrawReport/venv/bin/python worker.py
 Restart=always
 RestartSec=5
 
