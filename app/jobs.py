@@ -45,7 +45,7 @@ def run_order(conn: sqlite3.Connection, order_id: int) -> str:
 
 def _process(conn: sqlite3.Connection, order: sqlite3.Row) -> str:
     # heavy imports (genai, weasyprint) only when there's work
-    from pipeline.gemini import generate_report
+    from pipeline.llm import generate_report
     from pipeline.render import format_report_date, render_report_files
     from pipeline.schema import InsufficientReport
 

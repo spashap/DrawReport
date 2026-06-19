@@ -190,7 +190,23 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
 
 ---
 
-## STATUS: all 10 phases (M0-M9) complete. Build is feature-complete for owner QA.
+## Phase 10 — Switch LLM to Anthropic (Claude) — DONE (V0.011)
+
+- Provider abstraction matching the owner's US-project convention: `LLM_PROVIDER`
+  (anthropic|gemini), `LLM_MODEL` (claude-sonnet-4-6), `LLM_FALLBACK_MODEL`
+  (claude-haiku-4-5-20251001), `ANTHROPIC_API_KEY`. (Gemini kept as alternate provider.)
+- `pipeline/anthropic_llm.py` (Claude provider: image blocks + system/user, refusal handling,
+  no sampling params so it's model-agnostic), `pipeline/gemini.py` slimmed to a provider module,
+  `pipeline/llm.py` = provider-agnostic orchestrator (attempts, JSON validate, lint+repair,
+  primary→fallback model). `jobs.py`/`generate_report.py` import from `pipeline.llm`.
+- `anthropic` added to requirements; `.env.example` updated.
+- **M2 report quality verified LIVE (Claude Sonnet 4.6):** generated a full report from a test
+  drawing in 1 attempt, 0 repairs, **0 lint hits**; 7 directions, age-honest scoring (creativity 5
+  = typical for 6, not inflated), warm + grounded in visible details (used the context cue), all
+  activities in "you could offer" form, English. 8-page PDF, **zero fallback fonts**. The
+  insufficient-input and fallback-model paths are wired (not separately exercised).
+
+## STATUS: all phases complete + Anthropic LLM live. Build is feature-complete for owner QA.
 
 ### What needs the owner before launch (all behind stubs/placeholders now)
 - `.env` secrets: `GEMINI_API_KEY` (enables live report generation), `RESEND_API_KEY` +

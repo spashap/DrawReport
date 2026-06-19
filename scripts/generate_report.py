@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 from config import settings
-from pipeline.gemini import ReportGenerationError, generate_report
+from pipeline.llm import ReportGenerationError, generate_report
 from pipeline.render import format_report_date, render_report_files
 from pipeline.schema import InsufficientReport
 
@@ -52,7 +52,7 @@ def main() -> int:
         contexts = ctx_texts
     common = args.common.read_text(encoding="utf-8") if args.common else ""
 
-    print(f"-> Gemini ({len(args.images)} img, locale {args.locale}), out: {out_dir}")
+    print(f"-> {settings.LLM_PROVIDER} ({len(args.images)} img, locale {args.locale}), out: {out_dir}")
     try:
         result = generate_report(args.images, contexts, common_context=common,
                                  locale=args.locale, raw_dump_dir=out_dir / "raw")
@@ -63,7 +63,8 @@ def main() -> int:
         return 1
 
     (out_dir / "report_raw.json").write_text(result.raw_json_text, encoding="utf-8")
-    print(f"attempts: {result.attempts_used} | prompt v{result.prompt_version} | {result.model}"
+    print(f"attempts: {result.attempts_used} | prompt {result.prompt_version} | "
+          f"{result.provider}:{result.model}"
           f" | repairs: {result.repair_rounds} | lint hits left: {result.lint_hits_left}")
 
     if isinstance(result.report, InsufficientReport):

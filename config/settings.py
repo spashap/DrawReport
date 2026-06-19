@@ -16,7 +16,17 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-# --- Secrets / external services (env) ---
+# --- LLM (report generation) ---
+# Provider-agnostic, matching the convention used across the owner's US projects.
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "anthropic")          # 'anthropic' | 'gemini'
+LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-4-6")        # primary model
+LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "claude-haiku-4-5-20251001")
+LLM_MAX_ATTEMPTS = int(os.getenv("LLM_MAX_ATTEMPTS", "5"))     # per-model attempts (Golos §7.2)
+
+# Anthropic (Claude) - default provider
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
+# Gemini - alternate provider (LLM_PROVIDER=gemini); set LLM_MODEL to a gemini id then
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro")
 # Optional proxy base url for the Gemini API (leave empty to call Google directly)
