@@ -76,7 +76,7 @@ def _schema_jsonld(locale: str, min_price) -> str:
     org = {
         "@context": "https://schema.org", "@type": "Organization",
         "name": settings.SITE_NAME, "url": base + "/",
-        "logo": f"{base}/static/img/og-default.png",
+        "logo": f"{base}/static/img/og-default.jpg",
         "description": ("Educational analysis of a child's drawing from a photo: a personal "
                         "report on what the drawing shows about the child - strengths, interests "
                         "and skills - grounded in the developmental stages of children's art. "

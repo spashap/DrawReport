@@ -13,11 +13,11 @@
 <meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
 <meta property="og:site_name" content="{{ site_name }}">
 <meta property="og:locale" content="{{ {'en': 'en_US'}.get(locale, locale) }}">
-<meta property="og:image" content="{{ public_base_url }}/static/img/og-default.png">
+<meta property="og:image" content="{{ public_base_url }}/static/img/og-default.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ _('Hear what your child\'s drawings can tell you about them') }}">
 <meta name="twitter:description" content="{{ _('A personal PDF report on your child\'s drawings: strengths, interests, and activities for home. Not a diagnosis.') }}">
-<meta name="twitter:image" content="{{ public_base_url }}/static/img/og-default.png">
+<meta name="twitter:image" content="{{ public_base_url }}/static/img/og-default.jpg">
 <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
 {% for loc, href in alt_urls().items() %}<link rel="alternate" hreflang="{{ loc }}" href="{{ href }}">
 {% endfor %}

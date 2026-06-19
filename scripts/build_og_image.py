@@ -11,7 +11,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS = ROOT / "static" / "fonts"
-OUT = ROOT / "static" / "img" / "og-default.png"
+# Fallback text-card OG (used only if you don't build one from the hero photo).
+OUT = ROOT / "static" / "img" / "og-default.jpg"
 
 W, H = 1200, 630
 BG = (252, 239, 223)        # --bg warm paper
@@ -45,7 +46,7 @@ def main():
     center(d, 490, "for parents - not a diagnosis - drawreport.com", font("inter-400.ttf", 30), MUTED)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    img.save(OUT, format="PNG", optimize=True)
+    img.save(OUT, format="JPEG", quality=85, optimize=True, progressive=True)
     print("OK wrote %s (%dx%d, %d bytes)" % (OUT, W, H, OUT.stat().st_size))
     return 0
 
