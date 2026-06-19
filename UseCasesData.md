@@ -78,3 +78,51 @@ real acceptance criterion. Adding a locale = add `LOCALES` + its catalog/content
 ## #8 · Console/encoding: keep script stdout ASCII-safe
 **Problem:** Windows console (cp1252) raises `UnicodeEncodeError` on non-ASCII prints.
 **Solution:** keep project-script console output ASCII; write any non-ASCII to UTF-8 files/logs.
+
+## #11 · LLM is provider-abstracted (Anthropic default, Gemini alternate)
+**Decision:** the report LLM lives behind `pipeline/llm.py` (provider-agnostic orchestrator: attempts,
+JSON validate, lint+repair loop, primary→fallback model) calling a provider module —
+`pipeline/anthropic_llm.py` (default) or `pipeline/gemini.py`. Selected by env, matching the owner's
+other US projects: `LLM_PROVIDER`, `LLM_MODEL` (claude-sonnet-4-6), `LLM_FALLBACK_MODEL`
+(claude-haiku-4-5-20251001), `ANTHROPIC_API_KEY`.
+**Why these choices:**
+- The Anthropic provider sends **no sampling params** (no temperature/top_p) so the exact same code
+  works on Sonnet/Haiku AND future Opus/Fable (those 400 on sampling params).
+- Kept **manual JSON parse** (text → json.loads → `validate_report`) instead of structured outputs,
+  because the schema is a union `Report | InsufficientReport` and the prompt already asks for JSON.
+- Refusal (`stop_reason == "refusal"`) and empty content are raised as a failed attempt → triggers
+  retry / fallback model.
+**Reusable:** any new provider = a module with `generate(system, image_jpegs, user, model)` and
+`generate_text(prompt, model)`; register it in `llm._provider()`. When editing LLM code, consult the
+`claude-api` skill (don't guess model ids/params).
+
+## #12 · Carousel must be FINITE for a small site (don't clone for "infinite" scroll)
+**Problem:** the Golos landing carousel cloned each card ×3 for an infinite-scroll effect. Golos had
+14 blog posts so clones stayed off-screen; DrawReport has 1 sample + 3 posts, so the clones were
+fully visible — duplicate cards, and the dot count looked wrong.
+**Solution:** finite carousel in `landing.html` — no cloning, **one dot per real card**, arrows hidden
+when nothing overflows. Dots always equal the sample/blog count.
+
+## #13 · OG/social image = JPG from the hero, not a 1 MB PNG
+**Problem:** a photographic 1200×630 OG saved as PNG was ~1 MB.
+**Solution:** crop/resize the hero to 1200×630 and save **JPEG q82** (~114 KB) → `static/img/og-default.jpg`;
+point all refs at `.jpg` (base/landing/sample/blog/_seo_jsonld/routes `_schema_jsonld`).
+`build_og_image.py` (text-card fallback) also emits `.jpg`.
+
+## #14 · Hero/logo are built by host scripts from data/Images (gitignored source)
+Owner drops art in `data/Images/` (gitignored); `scripts/build_hero_image.py` reads
+`data/Images/Hero.png` → `static/img/hero.{jpg,webp}` (1600×900) + `hero-800.{jpg,webp}` (960×540);
+`scripts/build_logos.py` reads `stripLogo.png`/`logo.png`. The optimized `static/img/*` ARE committed.
+Per-blog-post SVG thumbnails live in `templates/_blog_thumb.html` (one `{% elif slug == %}` per slug,
+colored via palette `var(--*)`; default fallback for new posts).
+
+## #15 · Deploy: capital path, port 8002, LF line endings, registrar DNS
+- Server project dir is **`/var/www/DrawReport`** (capital D/R, matches the repo name). Local dev port
+  **3000** (`PORT` env), prod gunicorn **127.0.0.1:8002**. systemd units `drawreport-web`/`drawreport-worker`.
+- Deploy kit in **`drawreportDeploy/`** (copy to server `/var/www/drawreportDeploy`, run `provision.sh`).
+  `provision.sh` git-pulls into `/var/www/DrawReport` WITHOUT clobbering the owner-placed `.env`.
+- **`.gitattributes` forces `eol=lf` on `*.sh/*.service/*.conf`** so the scripts run on Linux after
+  being copied from Windows. (Note: `grep -c $'\r'` in Git Bash mis-reports — verify CRLF with Python
+  `b.count(b'\r')`, not grep.)
+- **DNS at the registrar, no Cloudflare** (or grey-cloud only). The orange proxy breaks `certbot`
+  HTTP-01 and rewrites robots.txt / 403s crawlers (the exact Golos pitfall). TLS = `certbot --nginx`.

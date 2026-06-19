@@ -217,5 +217,23 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
 - Launch price in `config/products.json` (or the admin Settings editor).
 - DNS for drawreport.com → 5.78.181.152 + run `provision.sh` then `certbot`.
 - Review the DRAFT copy (landing, blog, legal) and have legal reviewed by counsel.
-- Live report quality (M2 owner sign-off) once GEMINI_API_KEY is set: run
-  `scripts/generate_report.py <imgs> --context ...` and review English tone.
+- Live report quality (M2 owner sign-off): GEMINI no longer used — LLM is Anthropic now;
+  run `scripts/generate_report.py <imgs> --context ... --locale en` (key already in `.env`).
+
+## Session close — 2026-06-19 (V0.015, all pushed to origin/main)
+
+Post-build work completed this session (after M0–M9):
+- **LLM switched to Anthropic/Claude** behind `pipeline/llm.py` (Sonnet 4.6 primary, Haiku 4.5
+  fallback); verified live. See UseCase #11.
+- **Real hero + logo flow:** owner's hero built into `static/img/hero*.{jpg,webp}`; OG image is now a
+  JPG cropped from the hero; per-post blog SVG thumbnails in `_blog_thumb.html`. UseCases #13–#14.
+- **Carousel made finite** (dots = real card count). UseCase #12.
+- **Local dev on port 3000** (`run.py` reads `PORT`, default 3000); web + worker run locally.
+- **Deployment kit `drawreportDeploy/`** for server `/var/www/DrawReport` (capital) + port 8002,
+  cosmyday-safe; `provision.sh`/`deploy.sh`/`restart.sh` + units + nginx + README. `DEPLOY.md` updated.
+  `.gitattributes` forces LF. UseCase #15.
+- **DNS decision:** owner sets A records at the registrar (no Cloudflare). TLS via certbot.
+- CLAUDE.md given an AS-BUILT STATUS section.
+
+**To resume:** read CLAUDE.md (AS-BUILT section) + this file + UseCasesData.md. Run locally with
+`run.py`/`worker.py`. To deploy, follow `drawreportDeploy/README.md`.

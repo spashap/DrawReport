@@ -6,6 +6,25 @@
 > `positioning-en.md`. They are your spec. Build in phases, commit per phase, pause for owner
 > review at milestones.**
 
+---
+## ✅ AS-BUILT STATUS (updated 2026-06-19) — build is COMPLETE; this section overrides the "building from scratch" framing above
+Full system built, verified, committed, pushed to **https://github.com/spashap/DrawReport** (`main`, VERSION 0.015). All phases M0–M9 done. The spec docs below remain useful reference; these are the deviations + resume facts.
+
+**Deviations from the original spec (current reality):**
+- **LLM = Anthropic (Claude), not Gemini.** Provider abstraction: `pipeline/llm.py` (orchestrator: attempts, JSON validate, lint+repair, primary→fallback model) + `pipeline/anthropic_llm.py` (default) + `pipeline/gemini.py` (alternate). Env: `LLM_PROVIDER=anthropic`, `LLM_MODEL=claude-sonnet-4-6`, `LLM_FALLBACK_MODEL=claude-haiku-4-5-20251001`, `ANTHROPIC_API_KEY`. Verified live (full report, 0 lint hits, 8-page PDF, zero fallback fonts). Prompt lives in `pipeline/prompt.py` (`PROMPTS["en"]`, English, not yet polished). When editing LLM code, consult the `claude-api` skill.
+- **Analytics = GA4** client snippet (`templates/_analytics.html`, placeholder `GA_MEASUREMENT_ID`) + first-party events/admin dashboards (kept). Not Yandex.
+- **Server path = `/var/www/DrawReport` (capital D/R)**. Local dev on **port 3000** (`PORT` env, default 3000); prod gunicorn on **127.0.0.1:8002**.
+- **Deployment kit = `drawreportDeploy/`** (provision.sh / deploy.sh / restart.sh / systemd units / nginx vhost / README). Copy to server `/var/www/drawreportDeploy`, run as root. See `DEPLOY.md`. `.gitattributes` forces LF on `*.sh/*.service/*.conf`.
+- **DNS:** owner manages A records at the **registrar** (drawreport.com + www → server IP), **no Cloudflare** (or grey-cloud only — orange proxy breaks certbot + crawlers). TLS via `certbot --nginx`.
+
+**Run locally:** `venv\Scripts\python.exe run.py` (web :3000) + `venv\Scripts\python.exe worker.py`. Admin at `/admin/login` (pass = `ADMIN_PASS`).
+
+**Owner still to do before public launch:** DNS + `provision.sh` + `certbot`; in server `.env` set `PUBLIC_BASE_URL=https://drawreport.com` + strong `ADMIN_PASS`; add `RESEND_API_KEY`+`MAIL_BACKEND=resend`, `PAYPAL_*`+`PAYMENT_BACKEND=paypal`, `GA_MEASUREMENT_ID`; review DRAFT copy (landing/blog/legal) + legal with counsel; drop real logo art in `data/Images/` + run `build_logos.py` (placeholders ship; hero already built from owner art).
+
+**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` · plan `development-plan.md`.
+
+---
+
 ## What this is
 DrawReport: a parent uploads 1–3 of their child's drawings + a little context, pays, and receives a
 PDF report about the child's development — strengths, growth areas, and simple at-home activities —
@@ -13,7 +32,9 @@ based on what is visibly in the drawing and on the developmental stages of child
 **Educational observation, NOT psychological or medical diagnosis.** English first, architected
 multi-language from day one (see `i18n-architecture.md`).
 
-Pipeline: **Gemini 2.5 Pro → JSON (pydantic-validated) → Jinja2 → WeasyPrint PDF.**
+Pipeline: **LLM (Claude Sonnet 4.6, via the `pipeline/llm.py` provider abstraction) → JSON
+(pydantic-validated) → Jinja2 → WeasyPrint PDF.** (Originally specified as Gemini; switched to
+Anthropic — see AS-BUILT STATUS above.)
 
 ## ⛏️ THE REFERENCE PROJECT — read-only, copy don't invent
 A complete, working, production sibling site exists at **`C:\projects\GolosRisunka`** (Russian:
@@ -87,11 +108,11 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
 - Server: **root@5.78.181.152** (Hetzner). It already runs **cosmyday-api** (Python) at
   `/var/www/cosmyday-api` on **port 8001** (api.cosmyday.com). DrawReport must run **in parallel,
   isolated**:
-  - Code in **`/var/www/drawreport`**; app on its **own port (8002)** (gunicorn bind 127.0.0.1:8002).
+  - Code in **`/var/www/DrawReport`** (capital); app on its **own port (8002)** (gunicorn bind 127.0.0.1:8002). Deploy kit in `drawreportDeploy/` (copy to `/var/www/drawreportDeploy`).
   - Own systemd units: **`drawreport-web`**, **`drawreport-worker`** (do not touch cosmyday units).
   - Own **nginx vhost** for `drawreport.com` (+ www); **DNS-only + Let's Encrypt** cert (certbot nginx
     plugin) for drawreport.com only. Do not modify cosmyday's vhost/cert.
-  - Own **SQLite** db under `/var/www/drawreport/data/`.
+  - Own **SQLite** db under `/var/www/DrawReport/data/`.
   - `deploy.sh` (git pull + deps + restart the two drawreport units) and `restart.sh` in repo root,
     mirroring Golos. Model them on Golos `deploy.sh` but scoped to drawreport units/paths.
 - **System deps:** WeasyPrint needs Pango/Cairo/GDK-Pixbuf — `apt install` them on the box (document
