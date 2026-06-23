@@ -81,6 +81,38 @@ def get_products() -> dict:
         _products_cache = (mtime, json.loads(_PRODUCTS_FILE.read_text(encoding="utf-8")))
     return _products_cache[1]
 
+
+# Admin-controlled blocks appended to the END of a report (upsell by drawing count +
+# disclaimers + a free block). Source: config/report_texts.json, edited at
+# /admin/report-texts. The job picks the upsell/disclaimer by drawing count; empty = hidden.
+_REPORT_TEXTS_FILE = BASE_DIR / "config" / "report_texts.json"
+_report_texts_cache: "tuple[float, dict] | None" = None
+# Safe defaults so a render never crashes if the file is missing/corrupt.
+_REPORT_TEXTS_DEFAULT = {
+    "upsell": {"1": "", "2": "", "3": ""},
+    "disclaimer_main": "",
+    "disclaimer_by_count": {"1": "", "2": "", "3": ""},
+    "free_text": "",
+}
+
+
+def get_report_texts() -> dict:
+    """Read report_texts.json with an mtime cache — admin edits visible without restart.
+    Returns safe empty defaults if the file is missing/corrupt (a report still renders)."""
+    global _report_texts_cache
+    import json
+    try:
+        mtime = _REPORT_TEXTS_FILE.stat().st_mtime
+    except OSError:
+        return dict(_REPORT_TEXTS_DEFAULT)
+    if _report_texts_cache is None or _report_texts_cache[0] != mtime:
+        try:
+            data = json.loads(_REPORT_TEXTS_FILE.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return dict(_REPORT_TEXTS_DEFAULT)
+        _report_texts_cache = (mtime, data)
+    return _report_texts_cache[1]
+
 # --- Site ---
 SITE_NAME = "DrawReport"
 SITE_DOMAIN = os.getenv("SITE_DOMAIN", "drawreport.com")

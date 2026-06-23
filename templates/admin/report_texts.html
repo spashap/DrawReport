@@ -1,0 +1,48 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Report texts{% endblock %}
+{% block content %}
+<h1>Texts at the end of the report</h1>
+
+{% if saved == "ok" %}<div class="msg">Saved — the new texts appear on the next report generation/regeneration (no restart needed).</div>{% endif %}
+
+<p class="hint">Source: <code>config/report_texts.json</code>. The pipeline appends these blocks to the
+<strong>end of the report</strong> at generation time. Which upsell/disclaimer add-on to show is chosen
+automatically by the number of drawings in the order (1 / 2 / 3). <strong>Empty = block not rendered.</strong>
+This is REPORT content (PDF/HTML), not the landing page.</p>
+
+<form method="post" action="{{ url_for('admin.report_texts_save') }}">
+
+  <h3>Upsell "clear the fog" — by drawing count</h3>
+  <p class="hint">From a single drawing you can't separate a stable trait from one day's mood — an honest
+  basis for the upsell. The text is appended for orders with the matching number of drawings.</p>
+  <div class="card card--pad" style="margin-bottom:14px">
+    <div class="form-row"><label>Order with 1 drawing</label>
+      <textarea name="upsell_1" rows="4">{{ (texts.upsell or {}).get("1", "") }}</textarea></div>
+    <div class="form-row"><label>Order with 2 drawings</label>
+      <textarea name="upsell_2" rows="4">{{ (texts.upsell or {}).get("2", "") }}</textarea></div>
+    <div class="form-row"><label>Order with 3 drawings</label>
+      <textarea name="upsell_3" rows="4">{{ (texts.upsell or {}).get("3", "") }}</textarea></div>
+  </div>
+
+  <h3>Disclaimer at the end of the report</h3>
+  <div class="card card--pad" style="margin-bottom:14px">
+    <div class="form-row"><label>Main disclaimer (all reports)</label>
+      <textarea name="disclaimer_main" rows="5">{{ texts.disclaimer_main or "" }}</textarea></div>
+    <div class="form-row"><label>Add-on for 1 drawing <span class="hint">(appended to the main; e.g. "one moment, not the full picture")</span></label>
+      <textarea name="disclaimer_by_count_1" rows="3">{{ (texts.disclaimer_by_count or {}).get("1", "") }}</textarea></div>
+    <div class="form-row"><label>Add-on for 2 drawings</label>
+      <textarea name="disclaimer_by_count_2" rows="3">{{ (texts.disclaimer_by_count or {}).get("2", "") }}</textarea></div>
+    <div class="form-row"><label>Add-on for 3 drawings</label>
+      <textarea name="disclaimer_by_count_3" rows="3">{{ (texts.disclaimer_by_count or {}).get("3", "") }}</textarea></div>
+  </div>
+
+  <h3>Free text block</h3>
+  <p class="hint">An arbitrary block at the very end of the report — editable without code. Empty = not rendered.</p>
+  <div class="card card--pad" style="margin-bottom:14px">
+    <div class="form-row"><label>Free block</label>
+      <textarea name="free_text" rows="5">{{ texts.free_text or "" }}</textarea></div>
+  </div>
+
+  <button class="btn btn--primary" type="submit">Save texts</button>
+</form>
+{% endblock %}

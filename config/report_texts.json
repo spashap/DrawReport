@@ -1,0 +1,14 @@
+{
+  "upsell": {
+    "1": "This portrait is built from a single drawing - an honest snapshot of one moment. From one drawing it isn't possible to tell a stable trait from a particular day's mood. If you'd like to see what repeats from drawing to drawing (and what was a one-off), send 2-3 works from different days - a series makes the picture far clearer than a single sheet.",
+    "2": "This portrait is built from two drawings - already enough to see what repeats and what was a one-off. A third work from another day would make the picture of stable traits even more reliable.",
+    "3": ""
+  },
+  "disclaimer_main": "This report is an educational observation of what's visible in the drawing and a warm portrait of the child through their work. It is not a medical or psychological diagnosis: anything about mood, character, or inner world is a suggestion grounded in the developmental and art literature, best explored in conversation with the child. If you are seriously concerned about your child's wellbeing, behavior, or development, this report does not replace a consultation with a qualified professional.",
+  "disclaimer_by_count": {
+    "1": " Remember: this is a reading of one drawing - one moment, not the full picture of a child's development.",
+    "2": "",
+    "3": ""
+  },
+  "free_text": ""
+}

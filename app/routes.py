@@ -15,7 +15,7 @@ from flask_babel import gettext as _
 from app.auth import (SESSION_COOKIE, AuthError, current_customer, destroy_session,
                       request_code, verify_code)
 from app.blog import get_posts
-from app.content import get_faq, get_testimonials
+from app.content import get_faq, get_scenarios
 from app.db import get_db
 from app.orders import EMAIL_RE, FormError, validate_and_create_order
 from app.payments import create_payment, mark_paid
@@ -121,7 +121,7 @@ def index():
         products=products,
         samples=get_samples(locale),
         faq=get_faq(locale),
-        testimonials=get_testimonials(locale),
+        scenarios=get_scenarios(locale),
         blog_posts=get_posts(locale),
         min_price=min_price,
         inline_css=_inline_css(),

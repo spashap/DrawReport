@@ -24,8 +24,8 @@ def main() -> None:
     print("schema: valid |", len(report.dimensions), "dimensions")
 
     drawings = [{
-        "src": drawing_to_data_uri(samples / "sample_drawing.svg"),
-        "caption": '"Tree", Emma, age 7',
+        "src": drawing_to_data_uri(samples / "sample_drawing.png"),
+        "caption": '"My house", Liam, age 6',
     }]
 
     out_dir = settings.REPORTS_DIR / "sample"

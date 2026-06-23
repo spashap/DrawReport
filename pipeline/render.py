@@ -29,12 +29,13 @@ _env = Environment(loader=FileSystemLoader(settings.BASE_DIR / "templates"),
 REPORT_STRINGS = {
     "en": {
         "report_title": "Report",
-        "cover_h1": "A developmental report<br>from your child's drawing",
+        "cover_h1": "Understanding your child<br>through their drawing",
         "drawing_alt": "Drawing",
-        "cover_disclaimer": ("This report is an educational observation of the skills visible "
-                             "in the drawing. It is not a medical or psychological diagnosis."),
+        "cover_disclaimer": ("This report is a careful, educational observation of what your child's "
+                             "drawing expresses. It is not a medical or psychological diagnosis."),
         "h_context": "Details & context",
         "h_intro": "Introduction",
+        "h_about_child": "About your child",
         "h_scores": "Summary scores",
         "callout_h": "How to read the scores",
         "callout_p": ("Scores describe a particular drawing or set of drawings, not the child "
@@ -44,10 +45,15 @@ REPORT_STRINGS = {
                       "end of the PDF."),
         "h_dimensions": "Direction by direction",
         "activities_label": "How to develop this:",
-        "h_recommendations": "Recommendations for parents",
-        "h_directions": "Possible directions to explore",
-        "directions_note": ("These ideas are for interest and inspiration, not a prediction of "
-                            "the child's abilities."),
+        "h_understanding": "Understanding & connecting with your child",
+        "h_art": "Creative activities to try",
+        "h_specialists": "If you'd like to go deeper",
+        "specialists_note": ("Optional resources, not a sign that anything is wrong — just where to "
+                             "look if you'd like to explore a direction further."),
+        "h_directions": "Where to grow your child's strengths",
+        "directions_note": ("Not a prediction of who your child will become — a hint of which "
+                            "directions may be joyful to grow in. Any fields named are examples, "
+                            "not a forecast."),
         "h_conclusion": "In closing",
         "h_appendix": "How to read the scores in this report",
         "appendix_intro": ("Scores help you quickly see which skills came through most clearly in "
@@ -58,7 +64,7 @@ REPORT_STRINGS = {
         "appendix_items": [
             ("The score is about the drawing, not the child as a whole.",
              "For example, if a drawing shows a single tree with no people or characters, the "
-             "“story & interaction” direction may come through less. That doesn't mean "
+             "“story & characters” direction may come through less. That doesn't mean "
              "the child struggles socially."),
             ("An average score doesn't mean a problem.",
              "It can mean the skill was only partly shown, or that the chosen subject gave less "
@@ -102,9 +108,13 @@ def drawing_to_data_uri(path: Path) -> str:
 
 def render_html(report: Report, drawings: list[dict], generated_date: str,
                 locale: str = settings.DEFAULT_LOCALE,
-                static_prefix: str = "/static", site_header: bool = False) -> str:
+                static_prefix: str = "/static", site_header: bool = False,
+                upsell_text: str = "", disclaimer_text: str = "",
+                free_text: str = "") -> str:
     """drawings: [{"src": data-URI, "caption": str}, ...]
-    site_header=True - the site header (hosted variant only; absent in the PDF)."""
+    site_header=True - the site header (hosted variant only; absent in the PDF).
+    upsell_text / disclaimer_text / free_text - admin-controlled blocks at the END of
+    the report (the caller picks the upsell by drawing count); empty = not rendered."""
     return _env.get_template("report.html").render(
         report=report,
         drawings=drawings,
@@ -115,6 +125,9 @@ def render_html(report: Report, drawings: list[dict], generated_date: str,
         site_domain=settings.SITE_DOMAIN,
         static=static_prefix,
         site_header=site_header,
+        upsell_text=upsell_text,
+        disclaimer_text=disclaimer_text,
+        free_text=free_text,
     )
 
 
@@ -128,21 +141,30 @@ def render_pdf(html_for_print: str, out_path: Path) -> None:
 
 def render_report_files(report: Report, drawings: list[dict], generated_date: str,
                         out_dir: Path, locale: str = settings.DEFAULT_LOCALE,
-                        basename: str = "report") -> tuple[Path, Path]:
+                        basename: str = "report",
+                        upsell_text: str = "", disclaimer_text: str = "",
+                        free_text: str = "") -> tuple[Path, Path]:
     """Save both variants. Returns (html_path, pdf_path).
 
     The renderer runs outside Flask (worker/CLI), so the saved HTML is rendered
     WITHOUT the site header (no url_for/gettext needed). The navigable hosted page
     (/r/<token>, /sample/<token>) is rendered by the Flask route with the header.
+
+    upsell_text / disclaimer_text / free_text - admin-controlled end-of-report blocks
+    (empty = not rendered); threaded into both variants (hosted + print).
     """
     out_dir.mkdir(parents=True, exist_ok=True)
 
     html_hosted = render_html(report, drawings, generated_date, locale,
-                              static_prefix="/static", site_header=False)
+                              static_prefix="/static", site_header=False,
+                              upsell_text=upsell_text, disclaimer_text=disclaimer_text,
+                              free_text=free_text)
     html_path = out_dir / f"{basename}.html"
     html_path.write_text(html_hosted, encoding="utf-8")
 
-    html_print = render_html(report, drawings, generated_date, locale, static_prefix="static")
+    html_print = render_html(report, drawings, generated_date, locale, static_prefix="static",
+                             upsell_text=upsell_text, disclaimer_text=disclaimer_text,
+                             free_text=free_text)
     pdf_path = out_dir / f"{basename}.pdf"
     render_pdf(html_print, pdf_path)
 

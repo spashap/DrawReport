@@ -3,6 +3,15 @@
 Exactly what to take from `C:\projects\GolosRisunka` (READ-ONLY) and how. Three buckets:
 **COPY verbatim**, **ADAPT**, **REPLACE**. Plus what the **owner provides**.
 
+> **⚠️ The report pipeline now follows PHILOSOPHY 2.3 (prompt v4.0) — see
+> `projectSpec/HANDOFF-english-philosophy-2.3.md`.** The RU reference already implements it
+> (`pipeline/prompt.py` PROMPT_VERSION 4.0, `schema.py` with `about_child` + the 7 new directions +
+> `understanding_/art_recommendations` + `specialists` + `development_directions`, `lint.py` frame-check,
+> `config/report_texts.json`). **Mirror the CURRENT Golos structure**, then apply the **English
+> recalibration**: zone-3 (psychological) dialed DOWN, safe frame airtight, wider HARD bans, "educational
+> observation, not diagnosis" ironclad. DrawReport's LLM is Anthropic Claude via `pipeline/llm.py` — the
+> prompt/schema/lint concepts port unchanged; only the provider call differs.
+
 ## COPY verbatim (then only de-Russify comments if needed)
 | Golos path | Notes |
 |---|---|
@@ -26,8 +35,10 @@ Exactly what to take from `C:\projects\GolosRisunka` (READ-ONLY) and how. Three 
 ## ADAPT (copy structure, change content/logic)
 | Area | From Golos | Change for DrawReport |
 |---|---|---|
-| **Prompt** | `pipeline/prompt.py` (Russian) | English prompt, **per-locale** (`PROMPTS["en"]`); faithful adaptation of §7.4 philosophy + 7-direction taxonomy in English. NOT a literal translation. |
-| **Linter** | `pipeline/lint.py` | English banned-phrasings + repair instruction, per-locale. |
+| **Prompt** | `pipeline/prompt.py` v4.0 (Russian) | English prompt, **per-locale** (`PROMPTS["en"]`); adopt **philosophy 2.3** (portrait of the child + 4-condition safe frame + 7 new directions). NOT a literal translation; **dial zone-3 DOWN for US** (handoff §2). |
+| **Schema** | `pipeline/schema.py` v4.0 | Mirror v4.0 fields: `about_child`, the 7 directions, `understanding_/art_recommendations`, `specialists`, `development_directions`, refusal branch. Language-neutral keys. |
+| **Linter** | `pipeline/lint.py` (frame-check) | English HARD-ban patterns (wider for US), hedge list, attribution names (Piaget/Lowenfeld/Vygotsky/Machover…), artifact-noun list; frame-check only on interpretation fields; repair = "add frame, don't delete meaning". |
+| **End-of-report texts** | `config/report_texts.json` | Mirror: admin-editable upsell (per 1/2/3 drawings) + disclaimer + free block, pass-through. |
 | **All UI templates** | hardcoded Russian | English via Flask-Babel catalog; no hardcoded strings (see `i18n-architecture.md`). |
 | **Products** | `config/products.json` | USD prices; English `title/subtitle/features`; per-locale text. |
 | **Landing copy** | `templates/landing.html` RU copy | English DRAFT per `positioning-en.md` (adapt, mark for owner review). |

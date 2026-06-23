@@ -126,3 +126,35 @@ colored via palette `var(--*)`; default fallback for new posts).
   `b.count(b'\r')`, not grep.)
 - **DNS at the registrar, no Cloudflare** (or grey-cloud only). The orange proxy breaks `certbot`
   HTTP-01 and rewrites robots.txt / 403s crawlers (the exact Golos pitfall). TLS = `certbot --nginx`.
+
+## #16 · Admin-controlled end-of-report texts (upsell/disclaimer by drawing count)
+Problem: the report's closing upsell + disclaimers must be owner-editable without a deploy, and the
+upsell/disclaimer must vary by how many drawings the order had. Solution (mirror Golos): a single
+`config/report_texts.json` read via `settings.get_report_texts()` (mtime cache → edits live without a
+restart; safe empty defaults if the file is missing/corrupt). The worker (`app/jobs.py`) selects by
+`min(len(rows),3)`: `upsell[n]`, `disclaimer_main + disclaimer_by_count[n]`, `free_text`, and passes
+them into `render_report_files(...)`. The template gates each block (`{% if %}`) so empty = nothing
+rendered. Edited at `/admin/report-texts` (pass-through write, no business logic in the route).
+
+## #17 · Regenerate samples after a schema change — never hand-edit old JSON
+Problem: a schema/philosophy change makes the shipped sample JSON invalid (the old `sample_report.json`
+had no `about_child`, used `recommendations` not the split fields, and old dimension keys → fails the
+v4.0 validator). Solution: regenerate fresh from a real drawing via
+`scripts/generate_report.py data/test_drawing.png --context CTX.txt --common COMMON.txt -o OUTDIR`
+(needs `ANTHROPIC_API_KEY`), QA the output (safe frame on every zone-3 sentence, portrait `about_child`,
+varied non-flat scores, a non-art specialist only when warranted), then copy `report.json` →
+`pipeline/samples/sample_report.json` and the drawing → `pipeline/samples/`, and point `_SAMPLE_DEFS` +
+`scripts/render_sample.py` at it. Landing sample cards lead with the `about_child` portrait quote
+(`app/samples.py` falls back to `conclusion` for old JSON).
+
+## #18 · Verify "no fallback fonts" by decompressing the PDF, not a plaintext grep
+WeasyPrint packs font objects into FlateDecode streams, so `grep /BaseFont` on the raw PDF finds
+nothing. To confirm only the self-hosted subsets are embedded: zlib-decompress each `stream…endstream`
+and regex `/BaseFont /([A-Za-z0-9+\-]+)`. A clean report shows only `*+Caveat-*`, `*+Inter*`,
+`*+Rubik-*` (random subset prefixes) and no Segoe/Verdana/Arial/Times/DejaVu/Calibri.
+
+## #19 · Anthropic call needs an explicit per-request timeout
+The SDK `messages.create(...)` has no short default wall-clock cap; a hung request can wedge the
+worker. Pass `timeout=180` on every call in `pipeline/anthropic_llm.py` (both the image and the
+text-repair calls). The orchestrator (`pipeline/llm.py`) already treats any exception as a failed
+attempt with backoff → retry → model fallback, so a timeout fails cleanly.

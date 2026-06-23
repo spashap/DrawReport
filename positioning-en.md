@@ -4,6 +4,14 @@
 finished product. Do NOT literal-translate the Russian; adapt to natural US English following the rules
 below. Mark all visible marketing copy as DRAFT.**
 
+> **⚠️ Governed by `projectSpec/HANDOFF-english-philosophy-2.3.md` (product pivot).** The page now sells
+> "understand your CHILD through their drawing" (personality-led), not "drawing-skill scores". The hero
+> stays; "what you learn" leads with personality; the old "we only read skills / not the child" block is
+> replaced by **anti-fortune-teller** positioning. US calibration (owner decision): KEEP the depth —
+> safety comes from the safe frame + prominent disclaimers that interpretation is a literature-grounded
+> **suggestion/hypothesis, not a recommendation or diagnosis** (not from dialing zone-3 down).
+> "Educational observation, not a diagnosis" stays ironclad. The rules below match this.
+
 ## The locked Russian message (intent reference — what works)
 The sibling site converged on this hero after heavy iteration. Mirror the *structure and logic*, not the words:
 - Eyebrow (brand «voice» line, handwriting): «У каждого рисунка есть голос»
@@ -22,39 +30,59 @@ The sibling site converged on this hero after heavy iteration. Mirror the *struc
    The reassurance matters — put it lower (the "No myths" section), framed positively.
 4. **Don't limit the audience.** No "little kids / toddlers" — it works for any age (a 9-year-old still
    reveals themselves on the page).
-5. **What you get = a clear trio:** their **strengths** → **what to develop** (growth areas) → **how to
-   support at home**. Deliver all three (the page section that promises "what you'll learn" must show all three).
-6. **Credibility, honestly:** signal "serious, not myths" with **"grounded in the developmental stages of
-   children's art"** (true to the product). Do NOT claim "scientific analysis" — it overclaims and
-   collides with the not-a-diagnosis position.
-7. **Honesty (§7.4) is non-negotiable:** the "voice / what your child expresses" is pointed at **who the
-   child is and how they're developing (skills, interests)**, never at decoding hidden feelings or
-   psychology. Promising emotional mind-reading = wrong buyers, refunds, broken trust.
+5. **What you get = understand your CHILD (personality-led):** the worlds & themes they're drawn to,
+   their character/approach seen in their choices, the stories & heroes that matter, (lightly, framed)
+   the mood in their drawings, and **how to understand & support them at home**. Drawing skills come
+   **last**, as support. (This is the philosophy-2.3 reversal — the old "strengths/develop/support of
+   *drawing*" trio was the core complaint that drove the pivot.)
+6. **Credibility = "careful & methodical, not fortune-tellers."** Signal seriousness by naming real
+   developmental method (Piaget, Lowenfeld, Vygotsky; "developmental stages of children's art"). This is
+   the anti-esoteric move. Still do NOT claim clinical/diagnostic analysis of a child — "we reveal what
+   the child *expresses*", never "we detect hidden problems."
+7. **Honesty is non-negotiable (handoff §4–5):** we read the child as a *person* (character, interests,
+   themes) and may touch mood/emotion **only inside the safe frame** (attribution + hypothesis + visible
+   detail + "ask the child"). NEVER: bare diagnosis, hidden-trauma claims, "fix/cure", colour=emotion
+   fortune-telling, fate-as-fact talent predictions. Keep the depth (owner decision) — the safe frame +
+   "suggestion/hypothesis grounded in the literature, not a recommendation or diagnosis" disclaimers are
+   what make it safe, not suppressing zone-3.
 8. **Cold-traffic test:** a first-time visitor who reads only the hero must understand *what you do* and
    *why it's for them.* That was the original failure the redesign fixed — don't regress it.
 
 ## First English DRAFT (starting point — owner will refine)
 - Eyebrow: **Every drawing has a voice**
 - H1: **Children often say in their drawings what they can't yet put into words.**
-- Lead: **Understand what your child is expressing:** we'll show you their strengths, what to nurture,
-  and how to support them at home — grounded in the developmental stages of children's art.
+- Lead: **Understand what your child is expressing:** the worlds they're drawn to, what their drawings
+  reveal about who they are, and how to understand and support them at home — read carefully, by the
+  developmental stages of children's art (not fortune-telling).
 - Primary CTA: **Get the report — $<price>**
 - CTA "what's inside" popup (secondary, on hover/tap): PDF by email within the hour · 1–3 drawings ·
   private account.
 
-## Section intent (adapt Golos sections to English, same order/logic)
-- **What you'll learn** — deliver the trio (strengths / growth areas / at-home support) + "we help you
-  see more than a house and a sun."
-- **How the conclusion is built** — visible detail → what it shows → what to try at home (this section
-  *is* the proof of "we read the drawing"; keep it, it carries the whole concept).
-- **Examples** — sample reports (American names), as proof.
-- **No myths** — the honest/trust block; here is where "not a diagnosis, no hidden-meaning color
-  symbolism, we look at visible skills" lives — positively framed.
+## Section intent (philosophy 2.3 — adapt Golos v4.0 sections to English)
+- **What you'll learn** — **personality-led**: what excites the child / the worlds & themes they choose,
+  their character and approach, the stories & heroes that matter, (lightly, framed) the mood in their
+  drawings, and how to understand & support them. **Skills last.** + "we help you see more than a house
+  and a sun."
+- **How the conclusion is built** — a **personality** example: visible detail → gentle hypothesis →
+  what to ask the child (NOT a skills example). This section proves "we read the child, carefully."
+- **Illustrative scenarios** (skeptical-buyer trust block): 3–4 concrete "for example, a situation like
+  this…" cases — parent worry → what the report reveals → the tip it gives. **Explicitly examples,
+  never real clients.** No fabricated testimonials.
+- **Examples** — sample report cards lead with the **drawing (big) + the portrait quote (`about_child`)**,
+  small score bars — the child, not skill scores. American names.
+- **Anti-fortune-teller** (replaces the old "we don't read the child / only skills" block, which
+  contradicted the hero): contrast THEM vs US — **US = careful, serious, by methods (Piaget, Lowenfeld,
+  Vygotsky); THEM = myths, "black = depression", fortune-telling, diagnosing from one photo, scaring with
+  hidden traumas.** Disclaimers as **positive identity**: "a tool to understand the child through their
+  drawing — a careful observation and a hint, not a diagnosis and not fortune-telling." Keep "if
+  seriously worried → see a professional." Word "diagnosis" only in the soft-negative, never the promise.
 - **How it works** — 3 steps.
 - **Reviews** — "what parents unexpectedly noticed about their kids" (placeholder until real ones); the
   ideal review tells the "I misread it → they explained it → now I get my kid" story.
-- **Why trust us** — money-back, drawings stay private, observations tied to visible detail.
-- **Pricing / FAQ / Blog / Footer** — adapt.
+- **Why trust us** — money-back, drawings stay private, observations tied to visible detail + "ask the child."
+- **Pricing / FAQ / Blog / Footer** — adapt; keep SEO keywords, blend the emotional message in.
+- **Verbs:** allowed — reveal, show, understand, discern, help-understand, support, suggest. Banned —
+  diagnose, fix/cure, predict-as-fact.
 
 ## Brand voice
 Warm, calm, parent-to-parent, plain-spoken. Confident but humble. Not clinical, not cutesy, not hype.

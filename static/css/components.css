@@ -492,6 +492,12 @@ html.dk .btn { color: #241A12; }
 .compare-col--yes li::before { content: "✓"; color: var(--accent2); }
 @media (max-width: 880px) { .compare { grid-template-columns: 1fr; } }
 
+/* --- Illustrative scenarios (examples, never real clients) --- */
+.case-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.case p { color: var(--ink); font-size: var(--fs-body); line-height: 1.5; margin: 0; }
+.case strong { color: var(--accent2); font-weight: 700; }
+@media (max-width: 880px) { .case-list { grid-template-columns: 1fr; } }
+
 /* --- Мелкая поясняющая заметка под блоком (оценки у примеров) --- */
 .scores-note { max-width: 760px; margin: 6px auto 0; color: var(--soft);
                font-size: 13.5px; line-height: 1.5; text-align: center; }

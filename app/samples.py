@@ -30,9 +30,9 @@ def _first_sentence(text: str, max_len: int = 220) -> str:
 # the first screen. report_path is relative to BASE_DIR.
 _SAMPLE_DEFS = {
     "en": [
-        dict(token="sample-emma", report_path="pipeline/samples/sample_report.json",
-             drawing="pipeline/samples/sample_drawing.svg",
-             caption='"Tree", Emma, age 7', hero=True, n_drawings=1),
+        dict(token="sample-liam", report_path="pipeline/samples/sample_report.json",
+             drawing="pipeline/samples/sample_drawing.png",
+             caption='"My house", Liam, age 6', hero=True, n_drawings=1),
     ],
 }
 
@@ -84,7 +84,9 @@ def _load(locale: str) -> list[Sample]:
         data = json.loads(rjson.read_text(encoding="utf-8"))
         dims = sorted(data["dimensions"], key=lambda d: -d["score"])
         first_name = data["child"]["name"].split()[0]
-        quote = _first_sentence(data["conclusion"].strip())
+        # Lead the card with the portrait (about_child); fall back to conclusion for old JSON.
+        portrait = (data.get("about_child") or data.get("conclusion") or "").strip()
+        quote = _first_sentence(portrait)
         thumb_url, tw, th = _thumb(settings.BASE_DIR / sd["drawing"], sd["token"])
         samples.append(Sample(
             token=sd["token"], locale=locale,

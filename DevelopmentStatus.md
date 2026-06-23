@@ -237,3 +237,36 @@ Post-build work completed this session (after M0–M9):
 
 **To resume:** read CLAUDE.md (AS-BUILT section) + this file + UseCasesData.md. Run locally with
 `run.py`/`worker.py`. To deploy, follow `drawreportDeploy/README.md`.
+
+## Session — 2026-06-24 (V0.017) — Philosophy 2.3 pivot finished (TASK T1–T5)
+
+Engine (prompt `en-4.0` / lint frame-check / schema v4.0 / render sections) was already pivoted by the
+prior session; this session completed everything around it per `projectSpec/TASK-apply-philosophy-2.3.md`.
+
+- **T1 — admin-controlled end-of-report texts** (mirror Golos). New `config/report_texts.json`
+  (upsell by drawing count + `disclaimer_main` + per-count add-on + `free_text`);
+  `settings.get_report_texts()` (mtime cache, safe defaults); `render_html`/`render_report_files`
+  gained `upsell_text`/`disclaimer_text`/`free_text`; `templates/report.html` renders the gated
+  suffix blocks (`.r-upsell` / `.r-admin-note`) before the footer; `app/jobs.py` picks the
+  upsell/disclaimer by `min(n_drawings,3)`; admin editor `/admin/report-texts` (+ `…/save`, sidebar
+  nav, `templates/admin/report_texts.html`). Verified: save → 302 → next render shows it, no restart.
+- **T2 — landing rework to the pivot** (`templates/landing.html`, `app/content.py`, `app/routes.py`,
+  `app/samples.py`). "What you'll learn" now personality-led (skills last); "How the conclusion is
+  built" is a personality example (visible detail → gentle hypothesis → what to ask the child);
+  "No myths" reframed to careful, literature-grounded reading by real methods (Piaget/Lowenfeld/
+  Vygotsky) + a positive-identity disclaimer; **fabricated testimonials removed** and replaced with an
+  **illustrative-scenarios** case-list (`get_scenarios`, `.case` CSS mirrored from Golos); sample cards
+  now lead with the `about_child` portrait quote. Copy is DRAFT.
+- **T3 — sample regenerated** with the live Anthropic pipeline (en-4.0, 1 attempt, 1 repair, 0 lint
+  hits left). American name **Liam C.**, house-scene drawing; `pipeline/samples/sample_report.json` +
+  `sample_drawing.png` (old `sample_drawing.svg` removed); `_SAMPLE_DEFS` token `sample-liam`. QA:
+  safe frame on every zone-3 sentence, portrait `about_child`, varied scores (8/7/8/7/6/7/6).
+- **T4 — operational guard:** `pipeline/anthropic_llm.py` now passes `timeout=180` on both
+  `messages.create` calls (hung call → orchestrator retry/fallback, not a wedged worker).
+- **T5 — verified:** full report PDF shows About-your-child + both recommendation sections +
+  specialists + development directions + the admin suffix blocks; **only self-hosted fonts embedded
+  (Caveat/Inter/Rubik), zero fallback**; linter = 0 false positives on the framed report, 3 hits on an
+  injected bare diagnosis. Bumped VERSION 0.016 → 0.017.
+
+**To resume:** all of T1–T5 complete + committed (not pushed). Owner go-live steps unchanged
+(see CLAUDE.md AS-BUILT). New admin screen: `/admin/report-texts`.

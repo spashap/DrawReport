@@ -89,11 +89,24 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
   photo + frosted card. Copy `tokens.css`/`components.css`/`brand-book.md` from Golos verbatim, then
   only change the logo + any RU-specific copy.
 - **NO hardcoded UI text** — i18n catalog only (this is DrawReport's added rule on top of Golos).
-- **Prompt philosophy (§7.4):** NO Barnum statements, NO reading emotions/inner states from a drawing;
-  every observation tied to a visible detail; skills-language not trait-language ("works confidently at
-  large scale," NOT "isn't afraid of the page"). For "the LLM must not say X": prompt + a **programmatic
-  linter + repair call**, not prompt alone. Copy Golos `pipeline/` and adapt the prompt to English
-  (faithful adaptation of intent, not literal translation).
+- **Prompt philosophy — PHILOSOPHY 2.3 "PORTRAIT OF THE CHILD AS A PERSON" (prompt v4.0).**
+  ⚠️ This OVERRIDES the old "skills-only / no emotion-reading" rule (the RU site pivoted; the build did
+  NOT follow this yet — see below). Source of truth: **`projectSpec/HANDOFF-english-philosophy-2.3.md`**.
+  The report reads the CHILD (character, themes, inner world, mood, interests) THROUGH the drawing;
+  drawing skills are SUPPORT, not the point. Emotional/psychological interpretation (zone 3) is ALLOWED
+  but ONLY inside the **4-condition safe frame** (attribution to a real tradition/author + hypothesis
+  hedge + anchored to a visible detail + return-to-the-child "ask [name]…"). Always forbidden even with
+  the frame: bare diagnosis-as-fact, "fix/cure", hidden-trauma claims, colour/symbol fortune-telling,
+  command tone, fate-as-fact talent predictions, fake testimonials.
+  **ENGLISH CALIBRATION (OWNER DECISION — overrides handoff §2's "dial zone-3 down"):** KEEP the Russian
+  level of depth in English. Safety comes from (1) the airtight 4-condition safe frame AND (2) prominent
+  disclaimers that all interpretation is a **SUGGESTION / HYPOTHESIS grounded in the developmental & art
+  literature — never a recommendation, instruction, or diagnosis** — NOT from suppressing zone-3.
+  "Educational observation, not a diagnosis" stays ironclad; never state a child's state as fact; never
+  claim to detect hidden problems/traumas; wider HARD bans still apply. (prompt.py/lint.py already reflect this.)
+  For "the LLM must not say X": prompt + a **programmatic linter + repair call** (now a **frame-check** —
+  add the safe frame, don't delete meaning — not a blunt word-ban), not prompt alone. Mirror the RU v4.0
+  implementation (`pipeline/prompt.py` PROMPT_VERSION 4.0, `schema.py`, `lint.py`), adapt to English.
 - **Child gender** only from the explicit gender field. Report name format "First L." (last initial);
   landing shows first name only.
 - **Fonts self-hosted, own subsets**; `$` glyph required; after any font/report-CSS change verify the

@@ -34,6 +34,7 @@ SECTIONS = [
     ("admin.clients", "Clients"),
     ("admin.coupons", "Coupons"),
     ("admin.site_settings", "Site settings"),
+    ("admin.report_texts", "Report texts"),
     ("admin.emails", "Emails"),
 ]
 
@@ -498,6 +499,32 @@ def settings_products_save():
         return redirect(url_for("admin.site_settings", saved="err"))
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return redirect(url_for("admin.site_settings", saved="ok"))
+
+
+@bp_admin.get("/report-texts")
+def report_texts():
+    """Admin-controlled blocks at the END of a report (upsell by drawing count +
+    disclaimers + a free block). Pass-through to the pipeline via config/report_texts.json."""
+    _guard()
+    return _render("admin.report_texts", "admin/report_texts.html",
+                   texts=settings.get_report_texts(),
+                   saved=request.args.get("saved"))
+
+
+@bp_admin.post("/report-texts/save")
+def report_texts_save():
+    """Overwrite config/report_texts.json. Empty field = block not rendered in the report."""
+    _guard()
+    path = settings.BASE_DIR / "config" / "report_texts.json"
+    g = lambda k: request.form.get(k, "").strip()
+    data = {
+        "upsell": {n: g(f"upsell_{n}") for n in ("1", "2", "3")},
+        "disclaimer_main": g("disclaimer_main"),
+        "disclaimer_by_count": {n: g(f"disclaimer_by_count_{n}") for n in ("1", "2", "3")},
+        "free_text": g("free_text"),
+    }
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return redirect(url_for("admin.report_texts", saved="ok"))
 
 
 @bp_admin.get("/emails")

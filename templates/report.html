@@ -43,6 +43,14 @@
     <p>{{ report.introduction }}</p>
   </div>
 
+  <!-- About the child (the heart of the report) -->
+  {% if report.about_child %}
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_about_child }}</h2>
+    <div class="r-about">{{ report.about_child }}</div>
+  </div>
+  {% endif %}
+
   <!-- Summary scores -->
   <div class="r-section">
     <h2 class="r-h">{{ s.h_scores }}</h2>
@@ -84,13 +92,34 @@
     {% endfor %}
   </div>
 
-  <!-- Recommendations -->
-  {% if report.recommendations %}
+  <!-- Understanding & connecting with the child (half the value) -->
+  {% if report.understanding_recommendations %}
   <div class="r-section r-list">
-    <h2 class="r-h">{{ s.h_recommendations }}</h2>
+    <h2 class="r-h">{{ s.h_understanding }}</h2>
     <ul>
-      {% for r in report.recommendations %}<li>{{ r }}</li>{% endfor %}
+      {% for r in report.understanding_recommendations %}<li>{{ r }}</li>{% endfor %}
     </ul>
+  </div>
+  {% endif %}
+
+  <!-- Creative activities (the smaller other half) -->
+  {% if report.art_recommendations %}
+  <div class="r-section r-list">
+    <h2 class="r-h">{{ s.h_art }}</h2>
+    <ul>
+      {% for r in report.art_recommendations %}<li>{{ r }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Specialists as a resource (optional, never alarm) -->
+  {% if report.specialists %}
+  <div class="r-section">
+    <h2 class="r-h">{{ s.h_specialists }}</h2>
+    <p class="r-dd-note">{{ s.specialists_note }}</p>
+    {% for sp in report.specialists %}
+    <div class="r-dd"><span class="t">{{ sp.area }}.</span> {{ sp.reason }}</div>
+    {% endfor %}
   </div>
   {% endif %}
 
@@ -123,6 +152,23 @@
     </ul>
     <p>{{ s.appendix_outro }}</p>
   </div>
+
+  <!-- Admin-controlled end blocks (empty = not rendered): upsell -> disclaimer -> free -->
+  {% if upsell_text %}
+  <div class="r-section">
+    <div class="r-upsell">{{ upsell_text }}</div>
+  </div>
+  {% endif %}
+  {% if disclaimer_text %}
+  <div class="r-section">
+    <div class="r-admin-note">{{ disclaimer_text }}</div>
+  </div>
+  {% endif %}
+  {% if free_text %}
+  <div class="r-section">
+    <div class="r-admin-note">{{ free_text }}</div>
+  </div>
+  {% endif %}
 
   <div class="r-footer-disclaimer">
     {{ s.footer.format(site=site_name, domain=site_domain, date=generated_date) }}

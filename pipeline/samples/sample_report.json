@@ -1,108 +1,119 @@
 {
   "child": {
-    "name": "Emma R.",
-    "age_display": "7 years 8 months"
+    "name": "Liam C.",
+    "age_display": "6 years 2 months"
   },
-  "context_summary": "Drawn at home, free choice of subject, with markers. Emma's mom says she spent about 20 minutes on it and picked the subject herself - a tree.",
-  "introduction": "Between ages 7 and 9, children usually move from symbolic drawing toward more detailed, intentional work: steadier proportions, a planned composition, and real attention to detail (Lowenfeld & Brittain, Creative and Mental Growth, 1987). Emma's drawing - a tree with a sturdy trunk and a full, layered canopy - gives us a lot to look at: the lines are clear, the layout is balanced, and the color is laid down with care. What follows is a look across seven directions. One thing to hold onto as you read: this is an educational observation of the skills visible in the drawing itself, not an assessment of Emma's personality or state.",
+  "context_summary": "Liam drew this scene at home on a weekend, entirely by his own choice, using markers on plain paper. He worked for about 15 minutes and declined any help.",
+  "introduction": "This drawing shows a calm, sunny world: a figure stands on a wide green lawn, facing a house with a warm terracotta roof, a window, and a door; a round-topped tree stands to the right; and a bright yellow sun radiates from the upper left corner of a pale blue sky. Every element is placed deliberately, and the scene has a settled, inhabited feeling — like a small neighborhood Liam knows and trusts. What makes this drawing worth looking at carefully is not just what Liam drew, but how he chose to organize it: who gets to stand outside, what belongs together, what the day feels like. Approached as an educational observation — not a clinical assessment — this scene offers a window into the kind of world Liam is drawn to, the way he thinks about space and belonging, and some of the things that may matter to him right now.",
+  "about_child": "Liam comes across in this drawing as a child who is drawn to order, warmth, and the familiar. He chose a classic, reassuring world — sun, house, tree, person, grass — and arranged it with care: the figure on the left, the house in the center, the tree to the right, the sun watching over it all. That isn't random. At 6, children who organize a scene this deliberately — everything in its place, everything accounted for — are often, in the developmental tradition, children who find safety and pleasure in knowing how things fit together. The open door and the figure standing outside, facing the house, give the scene a sense of possibility: something is about to happen, or someone is about to go in. Liam did all of this on his own initiative, on a free weekend morning, without asking for input. That quiet self-direction, combined with his choice of a whole world rather than a single object, suggests a child who has clear ideas about what he wants to make and the confidence to see it through.",
   "dimensions": [
+    {
+      "key": "world_and_themes",
+      "title": "World & themes",
+      "score": 8,
+      "observation": "Liam chose to draw an entire small world — not just a house or just a person, but a scene with a human figure, a home, nature (the tree), weather (the sun), and ground (the grass). At 6 years 2 months, drawing a composed scene with multiple interacting elements rather than a single isolated subject is notably purposeful. The choice of home, outdoor space, and a person outside the door is one of the most common and meaningful themes in early childhood drawing; in the developmental tradition associated with Lowenfeld and Brittain, the house-person-tree scene at this age often reflects a child's interest in where they belong and how people and places connect. The sun placed large and active in the corner adds to the sense that this is a complete, livable world, not just a set of shapes. You might ask Liam, 'Who is the person standing outside? Where are they going?' — the answer will likely tell you more than the drawing itself.",
+      "research_note": "Lowenfeld and Brittain, in 'Creative and Mental Growth' (1964), describe the pre-schematic and early schematic stages (roughly ages 4-7) as a period when children begin organizing their drawn world into coherent scenes, using recurring symbols (house, sun, tree, person) to express their understanding of the relationships between people and their environment.",
+      "activities": [
+        "You could ask Liam to tell you the 'story' of this scene — who the person is, what time of day it is, what happens next — and just listen without steering; the narrative he builds will show you what this world means to him.",
+        "You might offer him a large sheet of paper and suggest he draw what's inside the house too, or what's around the corner — this opens up the world he is already building.",
+        "You could look at illustrated picture books with him that show outdoor neighborhood or village scenes (Richard Scarry's 'Busytown' books work well) and notice together what details he is drawn to."
+      ]
+    },
+    {
+      "key": "character_in_line_color",
+      "title": "Character in line & color",
+      "score": 7,
+      "observation": "The color choices here are clear and confident: warm terracotta for the roof, a distinct salmon-peach for the house walls, solid green for the tree canopy, a bright yellow sun, a clean blue sky, and a wide band of green grass. These are not hesitant choices — each area is filled fully, with no large gaps or scratchy coverage. The stick figure, drawn in a single dark outline, is placed without apology: it takes up its own space and stands firmly on the ground line. In the practice of reading children's drawings, a figure that stands upright with spread legs and open arms is sometimes associated with a sense of stability and ease in the child's felt relationship with their own body and place in the world. This is a hypothesis worth holding lightly — one drawing cannot confirm a stable trait — but it is consistent with the calm, ordered feeling of the whole scene.",
+      "research_note": "",
+      "activities": [
+        "You could offer Liam a wider range of markers or colored pencils — including mixed shades of green or orange — and see whether he gravitates toward his current palette or experiments; this will tell you whether his color choices are preference-driven or simply what was available.",
+        "You might try watercolor washes together sometime: lay down a wash of sky blue and let him add details on top with a marker, which can feel very different from working on white paper."
+      ]
+    },
+    {
+      "key": "mood_and_expression",
+      "title": "Mood & expression",
+      "score": 8,
+      "observation": "The overall register of this drawing is calm and sunny — not in a vague way, but in specific, visible terms: the sky fills the upper half with a clear, unbroken blue; the sun is large, warm, and placed high, with even rays extending outward; the grass is a solid, reassuring green; and the house sits squarely in the center of the composition. In the developmental tradition of reading children's art, a drawing in which light-source, ground, and shelter are all present and balanced is sometimes associated with a child's felt sense of safety and order in daily life — a world where things are where they should be. This is a suggestion grounded in what's visible, not a conclusion: the best way to check it is simply to ask Liam how the person in the drawing feels standing outside that house, and what the weather is like in his picture. One drawing also cannot tell you whether this calm register may reflect something stable in how he tends to approach the world, or whether it simply captures the particular ease of one free Saturday morning — a few drawings across different days would give you a much clearer picture.",
+      "research_note": "",
+      "activities": [
+        "You could say to Liam: 'The sun in your drawing looks really warm — what time of day is it?' Inviting him to describe the feeling of the scene, rather than its content, can open a conversation about mood that children often find easier through a drawing than through direct questions.",
+        "You might notice over time whether his drawings tend to include a sun, and how the sun varies — large or small, high or low, hidden by clouds or fully visible. That pattern, across several drawings, can be more telling than any single image."
+      ]
+    },
+    {
+      "key": "story_and_characters",
+      "title": "Story & characters",
+      "score": 7,
+      "observation": "There is one human figure in the scene, drawn as a classic stick person: circle head, single-line body, spread arms and legs. The figure stands to the left, facing the house but not yet at the door — creating a quiet narrative tension that is genuinely interesting. Something is in the middle of happening: the person is outside, the house is there, the door is open or reachable. At 6, children are beginning to place figures in relationship to environments and objects, and the spatial gap between the figure and the house gives this scene a small story. The absence of additional figures is not a concern; at this age, a single figure is completely typical, and the scene itself supplies the relational meaning. You could ask Liam whether the person lives in the house, is visiting, or is just walking by — his answer will likely surprise you.",
+      "research_note": "",
+      "activities": [
+        "You could invite Liam to add another person to the scene and tell you who they are — this can reveal how he thinks about social connections and who belongs in his imagined worlds.",
+        "You might ask him, 'If you could add one more thing to this picture, what would you put in?' — it is often more revealing than asking him to explain what he has already drawn."
+      ]
+    },
     {
       "key": "creativity",
       "title": "Creativity & imagination",
-      "score": 7,
-      "observation": "Emma picked a familiar subject - a tree - but the way she drew it steps past the usual template. Notice how the bark is built from separate little strokes, the branches fan out unevenly and bend in different ways, and the canopy is made of several greens rather than one flat patch. Those are her own choices, not a copied formula.",
-      "research_note": "Varying the details inside a familiar subject is one observable sign of flexible picture-making at this age (Lowenfeld & Brittain, 1987).",
-      "activities": [
-        "You could offer a \"magic tree\" where every branch blooms in its own way - it stretches her range inside a subject she already loves.",
-        "You might try a series of \"one tree in four seasons\": same object, different solutions each time."
-      ]
-    },
-    {
-      "key": "color_and_light",
-      "title": "Color & light",
-      "score": 7,
-      "observation": "Look at the color: several greens layered through the canopy and a worked-up brown for the bark, filled in densely and right to the edges. Emma carried the color all the way to the end rather than leaving it half done, and the layering gives the leaves a sense of depth and dappled light.",
+      "score": 6,
+      "observation": "The elements Liam chose — house, tree, person, sun, grass — are among the most universal symbols in early childhood drawing worldwide, and his composition follows a familiar template. At 6 years 2 months this is entirely expected and developmentally appropriate; children at this stage often rely on known symbol-schemas as building blocks. What shows individual choice is the confident color differentiation (the roof is a distinct, darker terracotta rather than a generic red; the house walls and door are clearly distinguished shades), and the decision to leave a narrative gap between the figure and the house rather than placing them touching. These are small but real authorial decisions within a conventional frame.",
       "research_note": "",
       "activities": [
-        "You could ask Emma why she chose these particular greens - talking about the choice builds awareness of color as a tool.",
-        "You might try the same tree \"in the rain\" and \"at sunset\" - the task of showing a different light through color alone."
-      ]
-    },
-    {
-      "key": "composition_and_space",
-      "title": "Composition & space",
-      "score": 8,
-      "observation": "The page is used thoughtfully: the trunk sits in the lower third, the canopy fills the upper part, and the drawing neither slides into a corner nor crowds the edge. The trunk and canopy are sized to agree with each other, and the picture isn't overloaded with extra elements - it has room to breathe.",
-      "research_note": "Balanced placement on the page is an observable marker of developing spatial planning at this age (Piaget, The Origins of Intelligence in Children, 1952).",
-      "activities": [
-        "You could offer a scene with a few objects (a house, a tree, a path) - the task of sharing the page between them.",
-        "You might try a landscape with a foreground and a background."
+        "You could offer Liam a prompt that nudges past the template: 'What if the house was somewhere really unusual — in a forest, underwater, on a hill? What would it look like?' This invites the same organizational confidence he already has, but applied to a less familiar world.",
+        "You might look together at the work of an illustrator who draws buildings and neighborhoods in unusual ways — Lois Ehlert or Charley Harper use bold flat shapes and colors that may appeal to Liam's existing visual sensibility."
       ]
     },
     {
       "key": "technique_and_materials",
       "title": "Technique & materials",
-      "score": 8,
-      "observation": "The marker work is controlled: the fill stays inside the outlines, and in the canopy the stroke direction clearly shifts on purpose to follow the shape of the leaves. There are no stray lines or accidental marks on the page - a sign of a steady, deliberate hand with the tool she chose.",
+      "score": 7,
+      "observation": "The marker work here is clean and deliberate for a 6-year-old: filled areas are fully covered with consistent color, the sky and grass bands sit flat and even, and the house's geometric shapes are clearly differentiated by color rather than just outline. The sun's rays are evenly spaced around the circle, which requires some planning. Composition shows an instinctive sense of horizontal organization — sky above, grass below, objects placed across the middle — which is characteristic of the schematic stage and handled capably here.",
       "research_note": "",
       "activities": [
-        "You could offer small, detailed work - patterns and borders on a character's clothes.",
-        "You might try finer tools, like colored pencils or a fineliner, now that her control is ready for them."
+        "You could offer Liam oil pastels or wide brush markers on colored paper: working on a non-white background often pushes children to make new color decisions and can feel fresh without requiring new skills.",
+        "You might try a collaborative drawing sometime where you each add one element at a time, taking turns — it is low-pressure and often produces surprising compositions."
       ]
     },
     {
-      "key": "fine_motor_skills",
-      "title": "Fine motor skills & detail",
-      "score": 8,
-      "observation": "The bark strokes and the small breaks of color in the canopy show precise, repeatable little movements of the hand. Notice how evenly the texture is spaced - that kind of small, controlled mark-making points to well-developed fine motor skills.",
-      "research_note": "Neat filling within an outline is linked to developing concentration and voluntary control of movement (Kellogg, Analyzing Children's Art, 1969).",
-      "activities": [
-        "You could offer ornament and pattern work - borders, repeating motifs, decorated objects.",
-        "You might try threading, beadwork, or folding alongside drawing - all support a steady hand."
-      ]
-    },
-    {
-      "key": "form_and_proportions",
-      "title": "Form & proportions",
-      "score": 8,
-      "observation": "The tree is built with an understanding of how the object is put together: the trunk widens toward the base, large branches come off the trunk and smaller ones off the large, and the leaves sit on the branches rather than floating in the air. It reads as a coherent, consistent structure.",
-      "research_note": "",
-      "activities": [
-        "You could offer a \"map\" of a familiar place - the yard or her room - to play with structure.",
-        "You might try diagram-style drawings: how a birdhouse is built, what a flower is made of."
-      ]
-    },
-    {
-      "key": "social_orientation",
-      "title": "Story & interaction",
+      "key": "fine_motor",
+      "title": "Fine motor & detail",
       "score": 6,
-      "observation": "This drawing has a single subject - the tree - with no people, animals, or interaction. That's a neutral observation: the subject Emma chose simply didn't call for characters, and one drawing can't tell us anything about how sociable a child is. Shown indirectly here, this direction would have more to draw on in a scene with several characters.",
-      "research_note": "The social side of drawing is read from a series of works, not a single one: scenes with several characters give this direction more to go on (Burkitt, 2016).",
+      "observation": "The geometric shapes — the triangular roof, the rectangular walls, the circular tree canopy — are recognizable and intentional, though the lines are not perfectly straight or closed, which is typical and expected at 6. The stick figure's limbs are controlled enough to convey a standing pose clearly. The window is a small rectangle placed inside the house wall, which requires planning a smaller shape within a larger one — a motor and spatial task that Liam handles adequately. There are no intricate details or patterns in this drawing, so fine motor precision is shown primarily through the management of basic geometric forms rather than delicate work.",
+      "research_note": "",
       "activities": [
-        "You could offer a subject where the tree is part of a story: \"someone set up a picnic under the tree,\" or \"a treehouse and the people who live in it.\"",
-        "You might try drawing together: one person starts the scene, the other adds a character."
+        "You could offer Liam a ruler and see whether he wants to try drawing straight-edged buildings with it — some children find tools like this very satisfying; others prefer the freedom of freehand.",
+        "Simple paper-folding activities, or cutting and gluing geometric shapes to make a collage version of a house scene, can build hand precision in a way that feels like making rather than practicing."
       ]
     }
   ],
-  "recommendations": [
-    "You could keep experimenting with materials - pastels, watercolor, fine pencils: Emma's current line control is ready for these more demanding tools.",
-    "You could offer subjects with several objects and characters - it builds composition planning and gives the story side of drawing more to work with.",
-    "You could ask Emma to tell you about her tree - what kind it is, what's happening around it - and listen for the story she gives it.",
-    "A supportive phrase she'd feel: \"I love how you made every branch a little different - tell me about this one.\"",
-    "You could save her drawings with dates: a series over six months shows growth far better than a single picture.",
-    "For inspiration, you could look together at picture-book illustrators and botanical drawings - art that pays attention to how real plants are built."
+  "understanding_recommendations": [
+    "Ask Liam to tell you about the person standing outside the house: who they are, where they are going, and what happens next. At 6, children often have complete stories attached to drawings that they simply haven't been asked to share. Listen without steering the narrative.",
+    "Notice over the coming weeks whether Liam gravitates toward the same themes when he draws freely — houses, outdoor scenes, people in landscapes. Recurring choices across multiple drawings are more meaningful than any single image and can tell you a lot about the worlds and questions that are alive for him right now.",
+    "When he finishes a drawing, you could try saying: 'Tell me one thing about this picture that I wouldn't know just from looking at it.' This simple invitation respects the fact that he knows more about his drawing than you do, and it tends to open conversations that a direct 'What did you draw?' does not.",
+    "Liam chose to work alone on this for 15 minutes without asking for help. That kind of self-directed focus is worth noticing and naming warmly: 'I noticed you worked on that all by yourself and really saw it through.' Pointing to the process — not just the result — helps him connect his effort to his own sense of capability."
+  ],
+  "art_recommendations": [
+    "You could offer Liam a set of colored construction paper and invite him to cut and paste a version of his scene as a collage — the house, the tree, the figure, the sky. Collage uses the same spatial thinking as his drawing but adds a tactile, problem-solving dimension that children who like to organize scenes often find very satisfying.",
+    "You might introduce him to the work of illustrator Eric Carle, whose picture books use bold, flat color areas and simple shapes in outdoor and natural scenes. Looking at Carle's art together and then trying the tissue-paper painting technique he uses (painting tissue paper with glue to create layered color sheets) could extend Liam's existing color confidence in a new direction.",
+    "You could try a 'same scene, different time of day' project: Liam draws his house scene three times on small cards — morning, afternoon, and night — changing only the sky, the light, and the mood. This kind of series builds observation and variation skills while staying inside the world he already knows how to draw."
+  ],
+  "specialists": [
+    {
+      "area": "Early childhood art educator or creative play facilitator",
+      "reason": "Liam shows clear enjoyment of self-directed, scene-based drawing and a developing spatial sense. If you would like to support and expand this in a structured setting, an early childhood art educator who emphasizes process over product could offer him new materials and prompts in a context where his independent working style would be genuinely valued — not as a concern, but as a natural next step for a child who clearly enjoys making worlds."
+    }
   ],
   "development_directions": [
     {
-      "title": "Nature & observation",
-      "text": "Emma's interest in a natural subject and her attention to how a tree is built could be supported by drawing from life: a sketchbook in the park, a little nature journal with quick studies."
+      "title": "Spatial thinking and building",
+      "text": "Liam's drawing shows a child who organizes space deliberately: sky above, ground below, objects placed across the scene with clear roles — shelter, nature, person. That sense of how things fit together in space is a real cognitive strength at 6. You could support it at home through building activities — block constructions, simple Lego, or arranging small objects into 'scenes' — that let him work with spatial relationships in three dimensions as well as two. This kind of thinking, nurtured over time, is the same foundation that feeds interest in fields like architecture, design, urban planning, or engineering, as examples."
     },
     {
-      "title": "Pattern & decorative work",
-      "text": "Her steady, even mark-making sits well with decorative drawing: borders, repeating motifs, and ornament, where careful, precise lines are the whole point."
+      "title": "Storytelling and world-building",
+      "text": "The figure standing outside the house, the open space between person and door — Liam built a scene with implied narrative even without being asked to tell a story. Children who naturally embed a 'what happens next' into their drawings often have a strong pull toward story and meaning-making. You could encourage this by telling stories together at bedtime where he gets to decide what a character does next, or by keeping a simple 'story journal' where he draws one scene from an imagined day. Over time, this kind of narrative thinking feeds interest in many fields that involve communication and meaning — writing, filmmaking, game design, or teaching, as examples."
     }
   ],
-  "conclusion": "Emma's tree shows a steady hand, a thought-out composition, and careful work carried all the way to the end. The strongest sides of this particular drawing are her control of the marker and her grasp of how the object is structured. A natural next step is richer scenes with several objects and characters - her current skills are ready for it. As a reminder: this report is an educational observation of the skills visible in one drawing, like a small story told on a page, not a psychological diagnosis.",
+  "conclusion": "Liam C. spent a free Saturday morning building a small, orderly world out of markers and his own ideas — no prompts, no help, no hesitation. A sunny day, a house with a door, a tree, a person standing outside deciding what comes next. That is not a small thing at 6. What this drawing shows, most of all, is a child who already knows how to organize what he sees and feels into something whole — and who finds real satisfaction in doing it on his own terms. That quality, more than any particular line or color, is what is worth noticing and holding onto.",
   "insufficient_input": false,
   "insufficient_reason": null
 }

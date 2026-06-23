@@ -1,8 +1,9 @@
-"""Per-locale landing content: FAQ + testimonials (Golos kept these as constants;
-DrawReport namespaces them by locale). English copy is a DRAFT for owner review
-(adapted from positioning-en.md / the Russian originals - not literal translations).
+"""Per-locale landing content: FAQ + illustrative scenarios (Golos kept these as
+constants; DrawReport namespaces them by locale). English copy is a DRAFT for owner
+review (adapted from positioning-en.md / the Russian originals - not literal translations).
 
-Adding a locale = add its FAQ/TESTIMONIALS entries. No business-logic change.
+Philosophy 2.3: we show ILLUSTRATIVE SCENARIOS (clearly examples, never real clients),
+not fabricated testimonials. Adding a locale = add its FAQ/SCENARIOS entries.
 """
 from __future__ import annotations
 
@@ -42,31 +43,25 @@ FAQ = {
     ],
 }
 
-# Testimonials - PLACEHOLDERS until the owner provides real ones. The strongest
-# "takes the worry away" testimonial is first (positioning rule). DRAFT, English.
-TESTIMONIALS = {
+# Illustrative scenarios - NOT testimonials. Each is explicitly an EXAMPLE of what the
+# report can do (never a real client), framed in the new philosophy: it reveals what the
+# child expresses and suggests what to ask/notice, without scary interpretations. DRAFT,
+# English. The template prepends a shared "For example, a situation like this:" lead.
+SCENARIOS = {
     "en": [
-        ("My son drew only with a black pen for a month and I'd worked myself up over it. "
-         "The report calmly showed he was working on outlines right now - and sure enough, the "
-         "colors came back a month later.",
-         "Anna, Mike's mom (age 5)"),
-        ("It was like really looking at my daughter's drawings for the first time. Half the "
-         "observations I'd never have noticed on my own.",
-         "Maria, Sophie's mom (age 6)"),
-        ("The skeptic in me went looking for generic filler and didn't find any. Every "
-         "observation is tied to a specific detail - the shading, the line, how the figure is "
-         "built.",
-         "David, Vera's dad (age 7)"),
-        ("We printed the report and hung it next to the drawing. My daughter walks around proud: "
-         "\"that's written about me.\"",
-         "Olga, Katie's mom (age 6)"),
-        ("The most useful part was the activities at the end: specific, ten minutes each. My son "
-         "now asks to \"play artist\" himself.",
-         "Natalie, Ethan's mom (age 4)"),
-        ("I sent three drawings and got back one connected story: what repeats from work to work, "
-         "and what showed up for the first time. Not at all what I expected from a \"photo "
-         "analysis.\"",
-         "Sarah, Mia's mom (age 8)"),
+        "a child draws only in black for a few weeks and a parent starts to worry. The report "
+        "calmly shows what actually keeps recurring across their drawings - say, space or dragons - "
+        "and that a dark background often makes the bright parts stand out more; then it suggests "
+        "what to ask the child and what to watch for in the next drawings. No scary readings.",
+        "a child draws the same little house over and over. We help you see what matters to them in "
+        "that house - their own world, a sense of safety, the people they love nearby - and how to "
+        "ask about it gently.",
+        "there's almost always a single character and no other people. We don't conclude \"unsociable\" - "
+        "we show that this can simply be a feature of the chosen subject, and suggest how to support "
+        "the child's interest in stories with several characters.",
+        "you send three drawings from different days. We show what repeats from work to work (the "
+        "steadier traits) and what appeared just once (a moment's mood) - something a single drawing "
+        "can't reveal.",
     ],
 }
 
@@ -79,5 +74,5 @@ def get_faq(locale: str | None = None) -> list[tuple[str, str]]:
     return FAQ[_loc(locale)]
 
 
-def get_testimonials(locale: str | None = None) -> list[tuple[str, str]]:
-    return TESTIMONIALS[_loc(locale)]
+def get_scenarios(locale: str | None = None) -> list[str]:
+    return SCENARIOS[_loc(locale)]

@@ -15,6 +15,9 @@ from config import settings
 
 _client: "anthropic.Anthropic | None" = None
 _MAX_TOKENS = 16000
+# Per-request wall-clock cap (seconds): a hung call aborts -> the orchestrator
+# (pipeline/llm.py) retries/falls back instead of wedging the worker.
+_TIMEOUT_SECONDS = 180
 
 
 class LLMRefusal(RuntimeError):
@@ -49,6 +52,7 @@ def generate(system_prompt: str, image_jpegs: list[bytes], user_text: str, model
     resp = _c().messages.create(
         model=model, max_tokens=_MAX_TOKENS, system=system_prompt,
         messages=[{"role": "user", "content": blocks}],
+        timeout=_TIMEOUT_SECONDS,
     )
     return _text(resp)
 
@@ -58,5 +62,6 @@ def generate_text(prompt: str, model: str) -> str:
     resp = _c().messages.create(
         model=model, max_tokens=_MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
+        timeout=_TIMEOUT_SECONDS,
     )
     return _text(resp)
