@@ -7,11 +7,13 @@ from __future__ import annotations
 
 import datetime
 import json
+import re
 
 from flask import (Blueprint, Response, abort, g, redirect, render_template,
                    request, url_for)
 from flask_babel import gettext as _
 
+from app import track
 from app.auth import (SESSION_COOKIE, AuthError, current_customer, destroy_session,
                       request_code, verify_code)
 from app.blog import get_posts
@@ -224,6 +226,7 @@ def order_submit():
             request.form, files,
             visitor_id=getattr(g, "visitor_id", None),
             utm=getattr(g, "utm", None), locale=g.lang_code,
+            visit_id=getattr(g, "visit_id", None),
         )
     except FormError as e:
         track_event("order_form_errors", {"fields": list(e.errors)})
@@ -306,18 +309,47 @@ def paypal_cancel(order_id=None):
 # --- First-party analytics beacon -----------------------------------------
 
 _GOAL_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_:-")
+_SCROLL_GOAL = re.compile(r"^scroll_(25|50|75|100)$")
+
+
+def _beacon_path() -> str | None:
+    """The page the beacon was fired FROM, reported by the browser. The request itself
+    always arrives at /t/e, so without this every goal on the site would be recorded as
+    happening on /t/e. Foreign absolute URLs are not accepted."""
+    p = (request.form.get("p") or request.args.get("p") or "").strip()
+    return p[:200] if p.startswith("/") else None
 
 
 @bp_root.post("/t/e")
 def track_beacon():
     """First-party beacon (navigator.sendBeacon). Cheap, anonymous, never errors.
-    Lives at the site root (no locale prefix) - matches the JS in _analytics.html."""
+    Lives at the site root (no locale prefix) - matches static/js/track.js.
+
+    - g=<goal>  -> event 'click:<goal>' (UI goals from data-goal + scroll/sections);
+    - engaged=1 -> event 'engaged' (scroll/interaction/15s of visible time). Sent at
+      most once per page load;
+    - sw/t      -> screen width and touch: layout breaks by WIDTH, and the user-agent
+      knows nothing about it (an iPad in desktop mode, a narrow laptop window).
+    All of it is written both to the event and to the visit row (web_visits)."""
+    path = _beacon_path()
+    try:
+        sw = int(request.form.get("sw") or request.args.get("sw") or 0)
+    except ValueError:
+        sw = 0
+    if sw:
+        track.mark_visit(screen_w=min(sw, 9999),
+                         is_touch=1 if (request.form.get("t") or request.args.get("t")) else 0)
+
     if request.form.get("engaged") or request.args.get("engaged"):
-        track_event("engaged")
+        track_event("engaged", path=path)
+        track.mark_visit(engaged=1)
         return ("", 204)
     goal = (request.form.get("g") or request.args.get("g") or "").strip().lower()
     if goal and len(goal) <= 64 and set(goal) <= _GOAL_CHARS:
-        track_event("click:" + goal)
+        track_event("click:" + goal, path=path)
+        m = _SCROLL_GOAL.match(goal)
+        if m:
+            track.mark_visit(max_scroll=int(m.group(1)))
     return ("", 204)
 
 

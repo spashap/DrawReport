@@ -91,8 +91,10 @@ CREATE TABLE IF NOT EXISTS coupons (
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY,
     visitor_id TEXT,
+    visit_id TEXT,                        -- the visit (see web_visits): without it the funnel lies
     customer_id INTEGER,
     type TEXT NOT NULL,
+    path TEXT,                            -- WHICH page it happened on (else a goal has no address)
     payload_json TEXT,
     utm_json TEXT,
     user_agent TEXT,                      -- raw UA (for device parsing)
@@ -103,10 +105,42 @@ CREATE TABLE IF NOT EXISTS events (
     geo_city TEXT,
     created_at TEXT NOT NULL
 );
+-- A visit = one continuous session of one person (30-minute window, cookie dr_s).
+-- Without this table a "funnel" counts unique visitors per period and divides one set
+-- by another: steps are not nested, a later step can come out larger than an earlier
+-- one, there is no duration, and a campaign cannot be tied to an order.
+-- One row per visit; events reference it through events.visit_id.
+CREATE TABLE IF NOT EXISTS web_visits (
+    visit_id TEXT PRIMARY KEY,
+    visitor_id TEXT,
+    started_at TEXT NOT NULL,
+    last_at TEXT NOT NULL,
+    entry_path TEXT,                      -- page they came in on
+    exit_path TEXT,                       -- page they left from
+    pages INTEGER DEFAULT 0,              -- HTML page views in this visit
+    engaged INTEGER DEFAULT 0,            -- scrolled / clicked / 15s of visible time
+    max_scroll INTEGER DEFAULT 0,         -- 25/50/75/100 - scroll depth for the visit
+    device TEXT,                          -- mobile / tablet / desktop / bot (UA)
+    screen_w INTEGER,                     -- SCREEN WIDTH from the client: the UA knows nothing about layout
+    is_touch INTEGER,
+    channel TEXT,                         -- ads / organic / social / referral / direct / internal / utm
+    utm_json TEXT,                        -- UTM of THIS visit (last touch)
+    gclid TEXT,                           -- ad click id - the only exact link to a campaign
+    referer TEXT,
+    geo_country TEXT,
+    geo_region TEXT,
+    customer_id INTEGER
+);
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type, created_at);
 CREATE INDEX IF NOT EXISTS idx_events_visitor ON events(visitor_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_visits_started ON web_visits(started_at);
+CREATE INDEX IF NOT EXISTS idx_visits_visitor ON web_visits(visitor_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_visits_channel ON web_visits(channel, started_at);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_drawings_order ON drawings(order_id);
+-- The index on events(visit_id) is built in _migrate(): on an OLD database
+-- executescript skips CREATE TABLE events, the column does not exist yet, and the
+-- index would fail here.
 """
 
 
@@ -138,14 +172,25 @@ def _migrate(conn: sqlite3.Connection) -> None:
     """Light migrations for existing DBs (CREATE IF NOT EXISTS won't add columns to
     an existing table). Idempotent: only ADD COLUMN if missing."""
     ev_cols = {r["name"] for r in conn.execute("PRAGMA table_info(events)")}
-    for col in ("user_agent", "device", "referer", "geo_country", "geo_region", "geo_city"):
+    for col in ("user_agent", "device", "referer", "geo_country", "geo_region",
+                "geo_city", "visit_id", "path"):
         if col not in ev_cols:
             conn.execute(f"ALTER TABLE events ADD COLUMN {col} TEXT")
+    # Only AFTER the ALTER: on an old DB the visit_id column does not exist while
+    # executescript(SCHEMA) runs, so the index has to be built here.
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_events_visit ON events(visit_id)")
+
     ord_cols = {r["name"] for r in conn.execute("PRAGMA table_info(orders)")}
     if "locale" not in ord_cols:
         conn.execute("ALTER TABLE orders ADD COLUMN locale TEXT NOT NULL DEFAULT 'en'")
     if "payment_id" not in ord_cols:
         conn.execute("ALTER TABLE orders ADD COLUMN payment_id TEXT")
+    # The visit an order was placed in. Payment arrives by webhook WITHOUT a browser,
+    # so the order_paid event cannot be attached to a visit - "paid" in the visit
+    # funnel is counted from the order row itself, not from the event.
+    if "visit_id" not in ord_cols:
+        conn.execute("ALTER TABLE orders ADD COLUMN visit_id TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_orders_visit ON orders(visit_id)")
 
 
 def get_db() -> sqlite3.Connection:
@@ -160,7 +205,9 @@ def new_token(nbytes: int = 32) -> str:
 
 
 def track(event_type: str, visitor_id: str | None = None,
+          visit_id: str | None = None,
           customer_id: int | None = None, payload: dict | None = None,
+          path: str | None = None,
           utm: dict | None = None, conn: sqlite3.Connection | None = None,
           user_agent: str | None = None, device: str | None = None,
           referer: str | None = None, geo_country: str | None = None,
@@ -171,10 +218,11 @@ def track(event_type: str, visitor_id: str | None = None,
     try:
         db = conn if conn is not None else get_db()
         db.execute(
-            "INSERT INTO events (visitor_id, customer_id, type, payload_json, utm_json,"
+            "INSERT INTO events (visitor_id, visit_id, customer_id, type, path,"
+            " payload_json, utm_json,"
             " user_agent, device, referer, geo_country, geo_region, geo_city, created_at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (visitor_id, customer_id, event_type,
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (visitor_id, visit_id, customer_id, event_type, path,
              json.dumps(payload, ensure_ascii=False) if payload else None,
              json.dumps(utm, ensure_ascii=False) if utm else None,
              user_agent, device, referer,

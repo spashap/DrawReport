@@ -30,9 +30,13 @@
 <link rel="preload" href="{{ static }}/fonts/rubik-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="{{ static }}/css/fonts.css">
-<link rel="stylesheet" href="{{ static }}/css/tokens.css">
-<link rel="stylesheet" href="{{ static }}/css/components.css">
+{# ?v= is REQUIRED: nginx serves /static/ with `expires 30d`, so an unversioned link
+   leaves every returning visitor on the CSS they cached weeks ago - new components
+   silently do not exist for them, and the page looks broken in ways that cannot be
+   reproduced locally. #}
+<link rel="stylesheet" href="{{ static }}/css/fonts.css?v={{ version }}">
+<link rel="stylesheet" href="{{ static }}/css/tokens.css?v={{ version }}">
+<link rel="stylesheet" href="{{ static }}/css/components.css?v={{ version }}">
 {% block head %}{% endblock %}
 {% include "_analytics.html" %}
 </head>

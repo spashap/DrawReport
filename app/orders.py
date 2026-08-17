@@ -49,7 +49,8 @@ def _validate_block(fields: list[dict], data: dict, prefix: str,
 
 def validate_and_create_order(form: dict, files: list[FileStorage],
                               visitor_id: str | None, utm: dict | None,
-                              locale: str = settings.DEFAULT_LOCALE) -> int:
+                              locale: str = settings.DEFAULT_LOCALE,
+                              visit_id: str | None = None) -> int:
     """Full server-side validation -> order in the DB + files on disk.
     Returns order_id. Raises FormError."""
     errors: dict[str, str] = {}
@@ -112,13 +113,17 @@ def validate_and_create_order(form: dict, files: list[FileStorage],
     if errors:
         raise FormError(errors)
 
+    # visit_id is stored on the order because payment arrives by webhook WITHOUT a
+    # browser: the order_paid event has no visit of its own, so the visit funnel counts
+    # "paid" from the order row.
     cur = db.execute(
         "INSERT INTO orders (email, product_code, price_cents, coupon_code, locale, status,"
-        " child_json, visitor_id, utm_json, created_at)"
-        " VALUES (?, ?, ?, ?, ?, 'created', ?, ?, ?, ?)",
+        " child_json, visitor_id, visit_id, utm_json, created_at)"
+        " VALUES (?, ?, ?, ?, ?, 'created', ?, ?, ?, ?, ?)",
         (email, product_code, price_cents, coupon_code, locale,
          json.dumps(child, ensure_ascii=False),
-         visitor_id, json.dumps(utm, ensure_ascii=False) if utm else None, now()),
+         visitor_id, visit_id,
+         json.dumps(utm, ensure_ascii=False) if utm else None, now()),
     )
     order_id = cur.lastrowid
 
