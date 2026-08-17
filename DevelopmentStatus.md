@@ -305,3 +305,59 @@ Owner verdict on the first English conversion: "epic fail". A separate review pr
   0 of the 11 banned phrases, no version badge, long disclaimer on both, all 12 public routes 200.
 
 **Pending (owner):** review of the freemium wizard templates - explicitly deferred by the owner.
+
+---
+
+## 2026-08-17 — STATE SNAPSHOT (V0.034). Owner is pausing here and will resume later.
+
+Verified against the running server and the live site on this date, not recalled.
+
+### Live and working
+- **https://drawreport.com** — TLS (Let's Encrypt), nginx vhost, gunicorn `127.0.0.1:8002`.
+  Three systemd units all `active`: `drawreport-web`, `drawreport-worker`, `drawreport-free`.
+- **PayPal LIVE** — `PAYMENT_BACKEND=paypal`, `PAYPAL_ENV=live`, client id/secret/webhook id set.
+  Real money. Read-only checks only; no test charge has ever been made.
+- **Email = Brevo over SMTP** — `MAIL_BACKEND=smtp`, `smtp-relay.brevo.com:587`,
+  from `team@drawreport.com`. Resend was abandoned (free tier = one domain, refused ours);
+  a stale `RESEND_API_KEY` remains in `.env`, unused and harmless.
+- **LLM = Anthropic** — paid `claude-sonnet-4-6` (fallback `claude-haiku-4-5-20251001`);
+  free reading `claude-haiku-4-5-20251001` via its own `FREE_LLM_MODEL`.
+- **Price = $29**, served from git-tracked `config/products.json`. The server has NO
+  `data/products.json` (see UseCase #23), so `config/` is live. The `$59 -> $39` variant exists
+  only in the local dev `data/products.json` and has never shipped.
+- Free funnel `/free/` end-to-end; admin `/admin` with 13 sections; sitemap + robots served;
+  og image 200; all 12 public routes 200.
+
+### 🔴 Missing — the resume list (nothing here is broken; it is unstarted)
+**Measurement — the site is currently measuring nothing external.**
+1. **GA4 not set up.** `GA_MEASUREMENT_ID` is EMPTY on the server; `templates/_analytics.html`
+   therefore renders nothing and zero pages emit gtag. Fix = create the property, put
+   `G-XXXXXXXXXX` in the server `.env`, restart. No code change needed.
+2. **Google Search Console not verified** (no `google-site-verification` meta tag; sitemap never
+   submitted).
+3. **Bing Webmaster Tools not verified** (no `msvalidate.01`). Bing feeds Copilot and ChatGPT
+   search, and IndexNow lives there, so it is not just "the other search engine".
+4. **No mechanism for verification meta tags exists** — adding 2 and 3 is a small feature
+   (env-driven `<meta>` in the head), and it must go in BOTH `templates/_base.html` AND
+   `templates/landing.html`, because landing.html carries its own `<head>` and does not extend
+   the base template.
+
+**SEO gaps found during this audit, deliberately left unfixed.**
+5. **Sitemap omits the blog posts.** `app/routes.py` emits `/en/blog` but none of the three
+   `/en/blog/<slug>` URLs — and the articles are the only organic-search surface the site has.
+6. **`lastmod` is `today` for every URL on every request** — claims the whole site changed today,
+   every day, which devalues the signal.
+7. **No `llms.txt`.**
+
+**Product / business.**
+8. **Freemium wizard copy has NOT had the native-English pass** — owner deferred it explicitly.
+   `/en/` and `/en/report` are done (V0.032); `/free/*` is untouched.
+9. **Legal pages are DRAFT**, never reviewed by counsel (COPPA/children's data, refunds, PayPal,
+   FTC "educational, not diagnosis" claims).
+10. **Blog has 3 posts.**
+11. **Launch price framing undecided** (flat $29 live vs the $59->$39 strike-through variant).
+
+### Docs updated in this session
+`CLAUDE.md` AS-BUILT rewritten to the above (the old "build it from scratch" framing is now
+explicitly marked historical); memory files `drawreport-build-state` and `drawreport-deploy`
+rewritten from V0.017-era text to current; `UseCasesData.md` gained #20-#23.

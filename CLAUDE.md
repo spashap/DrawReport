@@ -1,27 +1,95 @@
 # CLAUDE.md — DrawReport (drawreport.com)
 
-> **You (Claude Code) are building this project from scratch by faithfully cloning a proven Russian
-> sibling site and adapting it to a US/English audience. READ the companion docs in this folder
-> before starting: `development-plan.md`, `i18n-architecture.md`, `build-from-golos.md`,
-> `positioning-en.md`. They are your spec. Build in phases, commit per phase, pause for owner
-> review at milestones.**
+> **⚠️ The "build it from scratch" framing below is HISTORICAL.** The build is finished and the site
+> is LIVE at https://drawreport.com. `development-plan.md`, `i18n-architecture.md`,
+> `build-from-golos.md` and `positioning-en.md` remain useful reference for *why* things are shaped
+> the way they are — they are no longer a to-do list. Start from the AS-BUILT section immediately
+> below; it overrides anything that contradicts it.
 
 ---
-## ✅ AS-BUILT STATUS (updated 2026-06-19) — build is COMPLETE; this section overrides the "building from scratch" framing above
-Full system built, verified, committed, pushed to **https://github.com/spashap/DrawReport** (`main`, VERSION 0.015). All phases M0–M9 done. The spec docs below remain useful reference; these are the deviations + resume facts.
+## ✅ AS-BUILT STATUS — updated 2026-08-17, VERSION 0.033. **The site is LIVE and taking real payments.**
 
-**Deviations from the original spec (current reality):**
-- **LLM = Anthropic (Claude), not Gemini.** Provider abstraction: `pipeline/llm.py` (orchestrator: attempts, JSON validate, lint+repair, primary→fallback model) + `pipeline/anthropic_llm.py` (default) + `pipeline/gemini.py` (alternate). Env: `LLM_PROVIDER=anthropic`, `LLM_MODEL=claude-sonnet-4-6`, `LLM_FALLBACK_MODEL=claude-haiku-4-5-20251001`, `ANTHROPIC_API_KEY`. Verified live (full report, 0 lint hits, 8-page PDF, zero fallback fonts). Prompt lives in `pipeline/prompt.py` (`PROMPTS["en"]`, English, not yet polished). When editing LLM code, consult the `claude-api` skill.
-- **Analytics = GA4** client snippet (`templates/_analytics.html`, placeholder `GA_MEASUREMENT_ID`) + first-party events/admin dashboards (kept). Not Yandex.
-- **Server path = `/var/www/DrawReport` (capital D/R)**. Local dev on **port 3000** (`PORT` env, default 3000); prod gunicorn on **127.0.0.1:8002**.
-- **Deployment kit = `drawreportDeploy/`** (provision.sh / deploy.sh / restart.sh / systemd units / nginx vhost / README). Copy to server `/var/www/drawreportDeploy`, run as root. See `DEPLOY.md`. `.gitattributes` forces LF on `*.sh/*.service/*.conf`.
-- **DNS:** owner manages A records at the **registrar** (drawreport.com + www → server IP), **no Cloudflare** (or grey-cloud only — orange proxy breaks certbot + crawlers). TLS via `certbot --nginx`.
+Repo **https://github.com/spashap/DrawReport** (`main`). Live at **https://drawreport.com** (TLS via
+Let's Encrypt). All phases M0–M9 done, plus the Golos port (phases 1–6), the freemium funnel, the
+full-deploy `release.bat`, and a native-US-English copy pass.
 
-**Run locally:** `venv\Scripts\python.exe run.py` (web :3000) + `venv\Scripts\python.exe worker.py`. Admin at `/admin/login` (pass = `ADMIN_PASS`).
+### What is running in production right now
+| | |
+|---|---|
+| **Host** | Hetzner `root@5.78.181.152`, shared with **cosmyday-api** (port 8001) — never touch its units/vhost/cert/venv |
+| **Code** | `/var/www/DrawReport`, gunicorn on `127.0.0.1:8002`, nginx vhost `drawreport.com` (+www) |
+| **Units** | `drawreport-web`, `drawreport-worker`, **`drawreport-free`** (three, all active) |
+| **LLM** | Anthropic. Paid report `claude-sonnet-4-6` (fallback `claude-haiku-4-5-20251001`); **free reading `claude-haiku-4-5-20251001`** (`FREE_LLM_MODEL` — its own knob because it is a per-*visitor* cost, not a per-*sale* one) |
+| **Payments** | **PayPal LIVE** (`PAYMENT_BACKEND=paypal`, `PAYPAL_ENV=live`, webhook id set). Verified read-only; **never make a test charge** |
+| **Email** | **Brevo over SMTP** (`MAIL_BACKEND=smtp`, `smtp-relay.brevo.com:587`, from `team@drawreport.com`). NOT Resend — its free tier allows one domain and refused ours. A stale `RESEND_API_KEY` is still in `.env`; harmless, unused |
+| **Price** | **$29**, from the git-tracked `config/products.json`. The server has **no** `data/products.json`, so `config/` is what is live (see UseCase #23) |
+| **Locales** | `LOCALES=en` only. The i18n plumbing is real but the `en` catalog is empty and uncompiled, so `_('...')` returns the msgid — **English source text lives inline in the templates** |
 
-**Owner still to do before public launch:** DNS + `provision.sh` + `certbot`; in server `.env` set `PUBLIC_BASE_URL=https://drawreport.com` + strong `ADMIN_PASS`; add `RESEND_API_KEY`+`MAIL_BACKEND=resend`, `PAYPAL_*`+`PAYMENT_BACKEND=paypal`, `GA_MEASUREMENT_ID`; review DRAFT copy (landing/blog/legal) + legal with counsel; drop real logo art in `data/Images/` + run `build_logos.py` (placeholders ship; hero already built from owner art).
+### Site shape (this is the part that differs from Golos)
+- **`/` (`templates/home.html`) is the FREE-first front door** — its only job is to move the visitor
+  into `/free/`. This deliberately INVERTS Golos, where the free product is demoted so it cannot
+  cannibalise the paid one. Re-check that trade-off once there is organic traffic to protect.
+- **`/en/report` (`templates/landing.html`) is the paid product page**, one item in the nav.
+- **`/free/`** is the freemium wizard (3 questions → mirror → upload → reading), served by its own
+  worker unit. Caps are admin-controlled (`daily_cap`, `per_email_daily`).
+- **`/admin`** — 13 sections, ported wholesale from Golos: Tasks, Analytics, Visits, Actions, Orders,
+  Clients, Coupons, Prices, Site settings, Report texts, Emails, Freemium, Beta.
+- Only the **snapshot** product is enabled; `development` is disabled on purpose (Golos decision).
 
-**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` · plan `development-plan.md`.
+### Copy standard — read this before writing ANY visible English
+The first English conversion was rejected by the owner as an "epic fail". `/en/` and `/en/report`
+were rewritten on 2026-08-17 to native US consumer English against
+`projectSpec/drawreportcopyfixtask.md`. **Verify copy on the RENDERED page, never on the template
+source** (UseCase #20) — and remember one page pulls strings from five places: the template,
+`app/content.py`, `config/products.json`, `config/free_texts.py`, and `content/en/blog/*.md` front
+matter (UseCase #21). Avoid the tells that got flagged: Britishisms, `and a hint`-style translation
+artifacts, repeated not-X/never-X contrast, em-dash density, rule-of-three lists.
+
+### Deploy / release — ONE command
+```
+release.bat "message"               bump -> commit -> push -> ssh deploy -> asserting health check
+release.bat "message" --no-deploy   push only (use for docs/journal-only commits)
+release.bat --deploy-only           deploy what is already on GitHub
+```
+`deploy.sh` re-execs itself after `git pull` (it rewrites itself mid-run otherwise — UseCase in the
+log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
+
+### 🔴 WHAT IS MISSING (verified 2026-08-17 — this is the resume list)
+**Analytics & search — nothing is measuring anything right now.**
+1. **GA4 — NOT set up.** `GA_MEASUREMENT_ID` is EMPTY on the server, so `templates/_analytics.html`
+   renders no snippet and **zero pages emit gtag**. Owner must create the GA4 property and put the
+   `G-XXXXXXXXXX` id in the server `.env`. The template is ready; this is a value, not a code change.
+2. **Google Search Console — NOT verified.** No `google-site-verification` meta tag on the site,
+   sitemap never submitted.
+3. **Bing Webmaster Tools — NOT verified.** No `msvalidate.01` meta tag. Bing matters beyond Bing:
+   it feeds Copilot and ChatGPT search. IndexNow also lives here.
+4. **There is no mechanism for verification meta tags at all** — adding GSC/Bing needs a small
+   feature (env-driven `<meta>` tags in `_base.html` + `landing.html`), not just a pasted value.
+   Note `landing.html` has its OWN `<head>` and does not extend `_base.html`, so any head change
+   must be made in BOTH files.
+
+**SEO gaps found while auditing (not yet fixed, deliberately left for the next session).**
+5. **The sitemap omits the blog posts.** `app/routes.py` emits `/en/blog` (the index) but none of the
+   three `/en/blog/<slug>` URLs. The articles are the only organic-search surface the site has.
+6. **`lastmod` is `today` on every URL on every request** — tells crawlers the whole site changed
+   today, every day, which is a false signal that devalues the real ones.
+7. **No `llms.txt`.**
+
+**Product / business.**
+8. **Freemium wizard copy has NOT had the English pass** — owner explicitly deferred it ("later i
+   will have review about freemium templates"). `/en/` and `/en/report` are done; `/free/*` is not.
+9. **Legal pages are DRAFT** and have not been reviewed by counsel (COPPA / children's data,
+   refunds, PayPal, FTC "educational, not diagnosis" claims).
+10. **Blog has only 3 posts.**
+11. **Launch price framing undecided.** Live is a flat $29. A `$59 → $39` strike-through variant
+    exists only in the local dev `data/products.json` and is NOT on the server.
+
+**Run locally:** `venv\Scripts\python.exe run.py` (web :3000) + `worker.py` + `free_worker.py`.
+Admin `/admin/login` (pass = `ADMIN_PASS`). The footer version badge shows on localhost and is
+hidden in production — `settings.SHOW_VERSION`, derived from `PUBLIC_BASE_URL`.
+
+**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#23) ·
+copy task `projectSpec/drawreportcopyfixtask.md` · plan `development-plan.md`.
 
 ---
 
@@ -66,10 +134,11 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
 - **Language/UI:** English, via i18n (see `i18n-architecture.md`). **No hardcoded UI strings** anywhere —
   everything through the translation layer, English as the first catalog.
 - **Payment:** **PayPal Business** (Orders API: create order → capture → webhook). Drops into the same
-  payment-provider abstraction Golos uses for its stub/ЮKassa. Build with a stub provider first; owner
-  wires real PayPal creds in `.env`.
-- **Email:** **Resend** (HTTP API). Implement as a `resend` backend behind the same `mailer.py`
-  abstraction (Golos has outbox/unisender backends). Owner provides `RESEND_API_KEY`.
+  payment-provider abstraction Golos uses for its stub/ЮKassa. ✅ DONE and **LIVE** — see AS-BUILT.
+- **Email:** ⚠️ specced as **Resend**; **shipped as Brevo over SMTP.** Resend's free tier allows one
+  verified domain and rejected ours. `app/mailer.py` now has three backends behind one abstraction —
+  `outbox` (files, dev), `smtp` (**what prod uses**, portable to any provider) and `resend`. Prefer
+  `smtp`: switching providers is then an `.env` change, not a new code path.
 - **Currency:** USD `$`; number/date formatting per-locale via Babel. (No ₽.)
 - **Sample reports:** reuse Golos sample JSON + drawing images; **rename children to American names**;
   translate report content to natural US English (adapt, don't literal-translate).
@@ -114,15 +183,17 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
 - **Versioning:** bump minor before EVERY `git push` (`scripts/bump_version.py`); include `VERSION` in
   the same commit. Major only on explicit owner command.
 - **Console/encoding:** keep scripts ASCII-safe in console output.
-- **Secrets in `.env`, never committed** (`GEMINI_API_KEY`, `PAYPAL_*`, `RESEND_API_KEY`,
+- **Secrets in `.env`, never committed** (`ANTHROPIC_API_KEY`, `PAYPAL_*`, `SMTP_PASSWORD`,
   `ADMIN_PASS`, etc.). Build features behind abstractions + stubs so the app runs before real creds.
+  ⚠️ **PayPal is LIVE with real credentials** — use read-only checks; never make a test charge.
 
 ## Deployment — Hetzner VPS, SHARED with another project (do not disturb it)
 - Server: **root@5.78.181.152** (Hetzner). It already runs **cosmyday-api** (Python) at
   `/var/www/cosmyday-api` on **port 8001** (api.cosmyday.com). DrawReport must run **in parallel,
   isolated**:
   - Code in **`/var/www/DrawReport`** (capital); app on its **own port (8002)** (gunicorn bind 127.0.0.1:8002). Deploy kit in `drawreportDeploy/` (copy to `/var/www/drawreportDeploy`).
-  - Own systemd units: **`drawreport-web`**, **`drawreport-worker`** (do not touch cosmyday units).
+  - Own systemd units: **`drawreport-web`**, **`drawreport-worker`**, **`drawreport-free`** (the
+    freemium reading worker; three units in total — do not touch cosmyday units).
   - Own **nginx vhost** for `drawreport.com` (+ www); **DNS-only + Let's Encrypt** cert (certbot nginx
     plugin) for drawreport.com only. Do not modify cosmyday's vhost/cert.
   - Own **SQLite** db under `/var/www/DrawReport/data/`.
@@ -132,15 +203,19 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
   the exact packages in the deploy notes). Python venv per project (do not share cosmyday's venv).
 - **No Vercel.** `drawreport.com` points directly at this server.
 
-## Commands (mirror Golos; create equivalents)
+## Commands (as built)
 ```
-venv\Scripts\python.exe run.py                 # dev server
-venv\Scripts\python.exe worker.py [--once]     # report worker (paid -> delivered)
+venv\Scripts\python.exe run.py                 # dev server on :3000 (PORT env)
+venv\Scripts\python.exe worker.py [--once]     # PAID report worker (paid -> delivered)
+venv\Scripts\python.exe free_worker.py         # FREE reading worker (its own unit in prod)
 venv\Scripts\python.exe scripts\build_hero_image.py   # optimized hero from data/Images
-venv\Scripts\python.exe scripts\build_logos.py        # optimized logos from data/Images
+venv\Scripts\python.exe scripts\build_logos.py        # header strip + icon + favicons from data/Images
 venv\Scripts\python.exe scripts\bump_version.py       # minor +1 before every push
-release.bat "msg"                              # bump -> (export) -> commit -> push   (.\release.bat in PowerShell)
+.\release.bat "msg"                            # bump -> commit -> push -> DEPLOY -> health check
+.\release.bat "msg" --no-deploy                # push only (docs/journal commits)
+.\release.bat --deploy-only                    # deploy what is already on GitHub
 ```
+Three workers/units, not two: `drawreport-web`, `drawreport-worker`, `drawreport-free`.
 
 ## Build discipline
 - Follow `development-plan.md` phase by phase. **Commit at the end of each phase** with a clear message
