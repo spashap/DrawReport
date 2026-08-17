@@ -80,9 +80,17 @@ def _resend_send(to: str, subject: str, html_body: str,
         payload["attachments"] = atts
 
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    # An explicit User-Agent is REQUIRED, not cosmetic. urllib defaults to
+    # "Python-urllib/3.x", which Cloudflare in front of the Resend API blocks with its own
+    # 403 "error code: 1010" page. The request never reaches Resend, so its real error -
+    # a wrong key, an unverified domain - is replaced by a meaningless block page and
+    # every mail failure looks identical. This cost a live debugging session: the actual
+    # problem was "API key is not authorized to send emails from drawreport.com", and the
+    # only way to see it was to bypass our own client with curl.
     req = urllib.request.Request(
         settings.RESEND_API_URL, data=data, method="POST",
         headers={"Content-Type": "application/json",
+                 "User-Agent": f"DrawReport/{settings.APP_VERSION} (+https://{settings.SITE_DOMAIN})",
                  "Authorization": f"Bearer {settings.RESEND_API_KEY}"})
     try:
         with urllib.request.urlopen(req, timeout=settings.RESEND_TIMEOUT) as resp:
