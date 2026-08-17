@@ -23,6 +23,23 @@ LLM_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-4-6")        # primary model
 LLM_FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "claude-haiku-4-5-20251001")
 LLM_MAX_ATTEMPTS = int(os.getenv("LLM_MAX_ATTEMPTS", "5"))     # per-model attempts (Golos §7.2)
 
+# --- LLM (FREE analysis of one drawing) ---
+# Its own model knob, separate from the paid report on purpose: the free analysis runs
+# once per interested visitor rather than once per sale, so it is the only path where
+# model cost is a per-visitor cost. Its own attempt/repair budget for the same reason -
+# the parent is waiting on screen, so retries are cheaper to cap here than on the paid
+# path where nobody is watching.
+FREE_LLM_MODEL = os.getenv("FREE_LLM_MODEL", LLM_MODEL)
+FREE_MAX_ATTEMPTS = int(os.getenv("FREE_MAX_ATTEMPTS", "3"))
+FREE_REPAIR_ROUNDS = int(os.getenv("FREE_REPAIR_ROUNDS", "2"))
+# A hard daily ceiling on free analyses. Without it one bad traffic day is an unbounded
+# bill: every visitor who uploads a photo costs a model call whether or not they ever buy.
+FREE_DAILY_CAP = int(os.getenv("FREE_DAILY_CAP", "200"))
+# How long an uploaded free drawing is kept before deletion (days). The analysis text and
+# the counters stay; only the child's photo goes.
+FREE_PHOTO_RETENTION_DAYS = int(os.getenv("FREE_PHOTO_RETENTION_DAYS", "90"))
+# FREE_DIR lives in the Paths block below, where DATA_DIR is defined.
+
 # Anthropic (Claude) - default provider
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
@@ -60,6 +77,7 @@ TRANSLATIONS_DIR = BASE_DIR / "translations"
 # --- Paths ---
 DATA_DIR = BASE_DIR / "data"
 DRAWINGS_DIR = DATA_DIR / "drawings"   # /data/drawings/{order_id}/...
+FREE_DIR = DATA_DIR / "free"           # /data/free/{token}.jpg - uploaded free drawings
 REPORTS_DIR = DATA_DIR / "reports"     # /data/reports/{order_id}/...
 DB_PATH = DATA_DIR / "drawreport.sqlite3"
 

@@ -131,6 +131,65 @@ CREATE TABLE IF NOT EXISTS web_visits (
     geo_region TEXT,
     customer_id INTEGER
 );
+-- One free analysis of one drawing. The row is created when the questionnaire is
+-- answered, BEFORE any drawing arrives: that is what makes "answered the questions but
+-- never uploaded" a measurable step rather than an invisible drop-off.
+CREATE TABLE IF NOT EXISTS free_analyses (
+    id INTEGER PRIMARY KEY,
+    token TEXT UNIQUE NOT NULL,           -- public url token (/free/r/{token})
+    visitor_id TEXT,
+    visit_id TEXT,
+    customer_id INTEGER REFERENCES customers(id),
+    email TEXT,                           -- optional: left to receive the analysis by mail
+    child_name TEXT NOT NULL,
+    child_name_norm TEXT,                 -- lowercased, for the one-per-child limit
+    age INTEGER NOT NULL,
+    address_form TEXT,                    -- 'she' / 'he' / 'they'
+    concern_key TEXT NOT NULL,            -- which concern; 'neutral' = none named
+    duration_key TEXT,
+    parent_text TEXT,                     -- the parent's own words (data, not instruction)
+    image_path TEXT,                      -- data/free/{token}.jpg; NULL once retention deletes it
+    image_deleted_at TEXT,
+    status TEXT NOT NULL DEFAULT 'draft',
+        -- draft (questions answered) / queued (drawing in) / generating /
+        -- done / insufficient / failed / rejected
+    reason_key TEXT,                      -- when insufficient: photo_poor/not_a_drawing/blank/other
+    result_json TEXT,                     -- the validated analysis
+    model TEXT,
+    prompt_version TEXT,
+    attempts INTEGER DEFAULT 0,
+    repair_rounds INTEGER DEFAULT 0,
+    hypothesis_dropped INTEGER DEFAULT 0,
+    elapsed_s REAL,
+    locale TEXT NOT NULL DEFAULT 'en',
+    created_at TEXT NOT NULL,
+    uploaded_at TEXT,
+    done_at TEXT
+);
+-- One row per interpretation the model actually produced. This is the whole point of the
+-- beta: the library of admissible interpretations is assembled from real output rather
+-- than written in advance.
+CREATE TABLE IF NOT EXISTS free_interpretations (
+    id INTEGER PRIMARY KEY,
+    analysis_id INTEGER NOT NULL REFERENCES free_analyses(id),
+    key TEXT NOT NULL,                    -- from config/free_keys.py, or 'new'
+    phrase TEXT NOT NULL,
+    attribution TEXT,
+    age_scope TEXT,
+    new_key_description TEXT,             -- only when key='new'
+    child_age INTEGER,
+    created_at TEXT NOT NULL
+);
+-- The owner's verdict per key: is this interpretation one we stand behind?
+CREATE TABLE IF NOT EXISTS free_interpretation_keys (
+    key TEXT PRIMARY KEY,
+    verdict TEXT,                         -- confirmed / narrow / folklore
+    note TEXT,
+    decided_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_free_status ON free_analyses(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_free_created ON free_analyses(created_at);
+CREATE INDEX IF NOT EXISTS idx_free_interp_key ON free_interpretations(key, created_at);
 -- Work that has to be done BY HAND, in someone else's interface (GA4 key events,
 -- PayPal credentials, a legal review). Such a task has nowhere to live in code and
 -- disappears from a chat log, so it lives here. See app/admin_tasks.py.
@@ -210,6 +269,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "visit_id" not in ord_cols:
         conn.execute("ALTER TABLE orders ADD COLUMN visit_id TEXT")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_orders_visit ON orders(visit_id)")
+    # Attribution "free -> purchase": the token of the free analysis the order came from.
+    # The indirect joins (email / visitor_id) stay, but they are guesswork; a direct move
+    # from the analysis is the only exact source, and without a column it was lost.
+    if "free_token" not in ord_cols:
+        conn.execute("ALTER TABLE orders ADD COLUMN free_token TEXT")
 
 
 def get_db() -> sqlite3.Connection:
