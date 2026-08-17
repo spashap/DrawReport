@@ -11,9 +11,22 @@ APP_DIR=/var/www/DrawReport
 SVC_USER=www-data
 cd "$APP_DIR"
 
-echo "== pull =="
-git pull --ff-only
-echo "now at $(git rev-parse --short HEAD)  (V$(cat VERSION 2>/dev/null || echo '?'))"
+# SELF-UPDATE GUARD. This script lives in the repo it pulls, and bash reads a script
+# INCREMENTALLY as it runs - so `git pull` rewriting this file mid-execution leaves bash
+# running a mix of the old and new versions from whatever byte offset it had reached.
+# That is not theoretical: the first deploy after the free-worker unit was added ran the
+# OLD script end to end, so the unit was never installed and data/free was never created,
+# while the deploy reported success.
+#
+# The fix: pull, then immediately re-exec. `exec` replaces the process and reads the new
+# file from byte zero, so every step after the pull runs entirely from the new version.
+# The stage variable stops it looping.
+if [ "${DR_DEPLOY_STAGE:-1}" = "1" ]; then
+  echo "== pull =="
+  git pull --ff-only
+  echo "now at $(git rev-parse --short HEAD)  (V$(cat VERSION 2>/dev/null || echo '?'))"
+  DR_DEPLOY_STAGE=2 exec bash "$0" "$@"
+fi
 
 echo "== python deps =="
 venv/bin/pip install -q -r requirements.txt
