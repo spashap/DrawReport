@@ -127,6 +127,9 @@
 </section>
 {% endblock %}
 {% block footer %}{{ super() }}
+{# Note on the error strings below: 'email_cap' is deliberately worded differently from
+   the one-per-child limit, which is a sales redirect into the paid report. Someone who
+   hit a technical allowance should not be handed a pitch. #}
 <script>
   window.FREE_TEXT = {
     stoppedQuestion: {{ texts.DURATION_QUESTION_STOPPED | tojson }},
@@ -140,6 +143,7 @@
       'email': _('Please check the email address.'),
       'no_file': _('Choose a photo of the drawing.'),
       'cap': _('We’ve read the maximum number of drawings for today. Leave your email and we’ll send you a link tomorrow.'),
+      'email_cap': _('This email has used its free readings for today. Please try again tomorrow.'),
       'network': _('No connection. Please try again.'),
       'other': _('That didn’t upload. Please try again.')
     } | tojson }}

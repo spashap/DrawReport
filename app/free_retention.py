@@ -96,8 +96,35 @@ def used_today(conn) -> int:
         " 'insufficient','failed')", (start,)).fetchone()["c"]
 
 
+def used_today_by_email(conn, email: str) -> int:
+    """How many free analyses this email has had generated today (UTC).
+
+    Counted from uploaded_at, not created_at: an email left through the "no drawing to
+    hand" exit never reached the model and cost nothing, so it must not consume anyone's
+    quota."""
+    if not email:
+        return 0
+    start = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+    return conn.execute(
+        "SELECT COUNT(*) c FROM free_analyses"
+        " WHERE LOWER(email) = ? AND uploaded_at >= ?"
+        " AND status IN ('queued','generating','done','insufficient','failed')",
+        (email.strip().lower(), start)).fetchone()["c"]
+
+
 def cap_reached(conn) -> bool:
-    """Is the daily ceiling used up? Checked before accepting a drawing, not after: the
-    point is to refuse the upload politely, not to take the photo and then refuse."""
-    cap = settings.FREE_DAILY_CAP
+    """Is the GLOBAL daily ceiling used up? Checked before accepting a drawing, not after:
+    the point is to refuse the upload politely, not to take the photo and then refuse.
+    0 = unlimited."""
+    cap = settings.get_free_limits().get("daily_cap", 0)
     return cap > 0 and used_today(conn) >= cap
+
+
+def email_cap_reached(conn, email: str) -> bool:
+    """Has this address used up its own daily allowance? 0 = unlimited.
+
+    This is cost control, NOT the one-reading-per-child limit - that one is a sales
+    redirect ("the next step is looking at drawings together") and must not share wording
+    with this, or a parent who hit a technical limit gets a sales pitch."""
+    cap = settings.get_free_limits().get("per_email_daily", 0)
+    return cap > 0 and used_today_by_email(conn, email) >= cap

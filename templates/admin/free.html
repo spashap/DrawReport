@@ -33,8 +33,11 @@
     <p class="admin-flash admin-flash--err">{{ stuck }} analysis(es) stuck in the queue
       longer than {{ stuck_minutes }} minutes — the free worker is probably not running.</p>
     {% endif %}
-    <p class="hint">Today's free readings: <b>{{ used_today }}</b>{% if cap %} of a cap of {{ cap }}{% endif %}.
-      Every upload costs a model call whether or not the parent ever buys.</p>
+    <p class="hint">Today's free readings: <b>{{ used_today }}</b>{% if limits.daily_cap %}
+      of a cap of {{ limits.daily_cap }}{% else %} (no daily cap set){% endif %} ·
+      per email/day: {{ limits.per_email_daily or 'unlimited' }}.
+      Every upload costs a model call whether or not the parent ever buys —
+      <a href="{{ url_for('admin.prices') }}">change the limits</a>.</p>
   </div>
   <div>
     <h2>Where they are</h2>

@@ -32,7 +32,7 @@ from flask import (Blueprint, Response, abort, g, jsonify, redirect,
                    render_template, request, url_for)
 
 from app.db import get_db, new_token, now
-from app.free_retention import cap_reached
+from app.free_retention import cap_reached, email_cap_reached
 from app.orders import EMAIL_RE
 from app.track import track_event
 from config import free_texts as T
@@ -163,11 +163,19 @@ def upload(token: str):
     # not to take the drawing and then decline.
     if cap_reached(db):
         track_event("free_cap_hit")
-        return jsonify({"error": "cap"}), 429
+        # Also goes through _upload_failed so it lands in the same "why uploads were
+        # refused" table as every other refusal. Reporting it only under its own event
+        # name would leave a hole in exactly the table built to have no holes.
+        return _upload_failed("cap", {"error": "cap"}, 429)
 
     addr = (request.form.get("email") or "").strip().lower()
     if not EMAIL_RE.match(addr):
         return _upload_failed("email", {"error": "email"}, 400)
+    # Per-address allowance, checked after the address is known but still BEFORE the file
+    # is read or written: a refused upload must not cost us a disk write or a model call.
+    if email_cap_reached(db, addr):
+        track_event("free_email_cap_hit")
+        return _upload_failed("email_cap", {"error": "email_cap"}, 429)
 
     fs = request.files.get("file")
     if fs is None or not fs.filename:

@@ -70,8 +70,10 @@ def main() -> int:
     conn.commit()
     if stale:
         log.warning("reset %d stale 'generating' analysis(es) back to 'queued'", stale)
-    log.info("free worker started (model=%s, cap=%d/day, retention=%d days, once=%s)",
-             settings.FREE_LLM_MODEL, settings.FREE_DAILY_CAP,
+    lim = settings.get_free_limits()
+    log.info("free worker started (model=%s, cap=%s/day, %s/email/day, retention=%d days, once=%s)",
+             settings.FREE_LLM_MODEL, lim["daily_cap"] or "unlimited",
+             lim["per_email_daily"] or "unlimited",
              settings.FREE_PHOTO_RETENTION_DAYS, args.once)
 
     last_retention = 0.0

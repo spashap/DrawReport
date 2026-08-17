@@ -4,6 +4,7 @@
 <div class="admin-head"><h1 class="h2">Prices</h1></div>
 
 {% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Saved — the product page, the order form and checkout already use the new prices (no restart needed).</p>{% endif %}
+{% if saved == "limits" %}<p class="admin-flash admin-flash--ok">Limits saved — they apply to the next upload (no restart needed).</p>{% endif %}
 {% if err %}<p class="admin-flash admin-flash--err">Not saved: {{ err }}.</p>{% endif %}
 
 <p class="hint">Edits are saved to <code>data/products.json</code> (the default is
@@ -34,6 +35,33 @@ struck-through price is shown.</p>
     {% endfor %}
   </div>
   <button class="btn btn--primary" type="submit">Save prices</button>
+</form>
+
+<h2 class="admin-gap">Freemium limits</h2>
+<p class="hint">The other money knob on this page: <b>every free reading costs a model
+  call</b> whether or not the parent ever buys (about $0.03–0.04 each). The two limits are
+  not redundant — the daily cap protects the bill, the per-email cap stops one person
+  consuming that daily cap before anyone else arrives.<br>
+  <b>0 means unlimited.</b> Note what neither can do: an email is self-declared and we
+  don't verify it before generating, so a new address is a new allowance. The daily cap is
+  the only hard guarantee on spend.</p>
+
+<form method="post" action="{{ url_for('admin.prices_limits_save') }}" class="form-card admin-form">
+  <div class="field">
+    <label for="l-daily">Free readings per day, all visitors</label>
+    <div class="hint">Used today: <b>{{ used_today }}</b>{% if limits.daily_cap %}
+      of {{ limits.daily_cap }} — about ${{ '%.0f'|format(limits.daily_cap * 0.04) }}/day at the top{% endif %}</div>
+    <input class="input" id="l-daily" name="daily_cap" type="number" min="0"
+           value="{{ limits.daily_cap }}" required>
+  </div>
+  <div class="field">
+    <label for="l-email">Free readings per email, per day</label>
+    <div class="hint">Cost control, not the one-per-child limit — that one is a redirect
+      into the paid report and has its own message.</div>
+    <input class="input" id="l-email" name="per_email_daily" type="number" min="0"
+           value="{{ limits.per_email_daily }}" required>
+  </div>
+  <button class="btn btn--primary" type="submit">Save limits</button>
 </form>
 
 <p class="hint admin-gap">Coupons (an extra discount at checkout) are in

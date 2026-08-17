@@ -663,7 +663,8 @@ def free():
                    items=items, library=library, funnel=funnel, voted=voted,
                    with_email=with_email, stuck=stuck, verdicts=FREE_VERDICTS,
                    heartbeats=_heartbeats(db), stuck_minutes=FREE_STUCK_MINUTES,
-                   used_today=_free_used_today(db), cap=settings.FREE_DAILY_CAP,
+                   used_today=_free_used_today(db),
+                   limits=settings.get_free_limits(),
                    msg=request.args.get("msg"))
 
 
@@ -725,12 +726,38 @@ def _atomic_write_json(path, data):
 @bp_admin.get("/prices")
 def prices():
     """Product prices: before the discount (struck through) and payable (after).
-    PayPal is charged the PAYABLE price, minus any coupon - see orders.py."""
+    PayPal is charged the PAYABLE price, minus any coupon - see orders.py.
+
+    The freemium limits live on this page too: they are the other money knob. Every free
+    reading costs a model call whether or not the parent ever buys."""
     _guard()
+    db = get_db()
     return _render("admin.prices", "admin/prices.html",
                    products=settings.get_products(),
+                   limits=settings.get_free_limits(),
+                   used_today=_free_used_today(db),
                    saved=request.args.get("saved"),
                    err=request.args.get("err"))
+
+
+@bp_admin.post("/prices/limits")
+def prices_limits_save():
+    """The two freemium limits. 0 = unlimited, and the form says so - a blank field that
+    silently means "no limit" is how an unbounded bill happens."""
+    _guard()
+    out = {}
+    for field in ("daily_cap", "per_email_daily"):
+        raw = (request.form.get(field) or "").strip()
+        try:
+            n = int(raw)
+        except ValueError:
+            return redirect(url_for("admin.prices",
+                                    err="Limits must be whole numbers (0 = unlimited)"))
+        if n < 0:
+            return redirect(url_for("admin.prices", err="A limit cannot be negative"))
+        out[field] = n
+    _atomic_write_json(settings.FREE_LIMITS_RUNTIME_FILE, out)
+    return redirect(url_for("admin.prices", saved="limits"))
 
 
 @bp_admin.post("/prices/save")

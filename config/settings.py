@@ -32,9 +32,41 @@ LLM_MAX_ATTEMPTS = int(os.getenv("LLM_MAX_ATTEMPTS", "5"))     # per-model attem
 FREE_LLM_MODEL = os.getenv("FREE_LLM_MODEL", LLM_MODEL)
 FREE_MAX_ATTEMPTS = int(os.getenv("FREE_MAX_ATTEMPTS", "3"))
 FREE_REPAIR_ROUNDS = int(os.getenv("FREE_REPAIR_ROUNDS", "2"))
-# A hard daily ceiling on free analyses. Without it one bad traffic day is an unbounded
-# bill: every visitor who uploads a photo costs a model call whether or not they ever buy.
-FREE_DAILY_CAP = int(os.getenv("FREE_DAILY_CAP", "200"))
+# The two free-analysis limits live in JSON, not in .env, so the owner can change them
+# from the admin without a restart or a deploy - the same two-file split as products.json
+# (config/ = tracked default, data/ = what the admin writes). See get_free_limits().
+#
+# They are NOT redundant. The daily cap protects the bill; the per-email cap stops one
+# person consuming that daily cap before anyone else arrives. Note what neither can do:
+# an email is self-declared and unverified, so a new address is a new quota. The daily cap
+# is the only hard guarantee on spend; the per-email cap just makes it harder for one
+# person to eat it.
+FREE_LIMITS_DEFAULT_FILE = BASE_DIR / "config" / "free_limits.json"
+FREE_LIMITS_RUNTIME_FILE = None   # set in the Paths block below (needs DATA_DIR)
+_FREE_LIMITS_DEFAULT = {"daily_cap": 200, "per_email_daily": 2}
+_free_limits_cache: "tuple[float, dict] | None" = None
+
+
+def get_free_limits() -> dict:
+    """Read free_limits.json with an mtime cache - admin edits are live without a restart.
+    Falls back to safe defaults if the file is missing or corrupt: a broken file must not
+    mean UNLIMITED spending."""
+    global _free_limits_cache
+    import json
+    path = (FREE_LIMITS_RUNTIME_FILE
+            if FREE_LIMITS_RUNTIME_FILE and FREE_LIMITS_RUNTIME_FILE.exists()
+            else FREE_LIMITS_DEFAULT_FILE)
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return dict(_FREE_LIMITS_DEFAULT)
+    if _free_limits_cache is None or _free_limits_cache[0] != mtime:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return dict(_FREE_LIMITS_DEFAULT)
+        _free_limits_cache = (mtime, {**_FREE_LIMITS_DEFAULT, **data})
+    return _free_limits_cache[1]
 # How long an uploaded free drawing is kept before deletion (days). The analysis text and
 # the counters stay; only the child's photo goes.
 FREE_PHOTO_RETENTION_DAYS = int(os.getenv("FREE_PHOTO_RETENTION_DAYS", "90"))
@@ -78,6 +110,7 @@ TRANSLATIONS_DIR = BASE_DIR / "translations"
 DATA_DIR = BASE_DIR / "data"
 DRAWINGS_DIR = DATA_DIR / "drawings"   # /data/drawings/{order_id}/...
 FREE_DIR = DATA_DIR / "free"           # /data/free/{token}.jpg - uploaded free drawings
+FREE_LIMITS_RUNTIME_FILE = DATA_DIR / "free_limits.json"   # admin edits (see get_free_limits)
 REPORTS_DIR = DATA_DIR / "reports"     # /data/reports/{order_id}/...
 DB_PATH = DATA_DIR / "drawreport.sqlite3"
 
