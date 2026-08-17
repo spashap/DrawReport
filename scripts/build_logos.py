@@ -34,9 +34,17 @@ OUT = BASE / "static" / "img"
 # one name it rejected - and that is exactly the mistake that got made. The output name
 # is listed FIRST because it is the one a person guesses.
 JOBS = [
-    (("logo-strip.png", "stripLogo.png"), "logo-strip", 84, None),  # keep aspect by height
     (("logo-icon.png", "logo.png"), "logo-icon", 96, 96),           # square
 ]
+
+# The header strip is COMPOSED from the icon + the wordmark rather than supplied as one
+# image, so the two stay in step: replace either source and the lockup rebuilds itself.
+# Height 108 = 2x the 54px the header actually displays (.logo__img in components.css),
+# so it stays crisp on a retina screen. It was previously built at 84px against the same
+# 54px display box - only 1.55x, and visibly soft.
+STRIP_HEIGHT = 108
+STRIP_WORDMARK_RATIO = 0.46   # wordmark glyph height as a fraction of the icon height
+STRIP_GAP_RATIO = 0.16        # gap between icon and wordmark, also as a fraction
 
 # Favicons come from the SAME square source as the header icon. Building them here rather
 # than by hand is the point: a logo change that updates the header but leaves a stale
@@ -158,8 +166,36 @@ def main() -> int:
         im.save(webp, "WEBP", quality=90, method=6)
         print("  %-11s %3dx%-3d  png %5.1f KB   webp %5.1f KB" % (name, w, h, kb(png), kb(webp)))
 
+    # --- the header strip: icon + wordmark, composed ---
+    icon_src = _find(JOBS[0][0])
+    word_src = _find(("logo-strip.png", "stripLogo.png"))
+    if icon_src and word_src:
+        icon = _dealpha_and_trim(Image.open(icon_src))
+        word = Image.open(word_src).convert("RGBA")
+        wb = word.split()[-1].getbbox()          # trim the wordmark to its glyphs, so the
+        if wb:                                   # gap is measured from ink, not from the
+            word = word.crop(wb)                 # exporter's padding
+
+        ih = STRIP_HEIGHT
+        icon = icon.resize((round(icon.width * ih / icon.height), ih), Image.LANCZOS)
+        wh = round(ih * STRIP_WORDMARK_RATIO)
+        word = word.resize((round(word.width * wh / word.height), wh), Image.LANCZOS)
+        gap = round(ih * STRIP_GAP_RATIO)
+
+        strip = Image.new("RGBA", (icon.width + gap + word.width, ih), (0, 0, 0, 0))
+        strip.paste(icon, (0, 0), icon)
+        # Optically centred on the icon, not on the canvas: the icon's own artwork sits
+        # slightly high, and centring the text on the full canvas made it look dropped.
+        strip.paste(word, (icon.width + gap, (ih - word.height) // 2), word)
+
+        png, webp = OUT / "logo-strip.png", OUT / "logo-strip.webp"
+        strip.save(png, "PNG", optimize=True)
+        strip.save(webp, "WEBP", quality=92, method=6)
+        print("  %-11s %3dx%-3d  png %5.1f KB   webp %5.1f KB  (icon + wordmark)"
+              % ("logo-strip", strip.width, ih, kb(png), kb(webp)))
+
     # --- favicons, from the same square source as the header icon ---
-    icon_src = _find(JOBS[1][0])
+    icon_src = _find(JOBS[0][0])
     if icon_src is not None:
         FAVICON_DIR.mkdir(parents=True, exist_ok=True)
         art = _dealpha_and_trim(Image.open(icon_src))
