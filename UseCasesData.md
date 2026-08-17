@@ -158,3 +158,32 @@ The SDK `messages.create(...)` has no short default wall-clock cap; a hung reque
 worker. Pass `timeout=180` on every call in `pipeline/anthropic_llm.py` (both the image and the
 text-repair calls). The orchestrator (`pipeline/llm.py`) already treats any exception as a failed
 attempt with backoff → retry → model fallback, so a timeout fails cleanly.
+
+## #20 · Verify copy on the RENDERED page, never on the template sources
+A copy audit counted "25 straight apostrophes" on `/en/report`, but grepping the templates found
+far more - because Jinja msgids written as `_('...')` must escape an inner apostrophe as `child's`,
+which RENDERS as a straight `'`. Source counts and rendered counts are different numbers and only
+the rendered one is what a reader sees. The check that works: `create_app().test_client().get(url)`,
+strip `<script|style|head>`, strip comments, strip tags, unescape entities, then count. Same
+technique catches copy that lives outside the two templates entirely - blog front matter, product
+feature bullets, FAQ constants - all of which surfaced only once the page was rendered.
+
+## #21 · A "public page" copy fix reaches further than the page's own template
+`/en/report` renders strings from FIVE places: `templates/landing.html`, `app/content.py`
+(FAQ + scenarios), `config/products.json` (pricing-card features), `content/en/blog/*.md`
+(front matter, via the carousel) and `config/free_texts.py` (shared with the free wizard).
+Editing only the template leaves the audit failing on phrases that are demonstrably on the page.
+Grep the rendered text for each remaining hit and follow it back to its source.
+
+## #22 · Do not show the build version in a production footer
+`V0.0xx` under the disclaimer reads to a visiting parent as unfinished software. Gate it on
+`settings.SHOW_VERSION`, DERIVED from `PUBLIC_BASE_URL` containing localhost/127.0.0.1 rather
+than configured - a flag someone has to remember to flip is a flag that ships wrong. `SHOW_VERSION=1`
+in `.env` forces it back on when debugging a live box.
+
+## #23 · `data/products.json` may not exist on the server - config/ is what is live
+Prices and pricing-card copy have the same two-file split as everything else (tracked
+`config/products.json` = default, gitignored `data/products.json` = admin edits). The local dev box
+had a `data/` copy at $39/$59 while the SERVER had none, so production was serving the $29 from
+`config/`. Before assuming a copy fix in `data/` will ship, check which file the target box actually
+has: `ssh ... cat /var/www/DrawReport/data/products.json`.

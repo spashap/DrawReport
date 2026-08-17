@@ -270,3 +270,38 @@ prior session; this session completed everything around it per `projectSpec/TASK
 
 **To resume:** all of T1–T5 complete + committed (not pushed). Owner go-live steps unchanged
 (see CLAUDE.md AS-BUILT). New admin screen: `/admin/report-texts`.
+
+---
+
+## 2026-08-17 — Copy edit: native US English on `/en/` and `/en/report` (V0.032)
+Owner verdict on the first English conversion: "epic fail". A separate review produced
+`projectSpec/drawreportcopyfixtask.md` (283 lines, copy-only). Executed in full and deployed.
+
+- **Global.** All apostrophes/quotes curled, every ` - `-as-dash gone (checked on the RENDERED
+  pages, not the sources). Footer version badge `V0.0xx` is now gated by `settings.SHOW_VERSION`,
+  derived from `PUBLIC_BASE_URL` (localhost -> shown, production -> hidden; `SHOW_VERSION=1`
+  forces it on). Both footers now carry the longer disclaimer "Educational observation, not
+  medical **or psychological** diagnosis". `grounded in the developmental and art literature`
+  -> `grounded in developmental and art-education research`.
+- **`/en/` (home.html).** Britishism `to hand` -> `handy`; concern bullets made parallel (all
+  start with a verb about the child) and `very schematic` -> `just outlines`; hero tricolon
+  cut to one promise (it was a table of contents for the bullets a screen below); assorted
+  idiom fixes. 419 -> 411 words.
+- **`/en/report` (landing.html + `app/content.py` + `config/products.json`).** `in support:`,
+  `and a hint` x3, `real methods`, `specially`, `within the hour` all gone; the "For example"
+  block lost its five-times-repeated frame (heading is now "What this looks like in practice"
+  and the scenarios are whole sentences); the prose sentence restating the three-panel diagram
+  deleted; FAQ self-contradiction fixed (`judges` -> `reads`). Negation-contrast reduced from
+  8 to 3 keepers, em dashes 29 -> 16, 1651 -> 1549 words.
+- **Deliberate deviations from the task doc**, both forced by its own §2.8 budget (keep at most
+  three "not/never a diagnosis"): §2.2's replacements for the "No myths" intro and closing note
+  would have kept two more, so those two were rewritten positively instead. Flagged to the owner.
+- **Also touched, on purpose:** `config/free_texts.py` CONCERNS labels (they ARE the home-page
+  concern list) and the two MIRROR strings that paraphrase them - leaving the mirror quoting
+  "very schematic" after the button stopped saying it would echo words the parent never saw.
+  Blog front-matter title/description typography (those strings render in the landing carousel);
+  blog BODIES untouched.
+- **Verified on the live site**, not just locally: 0 straight quotes, 0 spaced-hyphen dashes,
+  0 of the 11 banned phrases, no version badge, long disclaimer on both, all 12 public routes 200.
+
+**Pending (owner):** review of the freemium wizard templates - explicitly deferred by the owner.
