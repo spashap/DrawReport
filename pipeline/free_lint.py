@@ -137,10 +137,28 @@ FREE_HEDGE = {
 
 # Attribution: the paid ATTRIBUTION does not know the generic forms the prompt itself
 # offers ("in the analysis of children's drawings", "in the reading of children's drawings").
+# ⚠️ COUPLED TO free_prompt.py: the prompt now ROTATES the generic attribution wording so
+# that "in the tradition of reading children's drawings" stops appearing verbatim in every
+# analysis. Every form the prompt offers must match here, or the linter will read a
+# correctly framed hypothesis as unattributed and send it round the repair loop.
 FREE_ATTRIBUTION = {
     "en": re.compile(
         ATTRIBUTION["en"].pattern + r"|in\s+the\s+(?:analysis|reading|study)\s+of\s+"
-        r"children'?s?\s+draw\w+|in\s+(?:child\s+)?developmental\s+psychology",
+        r"children'?s?\s+draw\w+|in\s+(?:child\s+)?developmental\s+psychology|"
+        r"people\s+who\s+study\s+children'?s?\s+(?:draw\w+|art)|"
+        r"research\s+on\s+children'?s?\s+(?:draw\w+|art)|"
+        r"one\s+common\s+reading",
+        re.IGNORECASE),
+}
+
+# The hedge required INSIDE hypothesis.phrase. The paid HEDGE knows "may speak of" and
+# "is sometimes associated with" - the two calques the prompt no longer offers - but not
+# the American phrasings that replaced them. ⚠️ COUPLED TO free_prompt.py condition 2:
+# whatever hedges the prompt lists must match here.
+FREE_PHRASE_HEDGE = {
+    "en": re.compile(
+        HEDGE["en"].pattern + r"|\boften\s+goes\s+with\b|\btends?\s+to\s+go\s+with\b|"
+        r"\b(?:can|may|might)\s+be\s+a\s+sign\b|\breads?\s+like\b|\bmay\s+point\s+to\b",
         re.IGNORECASE),
 }
 
@@ -443,12 +461,12 @@ def _check_hypothesis(a: FreeAnalysis, loc: str) -> list[dict]:
             "why": "references to traditions and authors are not needed in detail - the "
                    "system inserts the source from the interpretation key",
         })
-    if not HEDGE[loc].search(phrase):
+    if not FREE_PHRASE_HEDGE[loc].search(phrase):
         hits.append({
             "where": "hypothesis.phrase", "match": phrase[:80], "kind": "hypothesis",
             "context": phrase,
-            "why": "there is no hypothesis hedge - add \"may speak of\", \"is sometimes "
-                   "associated with\", \"can be read as\"",
+            "why": "there is no hypothesis hedge - add \"may point to\", \"often goes "
+                   "with\", \"can be a sign that\", \"can be read as\"",
         })
     # The attribution has become DATA: under each interpretation the server prints the
     # source from the dictionary by key. So it is only required inside the phrase itself
@@ -461,9 +479,9 @@ def _check_hypothesis(a: FreeAnalysis, loc: str) -> list[dict]:
             "where": "hypothesis.phrase", "match": phrase[:80], "kind": "hypothesis",
             "context": phrase,
             "why": "this interpretation has no source in the dictionary, so it needs an "
-                   "attribution in the phrase itself: \"in the tradition of reading "
-                   "children's drawings this is sometimes associated with...\". Do not "
-                   "invent sources",
+                   "attribution in the phrase itself: \"people who study children's "
+                   "drawings often link this to...\", \"in the research on children's "
+                   "drawings this tends to show up when...\". Do not invent sources",
         })
     if len(FREE_ATTRIBUTION[loc].findall(phrase)) > 1:
         hits.append({
@@ -492,7 +510,7 @@ def drop_hypothesis(a: FreeAnalysis, locale: str | None = None) -> FreeAnalysis 
     loc = _loc(locale)
     phrase_n = _norm(a.hypothesis.phrase)
     kept = [s for s in re.split(r"(?<=[.!?])\s+", a.detail.strip())
-            if phrase_n not in _norm(s) and not ATTRIBUTION[loc].search(s)]
+            if phrase_n not in _norm(s) and not FREE_ATTRIBUTION[loc].search(s)]
     detail = " ".join(kept).strip()
     if len(re.findall(r"[^\W\d_]+", detail, re.UNICODE)) < 12:
         return None
@@ -515,10 +533,11 @@ honest, not poorer.
 or mood OF THE CHILD is removed from it and replaced by a visible detail. About the drawing \
 itself ("a dark palette", "the mood of the work") is fine.
 3. THE HYPOTHESIS - you have TWO equally valid exits, choose the honest one:
-   a) complete the frame: an attribution to a real tradition (the unnamed generic form "in \
-the tradition of reading children's drawings this is sometimes associated with..." is fully \
-valid), a hypothesis hedge ("may speak of", "can be read as"), a tie to a visible detail, \
-and a return to the child. And copy the phrase VERBATIM into the hypothesis object;
+   a) complete the frame: an attribution to a real tradition (an unnamed generic form such \
+as "people who study children's drawings often link this to..." or "in the research on \
+children's drawings this tends to show up when..." is fully valid), a hypothesis hedge \
+("may point to", "often goes with", "can be read as"), a tie to a visible detail, and a \
+return to the child. And copy the phrase VERBATIM into the hypothesis object;
    b) DROP the hypothesis entirely: hypothesis=null, and in detail keep the visible detail, \
 a neutral observation and the question for the child. This is NOT a failure - an honest "we \
 have no lawful interpretation for this detail" is the only version that survives a hostile \

@@ -35,7 +35,7 @@ INTERPRETATION_KEYS: dict[str, dict[str, str]] = {
         # planning the page, not by significance.
         "age_scope": "5-12",
         "source": "K. Machover, “Personality Projection in the Drawing of the Human Figure” (1949)",
-        "source_note": "the projective tradition; the observation is widely described, but as a hypothesis rather than a measurement",
+        "source_note": "from the projective tradition — widely described, though as a hypothesis rather than a measurement",
     },
     "detail_as_interest": {
         "feature": "how much more worked-out one object is than the others on the page",
@@ -52,7 +52,7 @@ INTERPRETATION_KEYS: dict[str, dict[str, str]] = {
         "source_note": "on the transition from scribbles to the first recognizable symbols",
     },
     "spatial_organization_as_narrative": {
-        "feature": "the page divided into zones or planes, several centres of attention",
+        "feature": "the page divided into zones or planes, several centers of attention",
         "meaning": "a growing ability to build a connected scene and tell a story",
         "age_scope": "5-12",
         "source": "V. Lowenfeld and W. Brittain, “Creative and Mental Growth”",

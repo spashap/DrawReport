@@ -6,7 +6,7 @@
 <title>{% block title %}{{ site_name }}{% endblock %}</title>
 <link rel="icon" type="image/png" href="{{ static }}/img/favico/favicon-96x96.png" sizes="96x96">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ static }}/img/favico/apple-touch-icon.png">
-<meta name="description" content="{% block description %}{{ _('Educational analysis of your child’s drawing from a photo: a PDF report on their development for parents. Not a diagnosis.') }}{% endblock %}">
+<meta name="description" content="{% block description %}{{ _('Educational analysis of your child’s drawing from a photo: a PDF report for parents on how your child is developing. Not a diagnosis.') }}{% endblock %}">
 {% block og %}
 <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
 {% for loc, href in alt_urls().items() %}
@@ -46,7 +46,7 @@
   <div class="wrap">
     {% block footer %}
     <span class="foot__brand">{{ site_name }}</span>
-    {{ _('Educational observation, not medical or psychological diagnosis') }} · {{ site_domain }}
+    {{ _('Educational observation, not a medical or psychological diagnosis') }} · {{ site_domain }}
     {% endblock %}
     {% if show_version %}<span class="foot-ver">V{{ version }}</span>{% endif %}
   </div>

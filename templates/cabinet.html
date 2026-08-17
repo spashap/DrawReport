@@ -17,7 +17,7 @@
 
     {% if not has_orders %}
     <div class="form-card" style="margin-top: 24px; text-align: center">
-      <p class="sub">{{ _('Nothing here yet — order your first report and it will show up in your account.') }}</p>
+      <p class="sub">{{ _('Nothing here yet — order your first report and it will show up right here.') }}</p>
       <a class="btn btn--primary" href="{{ url_for('main.order') }}" style="margin-top: 16px" data-goal="cabinet_order_empty">{{ _('Order a report') }}</a>
     </div>
     {% endif %}
@@ -31,7 +31,7 @@
         <div class="order-card__head">
           <div>
             <b>{{ o.product_title }}</b>
-            <div class="hint">{{ _('order #%(id)s from %(date)s', id=o.id, date=o.date) }}</div>
+            <div class="hint">{{ _('order #%(id)s · %(date)s', id=o.id, date=o.date) }}</div>
           </div>
           <span class="status-pill status-pill--{{ o.status_kind }}">{{ o.status_label }}</span>
         </div>

@@ -16,7 +16,7 @@
   {% elif failed %}
     <div class="form-card">
       <h1 class="h2">{{ _('Something went wrong on our side') }}</h1>
-      <p>{{ _('The reading didn’t finish. Nothing was charged and nothing was lost —
+      <p>{{ _('The reading didn’t finish, and nothing was lost —
         please try once more with the same drawing.') }}</p>
       <a class="btn btn--primary btn--block" href="{{ url_for('free.page') }}"
          data-goal="free_retry">{{ _('Try again') }}</a>
@@ -28,8 +28,8 @@
       <p><img class="free-report__img" src="{{ url_for('free.image', token=token) }}"
               alt="{{ _('%(name)s’s drawing', name=name) }}"></p>
       {% else %}
-      <p class="hint">{{ _('The photo has been deleted under our retention policy.
-        The reading itself stays.') }}</p>
+      <p class="hint">{{ _('We’ve deleted the photo — we only keep photos for 90 days.
+        Your reading stays.') }}</p>
       {% endif %}
 
       {# 1. the warm opening #}
@@ -48,10 +48,10 @@
          cannot invent one. #}
       {% if a.hypothesis %}
       <div class="interp">
-        <div class="interp__label">{{ _('How this is read in the tradition of children’s drawing') }}</div>
+        <div class="interp__label">{{ _('How this is read in the literature on children’s drawing') }}</div>
         <p class="interp__text">{{ a.hypothesis.phrase }}</p>
         <p class="interp__hedge">{{ _('This is a suggestion, not a conclusion: one drawing
-          can’t confirm it. The most accurate answer will come from %(name)s — the question
+          can’t confirm it. The best answer will come from %(name)s — the question
           is below.', name=name) }}</p>
         {% if source %}
         <p class="interp__src"><b>{{ _('Source:') }}</b> {{ source.source }}{% if source.note %}
@@ -69,9 +69,9 @@
         <p class="hint free-vote-q">{{ _('Is this about %(name)s?', name=name) }}</p>
         <div class="free-vote">
           <button class="btn btn--ghost" data-vote="yes" data-goal="free_vote_yes">{{ _('Yes, that’s %(name)s', name=name) }}</button>
-          <button class="btn btn--ghost" data-vote="no" data-goal="free_vote_no">{{ _('Not %(name)s', name=name) }}</button>
+          <button class="btn btn--ghost" data-vote="no" data-goal="free_vote_no">{{ _('That’s not %(name)s', name=name) }}</button>
         </div>
-        <p class="hint" hidden data-thanks>{{ _('Thank you — this is what helps us get more accurate.') }}</p>
+        <p class="hint" hidden data-thanks>{{ _('Thank you — this is exactly what helps us get better.') }}</p>
       </div>
       {% endif %}
 

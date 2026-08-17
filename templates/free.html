@@ -1,7 +1,7 @@
 {% extends "_base.html" %}
 {% block robots %}noindex, nofollow{% endblock %}
 {% block title %}{{ _('What your child’s drawing says about them') }} — {{ site_name }}{% endblock %}
-{% block description %}{{ _('A free reading of one child’s drawing.') }}{% endblock %}
+{% block description %}{{ _('A free reading of one of your child’s drawings.') }}{% endblock %}
 {% block body %}
 {# THE WIZARD. Three questions, ONE SCREEN EACH, no scrolling on a phone: the visitor is
    a parent on a phone, late in the evening, after the child is asleep. Every extra screen
@@ -27,7 +27,7 @@
         <div class="form-card">
           <div class="field">
             <label for="f-name">{{ _('What’s your child’s name?') }}</label>
-            <div class="hint">{{ _('The name will be used in the reading') }}</div>
+            <div class="hint">{{ _('We’ll use it in the reading') }}</div>
             <input class="input" id="f-name" type="text" autocomplete="off"
                    maxlength="40" placeholder="{{ _('First name') }}">
           </div>
@@ -45,7 +45,7 @@
           </div>
 
           <div class="field">
-            <label>{{ _('How old?') }}</label>
+            <label>{{ _('How old are they?') }}</label>
             <div class="hint">{{ _('Drawing works differently at every age') }}</div>
             <div class="choice choice--grid" id="f-band">
               {% for b in bands %}
@@ -115,7 +115,7 @@
         <p class="wait-stage" id="w-stage">{{ _('Looking at the drawing…') }}
           <span class="dots-wait"><i></i><i></i><i></i></span></p>
         <div id="w-late" hidden>
-          <p class="sub">{{ _('This is taking longer than usual. We’ll email it as soon as
+          <p class="sub">{{ _('This is taking longer than usual. We’ll email the reading as soon as
             it’s ready — you can close the page.') }}</p>
           <p class="hint">{{ _('Or save the link — the reading will be here:') }}<br>
             <a id="w-link" href="#"></a></p>
@@ -134,16 +134,16 @@
   window.FREE_TEXT = {
     stoppedQuestion: {{ texts.DURATION_QUESTION_STOPPED | tojson }},
     stages: {{ [_('Preparing the photo…'), _('Looking at the drawing…'),
-                _('Finding a detail worth holding on to…'),
-                _('Re-reading the wording…'), _('Almost there…')] | tojson }},
+                _('Finding a detail worth a second look…'),
+                _('Checking how it’s worded…'), _('Almost there…')] | tojson }},
     errors: {{ {
       'too_big': _('That file is over 15 MB — please choose a smaller photo.'),
-      'format': _('Format: JPG, PNG, HEIC or WebP.'),
-      'broken': _('That file is damaged, or it isn’t a photo.'),
+      'format': _('That format won’t work. Please use a JPG, PNG, HEIC, or WebP.'),
+      'broken': _('We couldn’t open that file — it may be damaged, or it may not be a photo.'),
       'email': _('Please check the email address.'),
       'no_file': _('Choose a photo of the drawing.'),
-      'cap': _('We’ve read the maximum number of drawings for today. Leave your email and we’ll send you a link tomorrow.'),
-      'email_cap': _('This email has used its free readings for today. Please try again tomorrow.'),
+      'cap': _('We’ve hit today’s limit on free readings. Leave your email and we’ll send you a link tomorrow.'),
+      'email_cap': _('You’ve used your free readings for today. Please try again tomorrow.'),
       'network': _('No connection. Please try again.'),
       'other': _('That didn’t upload. Please try again.')
     } | tojson }}

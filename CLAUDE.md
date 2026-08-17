@@ -39,11 +39,18 @@ full-deploy `release.bat`, and a native-US-English copy pass.
 ### Copy standard — read this before writing ANY visible English
 The first English conversion was rejected by the owner as an "epic fail". `/en/` and `/en/report`
 were rewritten on 2026-08-17 to native US consumer English against
-`projectSpec/drawreportcopyfixtask.md`. **Verify copy on the RENDERED page, never on the template
-source** (UseCase #20) — and remember one page pulls strings from five places: the template,
-`app/content.py`, `config/products.json`, `config/free_texts.py`, and `content/en/blog/*.md` front
-matter (UseCase #21). Avoid the tells that got flagged: Britishisms, `and a hint`-style translation
-artifacts, repeated not-X/never-X contrast, em-dash density, rule-of-three lists.
+`projectSpec/drawreportcopyfixtask.md`; the **rest of the site** (freemium, emails, PDF strings,
+sample report, blog, legal) followed in V0.035 against
+`projectSpec/DrawReport-English-Copy-Repair-Report.md`. **Verify copy on the RENDERED page, never on
+the template source** (UseCase #20) — and remember one page pulls strings from five places: the
+template, `app/content.py`, `config/products.json`, `config/free_texts.py`, and
+`content/en/blog/*.md` front matter (UseCase #21). Avoid the tells that got flagged: Britishisms,
+`and a hint`-style translation artifacts, repeated not-X/never-X contrast, em-dash density,
+rule-of-three lists, and gallery vocabulary (`work`, `piece`, `the medium`, `palette`) for a
+child's drawing. Typography is curly (`’ “ ”`) and dashes are real em dashes — never a spaced
+ASCII hyphen. **Copy that lives in a PROMPT is different work:** it steers the model's own English,
+and if the linter matches the same phrasing it must change in both files (UseCase #24). Curly
+characters bound for the PDF need a font-subset check first (UseCase #26).
 
 ### Deploy / release — ONE command
 ```
@@ -76,8 +83,13 @@ log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
 7. **No `llms.txt`.**
 
 **Product / business.**
-8. **Freemium wizard copy has NOT had the English pass** — owner explicitly deferred it ("later i
-   will have review about freemium templates"). `/en/` and `/en/report` are done; `/free/*` is not.
+8. ✅ **DONE (V0.035) — freemium + site-wide English pass.** The whole site (freemium wizard,
+   emails, PDF strings, sample report, blog, legal) was repaired against
+   `projectSpec/DrawReport-English-Copy-Repair-Report.md`. ⚠️ **`pipeline/prompt.py` — the PAID
+   report prompt — was NOT audited and is the top remaining copy risk:** the free prompt carried
+   British spellings, calqued examples and mandatory sentence templates, and the paid one very
+   likely still does, into the 8-page PDF customers pay for. See UseCase #24 before touching it —
+   prompt wording that `lint.py` also matches must change in both files, in one commit.
 9. **Legal pages are DRAFT** and have not been reviewed by counsel (COPPA / children's data,
    refunds, PayPal, FTC "educational, not diagnosis" claims).
 10. **Blog has only 3 posts.**

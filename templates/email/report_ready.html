@@ -1,12 +1,12 @@
 {% extends "_email_base.html" %}
 {# Delivery of the finished report: PDF attached + link to the online version. #}
 {% block content %}
-<h2 style="font-size:22px; margin:0 0 14px">Your report is ready: {{ child_name }}</h2>
+<h2 style="font-size:22px; margin:0 0 14px">{{ child_name }}’s report is ready</h2>
 <p style="font-size:15px; line-height:1.6; margin:0 0 18px">
   We took a careful look at {{ 'the drawings' if drawings_count > 1 else 'the drawing' }} and
-  prepared a warm, personal report: what's visible in
-  {{ 'them' if drawings_count > 1 else 'it' }}, where your child's strengths are, and what you
-  can support at home. The PDF is attached to this email, and the online version is one click away:
+  put together your report: what’s visible in
+  {{ 'them' if drawings_count > 1 else 'it' }}, where your child’s strengths are, and what you
+  can encourage at home. The PDF is attached to this email, and you can read it online too:
 </p>
 <p style="text-align:center; margin:0 0 18px">
   <a href="{{ report_url }}" style="display:inline-block; background:#3E4E78; color:#ffffff;

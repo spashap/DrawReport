@@ -134,7 +134,7 @@ def summary():
         token=token, name=name, address=address, texts=T,
         wait_hint=T.wait_hint(concern, address),
         limit_token=limit_row["token"] if limit_row else None,
-        limit_title=T.LIMIT_TITLE.format(name=name),
+        limit_title=T.LIMIT_TITLE.format(name_poss=T.possessive(name)),
         limit_cta=T.LIMIT_CTA.format(name_poss=T.possessive(name)))
     return Response(html)
 

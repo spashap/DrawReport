@@ -56,11 +56,11 @@
     <label class="file-drop" for="f-file">
       <img class="preview" hidden alt="">
       <div class="fd-icon" aria-hidden="true">🖼️</div>
-      <div class="fd-text">{{ _('Tap to choose a photo — JPG, PNG or HEIC, up to 15 MB') }}</div>
+      <div class="fd-text">{{ _('Tap to choose a photo — JPG, PNG, HEIC, or WebP, up to 15 MB') }}</div>
       <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
              data-goal="free_add_drawing">
     </label>
-    <div class="hint field--gap-sm">{{ _('Only the analysis system sees the drawing — we
+    <div class="hint field--gap-sm">{{ _('Only our reading system ever sees the drawing — we
       never publish children’s work and never pass it to anyone else.') }}</div>
   </div>
 
@@ -86,7 +86,7 @@
            placeholder="you@example.com">
   </div>
   <button class="btn btn--ghost" id="f-nodraw-btn" data-token="{{ token }}"
-          data-goal="free_no_drawing">{{ _('Save my place and come back later') }}</button>
+          data-goal="free_no_drawing">{{ _('Email me the link') }}</button>
   <p class="hint" id="f-nodraw-ok" hidden>{{ _('Done. We’ve emailed you the link — come
     back when you find a drawing.') }}</p>
 </details>

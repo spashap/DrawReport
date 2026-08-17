@@ -5,18 +5,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ _('What your child’s drawing says about them — an educational PDF report, not a diagnosis') }} | {{ site_name }}</title>
-<meta name="description" content="{{ _('A photo-based educational report on your child’s drawing: strengths, interests, emerging skills, and simple activities for home. Not a diagnosis. From $%(price)s, usually ready within an hour.', price=min_price) }}">
+<meta name="description" content="{{ _('An educational report from a photo of your child’s drawing: strengths, interests, emerging skills, and simple activities to try at home. Not a diagnosis. From $%(price)s, usually ready within an hour.', price=min_price) }}">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{{ _('Hear what your child’s drawings can tell you about them') }}">
-<meta property="og:description" content="{{ _('A personal PDF report on your child’s drawings: strengths, interests, emerging skills, and simple activities for home. No diagnoses, no scary interpretations.') }}">
+<meta property="og:description" content="{{ _('A personal PDF report on your child’s drawings: strengths, interests, emerging skills, and simple activities to try at home. No diagnoses, nothing scary.') }}">
 <meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
 <meta property="og:site_name" content="{{ site_name }}">
 <meta property="og:locale" content="{{ {'en': 'en_US'}.get(locale, locale) }}">
 <meta property="og:image" content="{{ public_base_url }}/static/img/og-default.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ _('Hear what your child’s drawings can tell you about them') }}">
-<meta name="twitter:description" content="{{ _('A personal PDF report on your child’s drawings: strengths, interests, and activities for home. Not a diagnosis.') }}">
+<meta name="twitter:description" content="{{ _('A personal PDF report on your child’s drawings: strengths, interests, and activities to try at home. Not a diagnosis.') }}">
 <meta name="twitter:image" content="{{ public_base_url }}/static/img/og-default.jpg">
 <link rel="canonical" href="{{ public_base_url }}{{ request.path }}">
 {% for loc, href in alt_urls().items() %}<link rel="alternate" hreflang="{{ loc }}" href="{{ href }}">
@@ -41,9 +41,9 @@
   <div class="hero__in">
     <div class="hero__card">
       <span class="hero__eyebrow">{{ _('Every drawing has a voice') }}</span>
-      <h1>{{ _('Children often say in their drawings what they can’t yet put into words.') }}</h1>
+      <h1>{{ _('Children often say things in a drawing that they can’t yet put into words.') }}</h1>
       <p class="lead"><strong>{{ _('Understand what your child is expressing:') }}</strong>
-        {{ _('we’ll show you their strengths, what to nurture, and how to support them at home, drawing on the developmental stages of children’s art.') }}</p>
+        {{ _('we’ll show you their strengths, what to nurture, and how to support them at home, based on how children’s art develops with age.') }}</p>
       <div class="cta-zone">
         {# ENTRY 1 of 3 into the free reading. A quiet text link that names a STATE, not a
            product: someone who came to buy will not notice it, someone who came worried
@@ -56,7 +56,7 @@
           </div>
           <div class="chips">
             <span class="chip">{{ _('about 8 pages') }}</span><span class="chip">{{ _('7 areas') }}</span>
-            <span class="chip">{{ _('No diagnoses') }}</span><span class="chip">{{ _('Only you see the drawings') }}</span>
+            <span class="chip">{{ _('no diagnoses') }}</span><span class="chip">{{ _('only you see the drawings') }}</span>
           </div>
         </div>
       </div>
@@ -68,35 +68,35 @@
 <section class="section" id="inside" data-track-section="whats_inside">
   <div class="wrap">
     <h2 class="reveal">{{ _('What you’ll learn about your child') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('Most parents don’t want to raise an artist — they want to understand their child. The report reads your child as a person, through their drawing.') }}</div>
+    <div class="sub reveal reveal--d1">{{ _('Most parents don’t want to raise an artist — they want to understand their child. The report reads your child as a person, through what they draw.') }}</div>
     <div class="card card--pad check-list reveal reveal--d1">
       <ul>
         <li>{{ _('The worlds and themes your child is drawn to — what they choose to put on the page') }}</li>
-        <li>{{ _('Their character, read through choices they make themselves: how heavy the line is, how big things get on the page') }}</li>
-        <li>{{ _('The mood their drawings carry, offered as a suggestion to explore') }}</li>
-        <li>{{ _('The stories and characters that matter to them, and what that hints about how they see the world') }}</li>
+        <li>{{ _('Their character, read through the choices they make: how hard they press, how much space they take up on the page') }}</li>
+        <li>{{ _('The mood their drawings carry, offered as a suggestion to explore with them') }}</li>
+        <li>{{ _('The stories and characters that matter to them, and what that suggests about how they see the world') }}</li>
         <li>{{ _('How to understand and support your child: questions to ask, what to notice next') }}</li>
         <li>{{ _('Plus the supporting skills — technique, detail, and fine motor control') }}</li>
       </ul>
     </div>
-    <p class="scores-note reveal" style="text-align:left; margin-top:18px">{{ _('The report also includes scores across 7 areas: four about your child as a person and three about drawing skills, each with a clear explanation.') }}</p>
+    <p class="scores-note reveal" style="text-align:left; margin-top:18px">{{ _('The report also includes scores across 7 areas: four about your child as a person, three about drawing skills, each with a plain-language explanation.') }}</p>
   </div>
 </section>
 
-<!-- 3. How the conclusion is built -->
+<!-- 3. How each observation is built -->
 <section class="section section--soft" id="logic" data-track-section="how_we_read">
   <div class="wrap">
-    <h2 class="reveal">{{ _('How the conclusion is built') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('Every observation starts from something visible in the drawing, becomes a suggestion grounded in developmental and art-education research, and ends by turning back to your child.') }}</div>
+    <h2 class="reveal">{{ _('How each observation is built') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Every observation starts with something visible in the drawing, becomes a suggestion grounded in developmental and art-education research, and ends by turning back to your child.') }}</div>
     <div class="flow reveal reveal--d1">
       <div class="card card--pad flow-card">
         <div class="flow-card__label">{{ _('A visible detail') }}</div>
-        <p>{{ _('A warm little bird flies through a darker sky, drawn with care.') }}</p>
+        <p>{{ _('A small bird, drawn with care, flying through a dark sky.') }}</p>
       </div>
       <div class="flow-arrow" aria-hidden="true">&rarr;</div>
       <div class="card card--pad flow-card">
         <div class="flow-card__label">{{ _('A gentle hypothesis') }}</div>
-        <p>{{ _('In the developmental literature, an image like this often reads as warmth moving through something hard. We offer it as a hypothesis, and hold it lightly.') }}</p>
+        <p>{{ _('In the developmental literature, an image like this often reads as warmth moving through something hard. We offer it as a hypothesis and hold it lightly.') }}</p>
       </div>
       <div class="flow-arrow" aria-hidden="true">&rarr;</div>
       <div class="card card--pad flow-card">
@@ -113,8 +113,8 @@
 <!-- 4. Examples -->
 <section class="section" id="examples" data-track-section="examples">
   <div class="wrap">
-    <h2 class="reveal">{{ _('See the kind of observations parents get') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('Open a real example — you’ll see the drawing, the context, strengths, observations, and activities for parents.') }}</div>
+    <h2 class="reveal">{{ _('See the kind of observations you’ll get') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Open a real example — you’ll see the drawing, the context, strengths, observations, and activities to try at home.') }}</div>
     {% if samples %}
     <div class="carousel-wrap reveal reveal--d1">
     <button class="car-btn car-btn--prev" type="button" aria-label="{{ _('Previous') }}" data-car="-1" data-goal="landing_samples_prev">‹</button>
@@ -145,15 +145,15 @@
     <div class="car-dots" role="tablist" aria-label="{{ _('Scroll examples') }}"></div>
     </div>
     {% endif %}
-    <p class="scores-note reveal">{{ _('Scores describe a particular drawing, not the child as a whole. An average score doesn’t mean a problem; sometimes a direction is simply less visible in the chosen subject.') }}</p>
+    <p class="scores-note reveal">{{ _('Scores describe a particular drawing, not the child as a whole. An average score doesn’t mean something is wrong; sometimes an area just doesn’t show up much in the subject your child picked.') }}</p>
   </div>
 </section>
 
 <!-- 5. No myths -->
 <section class="section section--soft" id="no-myths" data-track-section="no_myths">
   <div class="wrap">
-    <h2 class="reveal">{{ _('No myths, no scary interpretations') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('We read your child carefully and seriously, grounded in developmental and art-education research, and offer what we see as a suggestion.') }}</div>
+    <h2 class="reveal">{{ _('No myths, nothing scary') }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('We read your child’s drawing carefully, using developmental and art-education research, and we offer what we notice as a suggestion.') }}</div>
     <div class="compare">
       <div class="card card--pad compare-col compare-col--no reveal reveal--d1">
         <h3>{{ _('What we don’t do') }}</h3>
@@ -169,12 +169,12 @@
         <ul>
           <li>{{ _('we read the child through their drawing: the worlds they build, and how the work feels') }}</li>
           <li>{{ _('we draw on established developmental frameworks (Piaget, Lowenfeld, Vygotsky) and the stages of children’s art') }}</li>
-          <li>{{ _('we offer careful, research-grounded pointers — anchored to what’s visible, and turned back to the child') }}</li>
-          <li>{{ _('we point out strengths and growth areas, with simple activities for home') }}</li>
+          <li>{{ _('we offer careful, research-grounded observations, anchored to what’s visible and turned back to your child') }}</li>
+          <li>{{ _('we point out strengths and growth areas, with simple activities to try at home') }}</li>
         </ul>
       </div>
     </div>
-    <p class="scores-note reveal" style="text-align:center; margin-top:20px">{{ _('It’s a way to understand your child through their drawing: careful pointers drawn from the research, always offered as a suggestion. If you’re ever seriously worried about your child, please see a qualified professional.') }}</p>
+    <p class="scores-note reveal" style="text-align:center; margin-top:20px">{{ _('It’s a way to understand your child through their drawing: careful observations grounded in research, always offered as a suggestion. If you’re ever seriously worried about your child, please see a qualified professional.') }}</p>
   </div>
 </section>
 
@@ -184,8 +184,8 @@
     <h2 class="reveal">{{ _('How it works') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('Three steps, and a personal report lands in your inbox.') }}</div>
     <div class="steps">
-      <div class="step reveal reveal--d1"><div class="step__n">1</div><h3>{{ _('Upload the drawings') }}</h3><p>{{ _('1–3 drawings your child already made work fine. Nothing has to be drawn just for this.') }}</p></div>
-      <div class="step reveal reveal--d2"><div class="step__n">2</div><h3>{{ _('Add a little context') }}</h3><p>{{ _('Age, materials, the subject and any prompt. The form takes 2–3 minutes.') }}</p></div>
+      <div class="step reveal reveal--d1"><div class="step__n">1</div><h3>{{ _('Upload the drawings') }}</h3><p>{{ _('Use 1–3 drawings your child has already made. Nothing needs to be drawn just for this.') }}</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n">2</div><h3>{{ _('Add a little context') }}</h3><p>{{ _('Age, what they drew with, the subject, and whether anyone suggested it. The form takes 2–3 minutes.') }}</p></div>
       <div class="step reveal reveal--d3"><div class="step__n">3</div><h3>{{ _('Get your PDF report') }}</h3><p>{{ _('Usually within an hour. It arrives by email and stays in your private account.') }}</p></div>
     </div>
   </div>
@@ -195,7 +195,7 @@
 <section class="section section--soft" id="scenarios" data-track-section="cases">
   <div class="wrap">
     <h2 class="reveal">{{ _('What this looks like in practice') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('These aren’t real clients; they’re examples of what the report can do.') }}</div>
+    <div class="sub reveal reveal--d1">{{ _('These aren’t real families; they’re examples of what the report can do.') }}</div>
     {# The "For example, a situation like this:" lead used to open EVERY card, under a
        heading that said "For example" as well: five instances of one frame in one
        section. The heading carries the framing now and the cards get straight to it. #}
@@ -213,7 +213,7 @@
         {{ _('Add one drawing and we’ll show you what’s visible in it. Free, in about a minute.') }}
       </div>
       <a class="btn btn--primary" href="{{ url_for('free.page') }}"
-         data-goal="landing_cases_free">{{ _('Read a drawing free') }}</a>
+         data-goal="landing_cases_free">{{ _('Get a free reading') }}</a>
     </div>
   </div>
 </section>
@@ -223,8 +223,8 @@
   <div class="wrap">
     <h2 class="reveal">{{ _('Why you can trust us') }}</h2>
     <div class="steps">
-      <div class="step reveal reveal--d1"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Money-back guarantee') }}</h3><p>{{ _('If the report isn’t for you, write within 7 days and we’ll refund you — no fuss.') }}</p></div>
-      <div class="step reveal reveal--d2"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Only you see the drawings') }}</h3><p>{{ _('Your child’s work is never published, never used in ads, and never shared with third parties.') }}</p></div>
+      <div class="step reveal reveal--d1"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Money-back guarantee') }}</h3><p>{{ _('If the report isn’t for you, write to us within 7 days and we’ll refund you — no hassle.') }}</p></div>
+      <div class="step reveal reveal--d2"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Only you see the drawings') }}</h3><p>{{ _('We never publish your child’s work, use it in ads, or share it with third parties.') }}</p></div>
       <div class="step reveal reveal--d3"><div class="step__n step__n--ok"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 12.5l3.5 3.5L18 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>{{ _('Observations from visible details') }}</h3><p>{{ _('We don’t invent hidden meanings; every observation is tied to what’s actually visible in the drawing.') }}</p></div>
     </div>
   </div>
@@ -235,7 +235,7 @@
    500ms. This is the "Reached the pricing" observation step of the funnel. #}
 <section class="section section--soft" id="pricing" data-track-section="pricing">
   <div class="wrap">
-    <h2 class="reveal">{{ _('Choose your report') }}</h2>
+    <h2 class="reveal">{{ _('The report') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('A report on 1–3 drawings from the same period.') }}</div>
     {# Only ENABLED products are shown. A "coming soon" card is a second option on the
        page's most expensive screen: at the moment of deciding, it invites the visitor to
@@ -257,7 +257,7 @@
         {# The price is IN the button on purpose: it filters out anyone who would drop at
            checkout, and next to the word "free" a button with no price reads as a trap. #}
         <a class="btn btn--primary" href="{{ url_for('main.order', product=code) }}" data-goal="landing_price_order_{{ code }}">{{ _('Order the report — $%(price)s', price=p.price_usd) }}</a>
-        <p class="p-note">{{ _('Not what you hoped for? We refund within 7 days.') }}</p>
+        <p class="p-note">{{ _('Not what you hoped for? Ask within 7 days and we’ll refund you.') }}</p>
       </div>
       {% endfor %}
     </div>
@@ -273,11 +273,11 @@
       <h2 class="worry-band__title">{{ _('Is something in the drawings worrying you?') }}</h2>
       <p class="worry-band__text">{{ _('Black everywhere, monsters, the same scene again and
         again, a child who draws themselves alone — there is almost always something behind
-        it, and almost never the thing parents fear. Tell us what you noticed, add one
+        it, and it’s rarely the thing parents fear. Tell us what you noticed, add one
         drawing, and we’ll show you what’s visible in it.') }}</p>
       <a class="btn btn--primary" href="{{ url_for('free.page') }}"
-         data-goal="landing_worry_free">{{ _('Read a drawing free') }}</a>
-      <p class="worry-band__note">{{ _('Free, about a minute, no card and no account.') }}</p>
+         data-goal="landing_worry_free">{{ _('Get a free reading') }}</a>
+      <p class="worry-band__note">{{ _('Free, about a minute, no credit card and no account.') }}</p>
     </div>
   </div>
 </section>
@@ -324,7 +324,7 @@
 <footer class="foot">
   <div class="wrap">
     <span class="foot__brand">{{ site_name }}</span>
-    {{ _('Educational observation, not medical or psychological diagnosis') }}<br>
+    {{ _('Educational observation, not a medical or psychological diagnosis') }}<br>
     <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a> ·
     <a href="{{ url_for('main.legal', page='terms') }}">{{ _('Terms') }}</a> ·
     <a href="{{ url_for('main.legal', page='refund') }}">{{ _('Refunds') }}</a> ·

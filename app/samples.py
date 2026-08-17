@@ -32,7 +32,7 @@ _SAMPLE_DEFS = {
     "en": [
         dict(token="sample-liam", report_path="pipeline/samples/sample_report.json",
              drawing="pipeline/samples/sample_drawing.png",
-             caption='"My house", Liam, age 6', hero=True, n_drawings=1),
+             caption='“My House,” Liam, age 6', hero=True, n_drawings=1),
     ],
 }
 

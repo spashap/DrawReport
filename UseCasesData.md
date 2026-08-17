@@ -187,3 +187,43 @@ Prices and pricing-card copy have the same two-file split as everything else (tr
 had a `data/` copy at $39/$59 while the SERVER had none, so production was serving the $29 from
 `config/`. Before assuming a copy fix in `data/` will ship, check which file the target box actually
 has: `ssh ... cat /var/www/DrawReport/data/products.json`.
+
+## #24 · A prompt phrasing change is a LINTER change, or the repair loop eats the release
+`pipeline/free_prompt.py` told the model to hedge with "may speak of" and to attribute with
+"in the tradition of reading children's drawings". Both are calques, and because they were the
+*preferred* forms they appeared near-verbatim in every reading - the single loudest "this was
+translated" signal in the product. But `pipeline/free_lint.py` checks the SAME two lists
+programmatically: `_check_hypothesis` requires a hedge matching `HEDGE["en"]` in
+`hypothesis.phrase`, and requires `FREE_ATTRIBUTION` to match when the interpretation key has no
+source in the dictionary. Swapping the prompt's wording alone would mean every correctly framed
+hypothesis fails the lint, burns a repair call, and comes back re-worded into the old calque -
+i.e. the fix would silently undo itself AND cost a paid call per reading.
+The fix ships as one commit: new hedges (`may point to`, `often goes with`, `can be a sign that`,
+`reads like`) added in a dedicated `FREE_PHRASE_HEDGE` used by `_check_hypothesis`, and the new
+generic attributions (`people who study children's drawings...`, `in the research on children's
+drawings...`, `one common reading of this is...`) added to `FREE_ATTRIBUTION` - which
+`drop_hypothesis` also uses, so a smuggled attribution is still strippable. The test that proves
+it: build a `FreeAnalysis` in the new voice and assert `find_free_violations(...) == []`.
+**Rule: prompt wording that the linter also matches is one artifact in two files. Change both, and
+prove it with a round-trip, before deploying.**
+
+## #25 · Three word budgets, none of them agreeing, is what "clipped, translated" text is made of
+The free prompt asked for `300-390 words, never more than 400`; `free_schema.py` computed the sum
+of its own per-block targets as `255-360`; `FREE_MAX_WORDS` was `420`; and the block-2 header said
+`60-90` while the JSON contract for the same block said `80-120`. The model pads to clear a floor
+it cannot reach honestly (filler sentences) AND compresses to stay under a ceiling it keeps hitting
+(dropped articles, stacked clauses) - which are exactly the two failure modes that read as
+machine-translated English. Reconciled to `260-360 / never more than 420` in the prompt, `80-120`
+in both places for block 2, an explicit "do not pad to reach the range - if the page gives you less,
+write less", and a comment on `FREE_MAX_WORDS` naming the other place the number is stated.
+**When output quality looks like a style problem, check whether the constraints contradict each
+other first - the model is often just obeying two rules at once.**
+
+## #26 · Curly typography in a PDF string is a FONT question, not a taste question
+Converting the report's straight `'` to `’` looks like pure copy-editing, but the report PDF is
+built from self-hosted, subsetted fonts (Rubik / Inter / Caveat) - and a subset that lacks U+2019
+silently falls back to a system font, which is the exact defect `CLAUDE.md` forbids. Check before
+converting, do not assume: read the cmap with fontTools and assert the codepoints are present
+(`’ “ ” — – $ … ·` all are, in all seven faces). Then verify on the OUTPUT, not the input: render
+the sample and read `/BaseFont` off every page - `Caveat / Inter / Rubik` only, no Segoe or
+Verdana, and the extracted text still contains the curly characters.

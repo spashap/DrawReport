@@ -5,7 +5,7 @@ The HTML is rendered twice with different static prefixes:
   - hosted variant ("/static") - served to the browser at /r/{token};
   - print variant ("static" relative to BASE_DIR) - fed to WeasyPrint.
 
-Fixed report labels are per-locale (REPORT_STRINGS); the report's own content
+Fixed report labels are per-locale (REPORT_STRINGS); the report’s own content
 already comes back from Gemini in the report language. Dates via Babel.
 """
 from __future__ import annotations
@@ -31,7 +31,7 @@ REPORT_STRINGS = {
         "report_title": "Report",
         "cover_h1": "Understanding your child<br>through their drawing",
         "drawing_alt": "Drawing",
-        "cover_disclaimer": ("This report is a careful, educational observation of what your child's "
+        "cover_disclaimer": ("This report is a careful, educational observation of what your child’s "
                              "drawing expresses. It is not a medical or psychological diagnosis."),
         "h_context": "Details & context",
         "h_intro": "Introduction",
@@ -39,49 +39,49 @@ REPORT_STRINGS = {
         "h_scores": "Summary scores",
         "callout_h": "How to read the scores",
         "callout_p": ("Scores describe a particular drawing or set of drawings, not the child "
-                      "“as a whole.” An average score doesn't mean a problem — "
-                      "sometimes a direction is simply less visible in the chosen subject. "
+                      "“as a whole.” An average score doesn’t mean a problem — "
+                      "sometimes an area simply shows up less in the subject the child chose. "
                       "More on this in “How to read the scores in this report” at the "
-                      "end of the PDF."),
-        "h_dimensions": "Direction by direction",
-        "activities_label": "How to develop this:",
+                      "end of this report."),
+        "h_dimensions": "A closer look at each area",
+        "activities_label": "Ways to build on this:",
         "h_understanding": "Understanding & connecting with your child",
         "h_art": "Creative activities to try",
-        "h_specialists": "If you'd like to go deeper",
-        "specialists_note": ("Optional resources, not a sign that anything is wrong — just where to "
-                             "look if you'd like to explore a direction further."),
-        "h_directions": "Where to grow your child's strengths",
-        "directions_note": ("Not a prediction of who your child will become — a hint of which "
-                            "directions may be joyful to grow in. Any fields named are examples, "
-                            "not a forecast."),
+        "h_specialists": "If you’d like to go deeper",
+        "specialists_note": ("Optional resources, not a sign that anything is wrong. This is simply "
+                             "where to look if you’d like to go further with one of these areas."),
+        "h_directions": "Ways to build on your child’s strengths",
+        "directions_note": ("These are areas that might be fun for your child to explore, not a "
+                            "prediction of who they will become. Any fields we name here are just "
+                            "examples."),
         "h_conclusion": "In closing",
         "h_appendix": "How to read the scores in this report",
         "appendix_intro": ("Scores help you quickly see which skills came through most clearly in "
                            "a particular drawing or set of drawings. They are not a rating of the "
-                           "child as a person, not a school grade, and not a psychological "
+                           "child as a person, a school grade, or a psychological "
                            "diagnosis."),
         "appendix_lead": "A few things to keep in mind:",
         "appendix_items": [
             ("The score is about the drawing, not the child as a whole.",
              "For example, if a drawing shows a single tree with no people or characters, the "
-             "“story & characters” direction may come through less. That doesn't mean "
+             "“story & characters” area may score lower. That doesn’t mean "
              "the child struggles socially."),
-            ("An average score doesn't mean a problem.",
-             "It can mean the skill was only partly shown, or that the chosen subject gave less "
-             "to observe."),
-            ("A high score points to a strength in this particular work.",
-             "A confident line, a large scale, neat filling, or a thought-out composition can all "
-             "reflect well-developed graphic skills."),
-            ("One drawing doesn't show a child's whole development.",
-             "A series of drawings from different periods gives a fuller picture — especially "
-             "if you keep the works with their dates."),
-            ("The point of the report isn't to assign a score,",
-             "but to point out what's already going well and which simple activities you could "
-             "try at home."),
+            ("An average score doesn’t mean a problem.",
+             "It can mean the skill only partly showed up, or that the subject the child picked "
+             "gave less to look at."),
+            ("A high score points to a strength in this particular drawing.",
+             "A confident line, drawing big, careful coloring in, or a well-planned composition "
+             "can all reflect strong drawing skills."),
+            ("One drawing doesn’t show a child’s whole development.",
+             "Several drawings made at different times give a fuller picture, especially "
+             "if you write the date on the ones you keep."),
+            ("The report isn’t a scorecard.",
+             "It’s here to show what’s already going well and to suggest a few simple things you "
+             "could try at home."),
         ],
-        "appendix_outro": ("This report is a calm, educational observation of the skills visible "
+        "appendix_outro": ("This report is an educational observation of what is visible "
                            "in a drawing. It does not replace a consultation with a specialist if "
-                           "you have serious questions about your child's wellbeing, behavior, or "
+                           "you have serious questions about your child’s well-being, behavior, or "
                            "development."),
         "footer": ("{site} ({domain}) · Report generated {date} · Educational "
                    "observation, not a medical or psychological diagnosis"),
@@ -132,7 +132,7 @@ def render_html(report: Report, drawings: list[dict], generated_date: str,
 
 
 def render_pdf(html_for_print: str, out_path: Path) -> None:
-    # import inside: WeasyPrint is heavy and the web process doesn't need it
+    # import inside: WeasyPrint is heavy and the web process doesn’t need it
     from weasyprint import HTML
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

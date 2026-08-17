@@ -5,10 +5,10 @@
   <div class="wrap" style="text-align:center; padding: 80px 0">
     <h1>{{ code }}</h1>
     <p class="sub" style="margin-top: 12px">
-      {% if code == 404 %}{{ _('There’s no such page.') }}
+      {% if code == 404 %}{{ _('We couldn’t find that page.') }}
       {% else %}{{ _('Something went wrong. We’re looking into it.') }}{% endif %}
     </p>
-    <a class="btn btn--primary" href="{{ url_for('main.index') }}">{{ _('Back to home') }}</a>
+    <a class="btn btn--primary" href="{{ url_for('main.index') }}">{{ _('Back to the home page') }}</a>
   </div>
 </div>
 {% endblock %}

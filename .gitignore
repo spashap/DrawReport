@@ -26,3 +26,6 @@ __pycache__/
 
 # compiled translations are generated; keep .po, ignore .mo
 translations/**/*.mo
+
+# scratch folder, not part of the project
+_to_delete/

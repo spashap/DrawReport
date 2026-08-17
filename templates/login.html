@@ -7,7 +7,7 @@
     <div class="form-card">
       <h3>{{ _('Sign in to your account') }}</h3>
       <p class="sub" style="font-size: 15px; margin-bottom: 20px">
-        {{ _('No passwords: we’ll email a 6-digit code to the address you used when ordering.') }}
+        {{ _('No password needed — we’ll email a 6-digit code to the address you used when you ordered.') }}
       </p>
 
       {% if notice %}<div class="login-notice">{{ notice }}</div>{% endif %}
@@ -25,14 +25,14 @@
             {% if error %}<div class="err">{{ error }}</div>{% endif %}
           </div>
         </div>
-        <button class="btn btn--primary" type="submit" style="width: 100%" data-goal="login_request_code">{{ _('Get the code') }}</button>
+        <button class="btn btn--primary" type="submit" style="width: 100%" data-goal="login_request_code">{{ _('Email me a code') }}</button>
       </form>
 
       {% else %}
       <form method="post" action="{{ url_for('main.login_verify') }}">
         <input type="hidden" name="email" value="{{ email }}">
         <div class="field">
-          <label for="code">{{ _('Code from the email for %(email)s', email=email) }}</label>
+          <label for="code">{{ _('Enter the code we sent to %(email)s', email=email) }}</label>
           <div class="ctl">
             <input class="input code-input{% if error %} input--error{% endif %}" type="text"
                    id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
@@ -49,7 +49,7 @@
       {% endif %}
     </div>
     <p class="hint" style="text-align: center">
-      {{ _('Haven’t ordered yet?') }} <a href="{{ url_for('main.order') }}" data-goal="login_order">{{ _('Get your first report') }}</a> — {{ _('your account opens automatically.') }}
+      {{ _('Haven’t ordered yet?') }} <a href="{{ url_for('main.order') }}" data-goal="login_order">{{ _('Get your first report') }}</a> — {{ _('we’ll set up your account for you.') }}
     </p>
   </div>
 </div>

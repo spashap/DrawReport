@@ -37,12 +37,12 @@
     <h1 class="h2">{{ post.title }}</h1>
     {{ post.html | safe }}
     <div class="form-card" style="margin-top: 36px; text-align: center">
-      <p style="margin-top: 0">{{ _('Want a calm, educational look at your child’s drawings — from visible details, no diagnosis?') }}
+      <p style="margin-top: 0">{{ _('Want a calm, educational look at your child’s drawings — based on what’s on the page, not a diagnosis?') }}
         <a href="{{ url_for('main.report_page') }}#examples" data-goal="blogpost_sample">{{ _('See a sample analysis') }}</a>
         {{ _('or order a report from a photo.') }}</p>
       <p style="margin-bottom: 0; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
-        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="blogpost_order">{{ _('Get a report on a drawing') }}</a>
-        <a class="btn btn--ghost" href="{{ url_for('main.report_page') }}#examples" data-goal="blogpost_sample_btn">{{ _('See an example') }}</a>
+        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="blogpost_order">{{ _('Get a report on your child’s drawing') }}</a>
+        <a class="btn btn--ghost" href="{{ url_for('main.report_page') }}#examples" data-goal="blogpost_sample_btn">{{ _('See a sample analysis') }}</a>
       </p>
     </div>
   </article>

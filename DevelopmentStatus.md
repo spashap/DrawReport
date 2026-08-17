@@ -361,3 +361,84 @@ Verified against the running server and the live site on this date, not recalled
 `CLAUDE.md` AS-BUILT rewritten to the above (the old "build it from scratch" framing is now
 explicitly marked historical); memory files `drawreport-build-state` and `drawreport-deploy`
 rewritten from V0.017-era text to current; `UseCasesData.md` gained #20-#23.
+
+---
+
+## Session — 2026-08-17 · English copy repair, site-wide (V0.035)
+
+Applied `projectSpec/DrawReport-English-Copy-Repair-Report.md` (307 findings) with judgement:
+the English was not broken, it was *translated*. 41 files changed.
+
+### What changed, by surface
+- **`config/free_texts.py`** — rewritten. The single largest concentration of translated English
+  in the repo (mirror, age anchors, duration modifiers, lenses, the ask, both special paths, the
+  selling close). Calques removed at the source: `what stands behind it`, `settle the reasons`,
+  `on their own initiative`, `a copy of a model`, `carry through to the end`, `notable events`,
+  `to hand`, `only just launching`, plus every `work` / `piece` / `sheet` for a child's drawing.
+  `possessive()` now returns `Lucas’s`, not `Lucas'`. `BAND_LABELS` is `ages 3–4`, not
+  `3-4 years old` — it is substituted into a sentence about the DRAWINGS.
+- **`pipeline/free_prompt.py`** — the highest-leverage file, since no template fix reaches the
+  *generated* reading. Added a real **HOW THE ENGLISH MUST SOUND** section (US spelling/vocabulary,
+  vary sentence length, no em-dash-joined clauses, no rule-of-three, an explicit banned-vocabulary
+  list, read-it-back-as-the-parent). Removed the British spellings that were priming the model,
+  rewrote every worked EXAMPLE (they set the register for their block and were being copied almost
+  verbatim), un-mandated the canned `"Notice how..."` opener, broadened the not-X-but-Y ban from
+  psychological negation to all five blocks, killed the stock phrases `the theme holding them` and
+  `in the tradition of reading children's drawings`, and gave `insufficient_reason` real
+  instructions — it renders word-for-word to a bounced visitor and previously had none.
+  `FREE_PROMPT_VERSION` 1.0 → 1.1.
+- **`pipeline/free_lint.py`** — the coupled half of the above. See **UseCase #24**.
+- **`pipeline/free_schema.py` / prompt** — the three contradictory word budgets reconciled. **#25**.
+- **Public pages** — `home.html`, `landing.html`, `_base.html`, `_header.html`, `app/content.py`
+  (FAQ + scenarios), `config/products.json`, `config/form_fields.py`, plus order / cabinet /
+  login / sample / blog / error / stub templates.
+- **Emails** (all 7) + `app/mailer.py` subject lines; **PDF strings** in `pipeline/render.py` and
+  `config/report_texts.json`; **`pipeline/samples/sample_report.json`** (the shipped sample, which
+  is real pipeline output and carried the same tells into the page customers judge us by);
+  the **3 blog posts**; **`app/legal.py`** (language only — every load-bearing clause preserved,
+  still DRAFT, still needs counsel).
+- Typography swept: curly `’ “ ”` and real em dashes everywhere, replacing the spaced ASCII hyphen.
+  Fonts checked first — **UseCase #26**.
+
+### Judgement calls (not everything in the report was applied as written)
+- **F-056 seven dimension names — RECONCILED rather than skipped.** The report said "fix all three
+  lists or leave them alone". The paid report's real labels live in `pipeline/prompt.py`
+  `DIMENSIONS["en"]` and were already the good short ones (`Mood & expression`,
+  `Technique & materials`). `free_texts.SEVEN_DIRECTIONS` had drifted away from them, which made
+  the free funnel's sales list quietly false. Aligned it to the paid labels, with a comment naming
+  the source of truth.
+- **F-020** `How should we refer to your child?` → `Which pronoun should we use for your child?`
+  (the report proposed "Which word should we use", which is no more idiomatic; the options are
+  literally she/he/they).
+- **F-091** written as "we only keep photos for 90 days" rather than the report's
+  "as our retention policy says we would" — same commitment, less legal register.
+- **F-224 / F-225** applied with em dashes, not the ASCII hyphens the report's own replacements
+  used — those contradicted its F-003.
+- Findings inside CSS/JS comments were left alone (not visitor-facing), matching the report's own
+  rendered-vs-source discipline.
+- **Found beyond the report:** the same `activities for parents` calque in the meta descriptions of
+  `templates/sample.html` and `templates/blog_index.html`.
+
+### Verification
+- All Python byte-compiles; all edited JSON parses.
+- Every free-summary path exercised (7 concerns × 5 durations × 3 pronoun forms) — no unfilled
+  `{slot}`, no ASCII-hyphen dashes; all four narrative branches read end to end.
+- All 12 public routes render 200 and were scanned as **rendered HTML** (UseCase #20) against the
+  banned tells: zero hits outside CSS comments.
+- Sample report re-rendered: 10-page PDF, fonts `Caveat / Inter / Rubik` only — **no fallback**,
+  curly typography present, every flagged phrase gone.
+- Prompt↔linter round trip: an analysis written in the new voice lints clean (0 violations,
+  276 words), and all four new hedges + three new attribution forms match.
+- Server checked read-only: no `data/products.json` and no `data/report_texts.json`, so the
+  `config/` edits are what production serves (UseCase #23).
+
+### Still open after this session
+Item 8 of the resume list (freemium native-English pass) is now **done** — the owner had deferred
+it, and this report covered it. Everything else on the list stands: **GA4 / GSC / Bing are still
+unset**, the sitemap still omits the blog posts, `lastmod` is still `today`, there is still no
+`llms.txt`, legal is still DRAFT-pending-counsel, and the blog still has 3 posts.
+**The biggest remaining copy risk is `pipeline/prompt.py` — the PAID report prompt was NOT audited**
+(Appendix C). Everything §1d found in the free prompt (British spellings, calqued examples,
+mandatory sentence templates, no English-voice instruction) is very likely also shaping the
+8-page PDF customers pay $29 for; `sample_report.json` was indirect evidence of exactly that.
+That is the highest-value follow-up.

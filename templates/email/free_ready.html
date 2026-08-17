@@ -2,19 +2,19 @@
 {# The reading is ready. The email is the copy the parent keeps - the link is the product
    here, not an upsell. The paid offer stays on the page, not in this message. #}
 {% block content %}
-<h2 style="font-size:22px; margin:0 0 14px">{{ name }}'s drawing — your reading is ready</h2>
+<h2 style="font-size:22px; margin:0 0 14px">{{ name }}’s drawing — your reading is ready</h2>
 <p style="font-size:15px; line-height:1.6; margin:0 0 14px">
-  Here's what we saw in the drawing you sent. It's a reading of one page: what's visible,
-  one detail worth holding on to, and a question to ask {{ name }} today.
+  Here’s what we saw in the drawing you sent. It’s a reading of one drawing: what’s visible,
+  one detail worth a second look, and a question to ask {{ name }} today.
 </p>
 <p style="margin:0 0 18px">
   <a href="{{ base_url }}/free/r/{{ token }}"
      style="display:inline-block; background:#3E4E78; color:#fff; text-decoration:none;
             padding:13px 22px; border-radius:10px; font-size:15px; font-weight:600">
-    Read it</a>
+    Open your reading</a>
 </p>
 <p style="font-size:14px; line-height:1.6; margin:0; color:#6B5B4B">
-  This is educational observation, not a diagnosis. We keep the photo for 90 days and then
-  delete it; the reading stays at your link.
+  This is an educational observation, not a diagnosis. We keep the photo for 90 days and then
+  delete it; your reading stays at the link above.
 </p>
 {% endblock %}

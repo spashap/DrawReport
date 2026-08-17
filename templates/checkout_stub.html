@@ -8,7 +8,7 @@
     <div class="card card--pad" style="margin-top:18px">
       <p class="sub">{{ product.title }}</p>
       <div class="p-price" style="font-size: 34px; margin: 10px 0">${{ '%.2f'|format(order['price_cents'] / 100) }}</div>
-      <p class="hint" style="margin-bottom:18px">{{ _('This is a test checkout (no real charge). The PayPal checkout drops in here for launch.') }}</p>
+      <p class="hint" style="margin-bottom:18px">{{ _('This is a test checkout — no real charge. PayPal will go here.') }}</p>
       <form method="post" action="{{ url_for('main.stub_confirm', order_id=order['id']) }}">
         <button type="submit" class="btn btn--primary" data-goal="stub_pay_confirm">{{ _('Pay (test) — $%(price)s', price='%.2f'|format(order['price_cents'] / 100)) }}</button>
       </form>

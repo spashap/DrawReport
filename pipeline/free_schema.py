@@ -37,7 +37,7 @@ FREE_SCHEMA_VERSION = "1.0"
 # prepositions, auxiliary verbs that Russian does without), so a ported ceiling rejects
 # analyses that are the right LENGTH in reading time and only over in word count. Measured
 # across live runs the model lands at 340-410 words for this block structure.
-FREE_MAX_WORDS = 420
+FREE_MAX_WORDS = 420  # keep the number quoted in free_prompt.py (the opening line) identical to this
 # The SOFT ceiling above is the product target and is enforced by the linter, which can
 # repair an over-long analysis by asking for a shorter one. The HARD ceiling here is only
 # a runaway guard. Keeping the soft target as a schema error was a mistake: the model
@@ -211,8 +211,9 @@ class FreeAnalysis(BaseModel):
                              f"far past the target of {FREE_MAX_WORDS}; regenerate")
         if n < floor:
             raise ValueError(
-                f"the analysis is shorter than {floor} words ({n}) - it needs a warm "
-                f"opening, a detail in frame, a question and an honest gap")
+                f"the analysis is shorter than {floor} words ({n}) - add substance, not "
+                f"padding: more of what is actually visible on the page, not longer "
+                f"sentences about the same thing")
         return self
 
     def word_count(self) -> int:

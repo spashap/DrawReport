@@ -184,9 +184,11 @@ def send_admin_alert(subject: str, body_text: str) -> Path | None:
 
 
 def send_free_save_place(db, to: str, token: str) -> Path | None:
-    """The "no drawing to hand" exit: the link back, with the answers kept."""
+    """The "no drawing handy" exit: the link back, with the answers kept."""
     html = render_email("free_save_place.html", token=token)
-    return send_email(to, f"Your place is saved - {settings.SITE_NAME}", html,
+    # No site name appended: the brand is already the From name, and a subject that
+    # repeats it reads as a mailing-list blast in the inbox list.
+    return send_email(to, "Your place is saved", html,
                       kind="free_save_place")
 
 
@@ -194,7 +196,7 @@ def send_free_ready(db, to: str, token: str, name: str) -> Path | None:
     """The finished free reading. The link is the product here; the paid offer stays on
     the page rather than being pushed into the message."""
     html = render_email("free_ready.html", token=token, name=name)
-    return send_email(to, f"{name}'s drawing - your reading is ready", html,
+    return send_email(to, f"{name}'s drawing: your reading is ready", html,
                       kind="free_ready")
 
 

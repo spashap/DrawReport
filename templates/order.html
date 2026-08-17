@@ -76,13 +76,13 @@
       </div>
       <button type="button" class="btn btn--ghost" id="add-draw" data-goal="order_add_drawing">+ {{ _('Add another drawing') }}</button>
 
-      <h3 style="margin-top:18px">{{ _('Delivery') }}</h3>
+      <h3 style="margin-top:18px">{{ _('Where to send it') }}</h3>
       {{ field(email_field, '', values, errors) }}
       {{ field(coupon_field, '', values, errors) }}
 
       <div class="order-submit">
         <button type="submit" class="btn btn--primary" data-goal="order_pay">{{ _('Continue to payment — $%(price)s', price=product.price_usd) }}</button>
-        <p class="hint">{{ _('Educational observation, not a diagnosis. Money-back guarantee within 7 days.') }}</p>
+        <p class="hint">{{ _('Educational observation, not a diagnosis. 7-day money-back guarantee.') }}</p>
       </div>
     </form>
   </div>
