@@ -1,34 +1,17 @@
 #!/usr/bin/env bash
-# deploy.sh — pull latest code, refresh deps, restart the DrawReport services.
-# Run as root from this folder (after provision.sh has run once):
-#     cd /var/www/drawreportDeploy && bash deploy.sh
+# deploy.sh - thin wrapper. The REAL deploy script is /var/www/DrawReport/deploy.sh,
+# in the application repo.
 #
-# Scoped to DrawReport ONLY — never touches cosmyday-api (port 8001).
-# DB schema is created/migrated idempotently on startup. .env is untouched.
+# Why a wrapper instead of a second copy: there used to be two full deploy scripts, one
+# here and one in the repo. Two copies of the same logic drift, and the failure is silent
+# - you fix a step in one, deploy through the other, and the fix simply never runs. The
+# repo copy is also the one `git pull` updates as part of the deploy itself, so it is
+# always the current one; this file cannot be.
 set -euo pipefail
 [ "$(id -u)" -eq 0 ] || { echo "ERROR: run as root"; exit 1; }
 
-APP_DIR=/var/www/DrawReport
-SVC_USER=www-data
-cd "$APP_DIR"
+APP_DEPLOY=/var/www/DrawReport/deploy.sh
+[ -x "$APP_DEPLOY" ] || [ -f "$APP_DEPLOY" ] || {
+  echo "ERROR: $APP_DEPLOY not found - has provision.sh run yet?"; exit 1; }
 
-echo "== pull =="
-git pull --ff-only
-echo "now at $(git rev-parse --short HEAD)  (V$(cat VERSION 2>/dev/null || echo '?'))"
-
-echo "== python deps =="
-venv/bin/pip install -q -r requirements.txt 'gunicorn>=21'
-
-echo "== data dirs / ownership =="
-mkdir -p data/drawings data/reports data/outbox
-chown -R "$SVC_USER:$SVC_USER" data static/img
-
-echo "== compile translations =="
-venv/bin/pybabel compile -d translations 2>/dev/null || true
-
-echo "== restart services =="
-systemctl restart drawreport-web.service drawreport-worker.service
-sleep 1
-echo "web:    $(systemctl is-active drawreport-web.service)"
-echo "worker: $(systemctl is-active drawreport-worker.service)"
-echo "deployed."
+exec bash "$APP_DEPLOY"

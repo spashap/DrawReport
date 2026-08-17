@@ -54,8 +54,9 @@ venv/bin/pybabel compile -d translations 2>/dev/null || true
 echo "== systemd units =="
 cp "$DEPLOY_DIR/drawreport-web.service"    /etc/systemd/system/
 cp "$DEPLOY_DIR/drawreport-worker.service" /etc/systemd/system/
+cp "$DEPLOY_DIR/drawreport-free.service"   /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now drawreport-web.service drawreport-worker.service
+systemctl enable --now drawreport-web.service drawreport-worker.service drawreport-free.service
 
 echo "== nginx vhost (drawreport.com only) =="
 cp "$DEPLOY_DIR/nginx-drawreport.conf" /etc/nginx/sites-available/drawreport.com
@@ -65,6 +66,7 @@ nginx -t && systemctl reload nginx
 echo
 echo "web:    $(systemctl is-active drawreport-web.service)"
 echo "worker: $(systemctl is-active drawreport-worker.service)"
+echo "free:   $(systemctl is-active drawreport-free.service)"
 echo
 echo "== NEXT =="
 echo "1) Point DNS: drawreport.com + www -> this server (DNS-only)."

@@ -1,0 +1,20 @@
+# /etc/systemd/system/drawreport-free.service
+# Worker for the FREE readings (queued -> generating -> done). One instance.
+#
+# A SEPARATE unit from drawreport-worker on purpose: the paid worker is busy for minutes
+# at a time generating an eight-page report, and a parent waiting on the free page for
+# their single drawing must not sit behind that queue.
+[Unit]
+Description=DrawReport free-reading worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/DrawReport
+ExecStart=/var/www/DrawReport/venv/bin/python free_worker.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
