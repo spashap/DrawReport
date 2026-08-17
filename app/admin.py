@@ -18,10 +18,11 @@ import re
 from flask import (Blueprint, Response, abort, redirect, render_template, request,
                    url_for)
 
+from app import admin_free_analytics as fa
 from app import admin_funnels as fn
 from app import admin_tasks as tasks
 from app import geoip, jobs
-from app.db import get_db
+from app.db import get_db, now
 from config import settings
 
 bp_admin = Blueprint("admin", __name__, url_prefix="/admin")
@@ -42,7 +43,18 @@ SECTIONS = [
     ("admin.site_settings", "Site settings"),
     ("admin.report_texts", "Report texts"),
     ("admin.emails", "Emails"),
+    ("admin.free_analytics", "Freemium"),
+    ("admin.free", "Beta"),
 ]
+
+# How many minutes in the queue counts as stuck: free_worker polls once a second and a
+# reading takes under a minute, so five minutes in 'queued' means the unit is not running.
+FREE_STUCK_MINUTES = 5
+
+# The owner's verdict on an interpretation key - the main result of the beta.
+FREE_VERDICTS = [("confirmed", "confirmed by a source"),
+                 ("narrow", "only in a narrow context"),
+                 ("folklore", "folklore")]
 
 # Funnel steps moved to app/admin_funnels.py: there they are counted by VISIT and are
 # nested by construction. Only the sidebar and the periods live here.
@@ -261,6 +273,7 @@ def analytics():
                    days=days, periods=PERIODS, show=request.args.get("show"),
                    kpi=kpi, funnels=funnels, sources=sources_view, events=events_view,
                    bots=bots, humans=humans, engaged=engaged, landing_only=landing_only,
+                   free=fa.dashboard_counters(db, since),
                    ga_configured=bool(settings.GA_MEASUREMENT_ID))
 
 
@@ -530,6 +543,169 @@ def coupons_toggle(code):
     db.execute("UPDATE coupons SET active = 1 - active WHERE code = ?", (code,))
     db.commit()
     return redirect(url_for("admin.coupons"))
+
+
+def _heartbeats(db):
+    """Are the background units alive? deploy.sh does not start a new unit and there is no
+    monitoring - without this row, after a reboot of the box free readings would silently
+    stop being generated and nothing on any screen would say so.
+
+    Each unit gets its own threshold: free_worker marks itself once a second, while the
+    paid worker is silent for the whole time it generates a report (minutes). A shared
+    120s limit would paint normal operation as an alarm."""
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    seen = {r["name"]: r["last_seen_at"] for r in
+            db.execute("SELECT name, last_seen_at FROM service_heartbeat")}
+    out = []
+    for name, label, limit in (("free_worker", "free_worker (free readings)", 120),
+                               ("worker", "worker (paid reports)", 600)):
+        ts = seen.get(name)
+        ago = None
+        if ts:
+            try:
+                ago = int((now_utc - datetime.datetime.fromisoformat(ts)).total_seconds())
+            except ValueError:
+                ago = None
+        out.append({"name": name, "label": label, "ago": ago,
+                    "ok": ago is not None and ago < limit})
+    return out
+
+
+@bp_admin.get("/free-analytics")
+def free_analytics():
+    """Freemium BEHAVIOUR: how far people get, what they pick, who buys afterwards.
+    "Beta" next door is about the QUALITY of the texts (the interpretation library).
+    Mixing the two on one screen would mean reading neither."""
+    _guard()
+    days, since = _period()
+    return _render("admin.free_analytics", "admin/free_analytics.html",
+                   days=days, periods=PERIODS, **fa.page_data(get_db(), since))
+
+
+@bp_admin.get("/free")
+def free():
+    """The beta: individual readings and the interpretation library."""
+    _guard()
+    days, since = _period()
+    db = get_db()
+
+    rows = db.execute(
+        "SELECT * FROM free_analyses WHERE created_at >= ?"
+        " ORDER BY id DESC LIMIT 300", (since,)).fetchall()
+    purchases = fa.purchases_index(db, rows)
+    items = []
+    for r in rows:
+        interps = db.execute(
+            "SELECT * FROM free_interpretations WHERE analysis_id = ? ORDER BY id",
+            (r["id"],)).fetchall()
+        data = json.loads(r["result_json"] or "{}")
+        items.append({
+            "id": r["id"], "token": r["token"],
+            "created": (r["created_at"] or "")[:16].replace("T", " "),
+            "child": r["child_name"], "age": r["age"],
+            "concern": fa.concern_label(r["concern_key"]), "duration": r["duration_key"],
+            "status": r["status"], "reason": r["reason_key"],
+            "flags": ", ".join(data.get("flags") or []),
+            "correlate": data.get("concern_correlate_visible"),
+            "email": r["email"] or "", "seconds": r["elapsed_s"],
+            "repairs": r["repair_rounds"], "dropped": r["hypothesis_dropped"],
+            "image_deleted": bool(r["image_deleted_at"]),
+            "has_image": bool(r["image_path"]),
+            "parent_text": r["parent_text"] or "",
+            "interps": [dict(i) for i in interps],
+            "purchases": purchases.get(r["id"]) or [],
+        })
+
+    # The library: grouped by key, with the parents' votes and the current verdict. This
+    # is the main result of the beta - what the model actually says about real drawings,
+    # graded.
+    lib = db.execute(
+        "SELECT i.key, COUNT(*) AS n,"
+        " SUM(CASE WHEN i.parent_vote = 'yes' THEN 1 ELSE 0 END) AS yes_n,"
+        " SUM(CASE WHEN i.parent_vote = 'no' THEN 1 ELSE 0 END) AS no_n,"
+        " MIN(i.created_at) AS first_at, k.verdict, k.note"
+        " FROM free_interpretations i"
+        " LEFT JOIN free_interpretation_keys k ON k.key = i.key"
+        " GROUP BY i.key ORDER BY n DESC").fetchall()
+    library = []
+    for k in lib:
+        examples = db.execute(
+            "SELECT phrase, new_key_description, age_scope, child_age, parent_vote"
+            " FROM free_interpretations WHERE key = ? ORDER BY id DESC LIMIT 3",
+            (k["key"],)).fetchall()
+        library.append({**dict(k), "examples": [dict(e) for e in examples],
+                        "in_dictionary": k["key"] in _dict_keys()})
+
+    funnel = []
+    for status, label in (("draft", "answered the questions"),
+                          ("queued", "uploaded a drawing"),
+                          ("generating", "being read"), ("done", "got a reading"),
+                          ("insufficient", "refused (unusable photo)"),
+                          ("failed", "failed")):
+        n = db.execute("SELECT COUNT(*) c FROM free_analyses"
+                       " WHERE status = ? AND created_at >= ?",
+                       (status, since)).fetchone()["c"]
+        funnel.append({"status": status, "label": label, "n": n})
+
+    voted = db.execute("SELECT COUNT(*) c FROM free_interpretations"
+                       " WHERE parent_vote IS NOT NULL").fetchone()["c"]
+    with_email = db.execute(
+        "SELECT COUNT(*) c FROM free_analyses WHERE email IS NOT NULL"
+        " AND created_at >= ?", (since,)).fetchone()["c"]
+    stuck = db.execute(
+        "SELECT COUNT(*) c FROM free_analyses WHERE status IN ('queued','generating')"
+        " AND created_at < ?",
+        ((datetime.datetime.now(datetime.timezone.utc)
+          - datetime.timedelta(minutes=FREE_STUCK_MINUTES)).isoformat(timespec="seconds"),
+         )).fetchone()["c"]
+
+    return _render("admin.free", "admin/free.html", days=days, periods=PERIODS,
+                   items=items, library=library, funnel=funnel, voted=voted,
+                   with_email=with_email, stuck=stuck, verdicts=FREE_VERDICTS,
+                   heartbeats=_heartbeats(db), stuck_minutes=FREE_STUCK_MINUTES,
+                   used_today=_free_used_today(db), cap=settings.FREE_DAILY_CAP,
+                   msg=request.args.get("msg"))
+
+
+def _dict_keys():
+    from config.free_keys import INTERPRETATION_KEYS
+    return set(INTERPRETATION_KEYS)
+
+
+def _free_used_today(db):
+    from app.free_retention import used_today
+    return used_today(db)
+
+
+@bp_admin.post("/free/key/<path:key>")
+def free_key_verdict(key):
+    """Grading an interpretation BY KEY - this is the main result of the beta."""
+    _guard()
+    verdict = (request.form.get("verdict") or "").strip()
+    note = (request.form.get("note") or "").strip()
+    if verdict not in {v[0] for v in FREE_VERDICTS}:
+        return redirect(url_for("admin.free", msg="Unknown verdict"))
+    db = get_db()
+    db.execute(
+        "INSERT INTO free_interpretation_keys (key, verdict, note, decided_at)"
+        " VALUES (?, ?, ?, ?)"
+        " ON CONFLICT(key) DO UPDATE SET verdict = excluded.verdict,"
+        " note = excluded.note, decided_at = excluded.decided_at",
+        (key, verdict, note, now()))
+    db.commit()
+    return redirect(url_for("admin.free", msg=f"{key}: {verdict}"))
+
+
+@bp_admin.post("/free/<int:analysis_id>/delete-image")
+def free_delete_image(analysis_id):
+    """Delete a photo on the parent's request. There was NO deletion path in the project
+    at all, and the first such request is inevitable: we are storing other people's
+    children's drawings."""
+    _guard()
+    from app.free_retention import delete_image
+    ok = delete_image(get_db(), analysis_id)
+    return redirect(url_for("admin.free",
+                            msg="Photo deleted" if ok else "The file was already gone"))
 
 
 def _load_products_for_edit():

@@ -60,6 +60,32 @@ def purge_old_images(conn, days: int | None = None) -> dict:
             "cutoff": cutoff, "days": days}
 
 
+def delete_image(conn, analysis_id: int) -> bool:
+    """Delete one photo on request, before the retention period is up.
+
+    There was no deletion path in the project at all, and the first such request is
+    inevitable: we store other people's children's drawings, and "wait ninety days" is not
+    an answer a parent should have to accept."""
+    row = conn.execute("SELECT image_path FROM free_analyses WHERE id = ?",
+                       (analysis_id,)).fetchone()
+    if row is None:
+        return False
+    existed = False
+    if row["image_path"]:
+        p = Path(row["image_path"])
+        try:
+            if p.exists():
+                p.unlink()
+                existed = True
+        except OSError as e:
+            log.warning("delete_image: could not delete %s: %s", p, e)
+            return False
+    conn.execute("UPDATE free_analyses SET image_path = NULL, image_deleted_at = ?"
+                 " WHERE id = ?", (now(), analysis_id))
+    conn.commit()
+    return existed
+
+
 def used_today(conn) -> int:
     """How many free analyses have actually been GENERATED today (UTC). Counts the ones
     that reached the model, not questionnaires: a draft row costs nothing."""

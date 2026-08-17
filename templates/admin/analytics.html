@@ -80,6 +80,19 @@
   {%- if f.revenue %} · revenue from them: <b>${{ f.revenue }}</b>{% endif %}</p>
 {% endmacro %}
 
+<h2 class="admin-gap">Freemium <span class="hint">(the free reading)</span></h2>
+<p class="hint">{{ free.total }} completed the questions — of those <b>{{ free.email_only }}</b>
+  left only an email (no drawing to hand) and <b>{{ free.requested }}</b> actually brought
+  a drawing. Opened the wizard: {{ free.openers }}.
+  <a href="{{ url_for('admin.free_analytics') }}?days={{ days }}">Full freemium analytics →</a></p>
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.total }}</div><div class="admin-kpi__l">completed<br>the questions</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.email_only }}</div><div class="admin-kpi__l">email only<br>(no drawing)</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.requested }}</div><div class="admin-kpi__l">asked for a reading<br>(drawing uploaded)</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.done }}</div><div class="admin-kpi__l">reading ready</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ free.dropped }}</div><div class="admin-kpi__l">left with no email<br>and no drawing</div></div>
+</div>
+
 <h2 class="admin-gap">Funnels by visit</h2>
 <p class="hint">The unit is a <b>visit</b> (one sitting, with no gap longer than 30
   minutes), not a person over a period. Two kinds of row, and they must not be confused:<br>

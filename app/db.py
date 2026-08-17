@@ -275,6 +275,15 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "free_token" not in ord_cols:
         conn.execute("ALTER TABLE orders ADD COLUMN free_token TEXT")
 
+    # The parent's verdict on one interpretation ("is this about your child?"). This is
+    # what makes the accumulated library gradeable: without it every interpretation looks
+    # equally plausible on paper and nothing distinguishes a real reading from a
+    # confident-sounding template.
+    icols = {r["name"] for r in conn.execute("PRAGMA table_info(free_interpretations)")}
+    if "parent_vote" not in icols:
+        conn.execute("ALTER TABLE free_interpretations ADD COLUMN parent_vote TEXT")
+        conn.execute("ALTER TABLE free_interpretations ADD COLUMN voted_at TEXT")
+
 
 def get_db() -> sqlite3.Connection:
     """Per-request connection (Flask g). Closed in teardown (app/__init__)."""

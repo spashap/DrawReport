@@ -1,0 +1,156 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Freemium{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Freemium</h1>
+  {{ period_filter(periods, days, url_for("admin.free_analytics")) }}
+</div>
+<p class="hint">Behaviour: how far people get, what they pick, and who buys afterwards.
+  The <a href="{{ url_for('admin.free') }}">Beta</a> section next door is about the
+  QUALITY of the texts — mixing the two on one screen would mean reading neither.<br>
+  The period is the date of the QUESTIONNAIRE (a cohort). Purchases by that cohort are
+  counted with no date limit: the question is "did they buy at all", not "did they buy
+  the same day".</p>
+
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ total }}</div><div class="admin-kpi__l">completed<br>the questions</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ uploaded }}</div><div class="admin-kpi__l">uploaded<br>a drawing</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ done }}</div><div class="admin-kpi__l">got a reading</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ paid }}</div><div class="admin-kpi__l">paid</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">${{ revenue }}</div><div class="admin-kpi__l">revenue</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ conv_done_paid }}</div><div class="admin-kpi__l">reading → paid</div></div>
+</div>
+
+{% macro steps_table(steps, unit) %}
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Step</th><th>{{ unit }}</th><th>From prev.</th><th>From top</th><th>Source</th></tr></thead>
+  <tbody>
+  {% for s in steps %}
+  <tr><td>{{ s.label }}</td><td><b>{{ s.n }}</b></td><td>{{ s.pct_prev }}</td>
+      <td>{{ s.pct_top }}</td><td class="hint">{{ s.note }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endmacro %}
+
+<h2 class="admin-gap">Depth, by visitor</h2>
+<p class="hint">The wizard steps leave no row in the database — these are beacon events,
+  counted as unique people. Not to be added to the table below: the units differ.</p>
+{{ steps_table(page_steps, "People") }}
+
+<h2 class="admin-gap">Depth, by questionnaire</h2>
+<p class="hint">One row = one completed set of questions; one person can complete it twice.
+  The interpretation vote is deliberately not a step here: it is optional, and including
+  it would produce meaningless "300% of the previous step".</p>
+{{ steps_table(form_steps, "Questionnaires") }}
+
+<h2 class="admin-gap">Where the ones who brought no drawing stopped</h2>
+<p class="hint">Left only an email (the "no drawing to hand" exit): <b>{{ stalled.email }}</b> ·
+  left nothing at all: <b>{{ stalled.silent }}</b> of {{ stalled.total }}.
+  The first group can be contacted; the second is the real leak.</p>
+
+{% if rejects or flags or upload_fails %}
+<div class="admin-cols">
+  <div>
+    <h3>Refusals and failures</h3>
+    <p class="hint">Depth too: the person reached the end and got no reading.</p>
+    <table>
+      <thead><tr><th>Reason</th><th>Count</th></tr></thead>
+      <tbody>
+      {% for k, n in rejects %}<tr><td>{{ k }}</td><td><b>{{ n }}</b></td></tr>
+      {% else %}<tr><td colspan="2" class="hint">None</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <h3 class="admin-gap">Upload refused</h3>
+    <p class="hint">The biggest blind spot there was: without this the step simply never
+      happens and no reason is recorded anywhere.</p>
+    <table>
+      <thead><tr><th>Payload</th><th>Count</th></tr></thead>
+      <tbody>
+      {% for k, n in upload_fails %}<tr><td><code>{{ k }}</code></td><td><b>{{ n }}</b></td></tr>
+      {% else %}<tr><td colspan="2" class="hint">None</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h3>Flags the model set</h3>
+    <table>
+      <thead><tr><th>Flag</th><th>Count</th></tr></thead>
+      <tbody>
+      {% for k, n in flags %}<tr><td>{{ k }}</td><td><b>{{ n }}</b></td></tr>
+      {% else %}<tr><td colspan="2" class="hint">None</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <h3 class="admin-gap">Engagement with the finished reading</h3>
+    <table>
+      <tbody>
+        <tr><td>Voted on the interpretation</td><td><b>{{ engagement.voted }}</b> ({{ engagement.voted_pct }} of readings)</td></tr>
+        <tr><td>Clicked through to the report</td><td>{{ engagement.to_order_clicks }}</td></tr>
+        <tr><td>Asked to retry after a refusal</td><td>{{ engagement.retry_clicks }}</td></tr>
+        <tr><td>Hit the one-per-child limit</td><td>{{ engagement.limit_hits }}</td></tr>
+        <tr><td>Hit the daily cap</td><td>{{ engagement.cap_hits }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<h2 class="admin-gap">What they chose in the questionnaire</h2>
+<p class="hint">Options nobody chose stay visible — a zero is an answer too.</p>
+{% for s in surveys %}
+<h3 class="admin-gap">{{ s.title }}</h3>
+{% if s.hint %}<p class="hint">{{ s.hint }}</p>{% endif %}
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>{{ s.unit }}</th><th>Chose it</th><th>Share</th><th>Uploaded</th>
+    <th>→ upload</th><th>Got a reading</th><th>Ordered</th><th>Paid</th></tr></thead>
+  <tbody>
+  {% for r in s.rows %}
+  <tr><td>{{ r.label }}</td><td><b>{{ r.n }}</b></td><td>{{ r.share }}</td>
+      <td>{{ r.uploaded }}</td><td>{{ r.to_upload }}</td><td>{{ r.done }}</td>
+      <td>{{ r.orders }}</td><td>{{ r.paid }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endfor %}
+
+<h2 class="admin-gap">Free reading → purchase</h2>
+<p class="hint">In descending order of precision. <b>came from the reading</b> is exact
+  (the token travels through the order form). <b>same email</b> and <b>same visitor</b>
+  are matches by coincidence and can be wrong — a shared computer, someone else's
+  address — so they are shown separately rather than folded into one number.</p>
+<table>
+  <thead><tr><th>How it was matched</th><th>Orders</th><th>Paid</th><th>Revenue</th></tr></thead>
+  <tbody>
+  {% for b in by_kind %}
+  <tr><td>{{ b.label }}</td><td>{{ b.orders }}</td><td><b>{{ b.paid }}</b></td><td>${{ b.usd }}</td></tr>
+  {% else %}<tr><td colspan="4" class="hint">No purchases attributed yet</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+{% if pairs %}
+<h3 class="admin-gap">Every match <span class="hint">(newest first)</span></h3>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Child</th><th>Concern</th><th>Reading</th><th>Order</th><th>Gap</th>
+    <th>How</th><th>Status</th><th>Amount</th></tr></thead>
+  <tbody>
+  {% for p in pairs %}
+  <tr>
+    <td>{{ p.child }}</td><td class="hint">{{ p.concern }}</td>
+    <td class="nowrap">{{ p.free_at }}</td>
+    <td class="nowrap">#{{ p.order_id }} · {{ p.order_at }}</td>
+    <td>{{ p.lag_days }}</td><td class="hint">{{ p.kind_label }}</td>
+    <td><span class="admin-status admin-status--{{ p.status }}">{{ p.status }}</span></td>
+    <td>{% if p.paid %}${{ p.usd }}{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

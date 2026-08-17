@@ -60,6 +60,21 @@
       </div>
       {% endif %}
 
+      {# The vote is attached to the INTERPRETATION, not to the reading as a whole: "was
+         this any good" averages a warm opening with a shaky interpretation and grades
+         neither. The key is what the library is built from, so the key is what gets
+         judged. Hidden once answered. #}
+      {% if interp_id %}
+      <div class="free-note free-vote-box" data-interp="{{ interp_id }}">
+        <p class="hint free-vote-q">{{ _('Is this about %(name)s?', name=name) }}</p>
+        <div class="free-vote">
+          <button class="btn btn--ghost" data-vote="yes" data-goal="free_vote_yes">{{ _('Yes, that’s %(name)s', name=name) }}</button>
+          <button class="btn btn--ghost" data-vote="no" data-goal="free_vote_no">{{ _('Not %(name)s', name=name) }}</button>
+        </div>
+        <p class="hint" hidden data-thanks>{{ _('Thank you — this is what helps us get more accurate.') }}</p>
+      </div>
+      {% endif %}
+
       {% if a.portrait_hint %}<p>{{ a.portrait_hint }}</p>{% endif %}
       <p><b>{{ _('Ask %(name)s today:', name=name) }}</b> {{ a.question_to_child }}</p>
       <p><b>{{ _('What this page doesn’t show.') }}</b> {{ a.unknown_next }}</p>
@@ -92,4 +107,7 @@
   {% endif %}
   </div>
 </section>
+{% endblock %}
+{% block footer %}{{ super() }}
+<script src="{{ static }}/js/free_result.js?v={{ version }}" defer></script>
 {% endblock %}

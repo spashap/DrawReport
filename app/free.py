@@ -274,9 +274,15 @@ def result(token: str):
         notes.insert(0, T.MISMATCH_PARAGRAPH)
 
     source = None
+    interp_id = None
     if a.hypothesis:
         from config.free_keys import source_for
         source = source_for(a.hypothesis.key)
+        got = db.execute(
+            "SELECT id, parent_vote FROM free_interpretations WHERE analysis_id = ?"
+            " ORDER BY id DESC LIMIT 1", (row["id"],)).fetchone()
+        if got is not None and got["parent_vote"] is None:
+            interp_id = got["id"]
 
     # A coloring page does NOT get the selling close: the parent is one step from giving
     # us usable material, and asking for money at that step loses the drawing and the sale.
@@ -285,7 +291,7 @@ def result(token: str):
         "free_result.html", a=a, name=name, token=token, notes=notes, source=source,
         selling=None if coloring else T.selling_block(name, address),
         coloring_cta=T.coloring_cta(name, address) if coloring else None,
-        texts=T, has_image=bool(row["image_path"]))
+        texts=T, has_image=bool(row["image_path"]), interp_id=interp_id)
 
 
 @bp_free.get("/img/<token>")
@@ -304,6 +310,32 @@ def image(token: str):
     mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
     return Response(p.read_bytes(), mimetype=mime,
                     headers={"Cache-Control": "private, max-age=600"})
+
+
+@bp_free.post("/vote/<int:interp_id>")
+def vote(interp_id: int):
+    """The parent's verdict on ONE interpretation, not on the reading as a whole.
+
+    Tied to the interpretation rather than the analysis on purpose: "was this reading any
+    good" averages a warm opening with a shaky interpretation and grades neither. The key
+    is what the library is built from, so the key is what has to be judged."""
+    db = get_db()
+    row = db.execute(
+        "SELECT i.id, a.token FROM free_interpretations i"
+        " JOIN free_analyses a ON a.id = i.analysis_id WHERE i.id = ?",
+        (interp_id,)).fetchone()
+    if row is None:
+        return jsonify({"error": "not_found"}), 404
+    if not _owns(row["token"]):
+        abort(403)
+    v = (request.form.get("vote") or "").strip().lower()
+    if v not in ("yes", "no"):
+        return jsonify({"error": "bad_vote"}), 400
+    db.execute("UPDATE free_interpretations SET parent_vote = ?, voted_at = ?"
+               " WHERE id = ?", (v, now(), interp_id))
+    db.commit()
+    track_event("free_vote", {"vote": v})
+    return jsonify({"ok": True})
 
 
 @bp_free.post("/to-order/<token>")

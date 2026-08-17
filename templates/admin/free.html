@@ -1,0 +1,164 @@
+{% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
+{% block title %}Beta{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Beta</h1>
+  {{ period_filter(periods, days, url_for("admin.free")) }}
+</div>
+{% if msg %}<p class="admin-flash admin-flash--ok">{{ msg }}</p>{% endif %}
+<p class="hint">The QUALITY of the free readings: the interpretation library and the
+  individual analyses. Behaviour and money live next door in
+  <a href="{{ url_for('admin.free_analytics') }}">Freemium</a>.</p>
+
+{# Liveness first. deploy.sh does not start a new unit and there is no monitoring: after a
+   reboot of the box, free readings would silently stop being generated and nothing else
+   on any screen would say so. #}
+<div class="admin-cols">
+  <div>
+    <h2>Background units</h2>
+    <table>
+      <tbody>
+      {% for h in heartbeats %}
+      <tr>
+        <td>{{ h.label }}</td>
+        <td>{% if h.ok %}<span class="admin-status admin-status--delivered">alive</span>
+            {% elif h.ago is none %}<span class="admin-status admin-status--failed">never seen</span>
+            {% else %}<span class="admin-status admin-status--failed">silent {{ h.ago }}s</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if stuck %}
+    <p class="admin-flash admin-flash--err">{{ stuck }} analysis(es) stuck in the queue
+      longer than {{ stuck_minutes }} minutes — the free worker is probably not running.</p>
+    {% endif %}
+    <p class="hint">Today's free readings: <b>{{ used_today }}</b>{% if cap %} of a cap of {{ cap }}{% endif %}.
+      Every upload costs a model call whether or not the parent ever buys.</p>
+  </div>
+  <div>
+    <h2>Where they are</h2>
+    <table>
+      <thead><tr><th>Status</th><th>Count</th></tr></thead>
+      <tbody>
+      {% for f in funnel %}
+      <tr><td>{{ f.label }} <code>{{ f.status }}</code></td><td><b>{{ f.n }}</b></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="hint">Left an email: <b>{{ with_email }}</b> · interpretations voted on
+      by a parent, all time: <b>{{ voted }}</b>.</p>
+  </div>
+</div>
+
+<h2 class="admin-gap">The interpretation library</h2>
+<p class="hint">THE MAIN RESULT OF THE BETA: what the model actually says about real
+  drawings, grouped by key and graded by you. A key marked <b>folklore</b> is a candidate
+  for removal from <code>config/free_keys.py</code>; one marked <b>confirmed</b> stays.<br>
+  <code>new</code> means the model met an interpretation outside the dictionary and said
+  so rather than silently inventing a key — read the description and decide whether it
+  becomes a real key or is rejected.</p>
+<div class="vis-list">
+  {% for k in library %}
+  <details class="drill drill--src">
+    <summary>
+      <span><code>{{ k.key }}</code>{% if not k.in_dictionary %}
+        <span class="admin-status admin-status--insufficient">not in the dictionary</span>{% endif %}</span>
+      <span><b>{{ k.n }}</b> use(s)</span>
+      <span>{% if k.yes_n or k.no_n %}👍 {{ k.yes_n }} · 👎 {{ k.no_n }}{% else %}<span class="hint">no votes</span>{% endif %}</span>
+      <span>{% if k.verdict %}<span class="status-pill status-pill--ready">{{ k.verdict }}</span>
+            {% else %}<span class="status-pill status-pill--wait">not graded</span>{% endif %}</span>
+      <span class="hint">since {{ (k.first_at or '')[:10] }}</span>
+    </summary>
+    <div class="vis-body">
+      {% if k.note %}<p class="hint">Your note: {{ k.note }}</p>{% endif %}
+      <table class="vis-events">
+        <thead><tr><th>What the model wrote</th><th>Age scope</th><th>Child</th><th>Parent</th></tr></thead>
+        <tbody>
+        {% for e in k.examples %}
+        <tr>
+          <td>{{ e.phrase }}{% if e.new_key_description %}<br>
+              <span class="hint">proposed meaning: {{ e.new_key_description }}</span>{% endif %}</td>
+          <td>{{ e.age_scope or '-' }}</td>
+          <td>{{ e.child_age or '-' }}</td>
+          <td>{{ {'yes': '👍', 'no': '👎'}.get(e.parent_vote, '-') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <form method="post" action="{{ url_for('admin.free_key_verdict', key=k.key) }}"
+            class="admin-inline-form admin-row-actions">
+        {% for val, label in verdicts %}
+        <button class="status-pill {{ 'status-pill--ready' if k.verdict == val else 'status-pill--wait' }}"
+                name="verdict" value="{{ val }}" type="submit">{{ label }}</button>
+        {% endfor %}
+        <input class="input" name="note" type="text" maxlength="300"
+               placeholder="a note (optional)" value="{{ k.note or '' }}">
+      </form>
+    </div>
+  </details>
+  {% else %}
+  <p class="hint">Nothing yet. The library fills up from real readings — there is nothing
+    to grade until the model has actually interpreted some drawings.</p>
+  {% endfor %}
+</div>
+
+<h2 class="admin-gap">Readings <span class="hint">(up to 300)</span></h2>
+<div class="vis-list">
+  <div class="vis-head">
+    <span>#</span><span>Child</span><span>Concern</span><span>Status</span>
+    <span>Flags</span><span>Bought</span><span>When</span><span></span>
+  </div>
+  {% for i in items %}
+  <details class="vis">
+    <summary>
+      <code>{{ i.id }}</code>
+      <span>{{ i.child }}, {{ i.age }}</span>
+      <span>{{ i.concern }}</span>
+      <span><span class="admin-status admin-status--{{ i.status }}">{{ i.status }}</span></span>
+      <span class="hint">{{ i.flags }}{% if i.correlate is false %} mismatch{% endif %}</span>
+      <span>{% if i.purchases %}<b>${{ i.purchases[0].usd }}</b>{% endif %}</span>
+      <span class="nowrap">{{ i.created }}</span>
+      <span class="hint">open ▾</span>
+    </summary>
+    <div class="vis-body">
+      <p class="hint">
+        {% if i.email %}{{ i.email }} · {% endif %}
+        {% if i.seconds %}{{ '%.0f'|format(i.seconds) }}s · {% endif %}
+        repairs: {{ i.repairs }}{% if i.dropped %} · hypothesis dropped{% endif %}
+        {% if i.reason %} · refused: {{ i.reason }}{% endif %}
+        {% if i.image_deleted %} · photo deleted{% endif %}
+        · <a href="{{ url_for('free.result', token=i.token) }}">open the reading</a>
+      </p>
+      {% if i.parent_text %}
+      <p class="hint">What the parent wrote: “{{ i.parent_text }}”</p>
+      {% endif %}
+      {% if i.interps %}
+      <table class="vis-events">
+        <thead><tr><th>Key</th><th>Interpretation</th><th>Attribution</th><th>Parent</th></tr></thead>
+        <tbody>
+        {% for n in i.interps %}
+        <tr><td><code>{{ n.key }}</code></td><td>{{ n.phrase }}</td>
+            <td class="hint">{{ n.attribution }}</td>
+            <td>{{ {'yes': '👍', 'no': '👎'}.get(n.parent_vote, '-') }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="hint">No interpretation — a lawful outcome, not a failure.</p>
+      {% endif %}
+      {% if i.has_image %}
+      <div class="admin-row-actions">
+        <form method="post" action="{{ url_for('admin.free_delete_image', analysis_id=i.id) }}"
+              onsubmit="return confirm('Delete this child’s drawing? This cannot be undone.')">
+          <button class="status-pill status-pill--warn" type="submit">delete the photo</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </details>
+  {% else %}
+  <p class="hint">No readings in this period.</p>
+  {% endfor %}
+</div>
+{% endblock %}
