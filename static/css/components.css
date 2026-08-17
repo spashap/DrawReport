@@ -1010,3 +1010,63 @@ html.dk .btn { color: #241A12; }
   font-size: var(--fs-small); font-weight: 600; color: var(--accent);
 }
 @media (max-width: 480px) { .offer, .free-sell { padding: 22px 17px 18px; } }
+
+
+/* ============================================================================
+   FREE ENTRY POINTS on the paid product page (/report).
+   Three of them, all quieter than or below the paid CTA. A fourth would devalue
+   the other three; each has a stated place and reason.
+   ========================================================================= */
+
+.price-card .p-note { margin-top: 10px; text-align: center; color: var(--muted);
+                      font-size: var(--fs-micro); }
+
+/* A single-card price block should not stretch to full width. */
+.price-grid--single { grid-template-columns: minmax(0, 420px); justify-content: center; }
+
+/* The "check it free" band inside the text sections of the page. */
+.free-band {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  margin-top: 26px; padding: 20px 24px; border-radius: var(--radius-card);
+  background: var(--bg-soft); border: 2px solid var(--accent);
+}
+.free-band__text { flex: 1 1 260px; font-size: var(--fs-body); line-height: 1.5; }
+.free-band__text b { display: block; font-family: var(--font-head); font-weight: 800;
+                     font-size: var(--fs-h3); margin-bottom: 4px; }
+.free-band .btn { flex: 0 0 auto; }
+@media (max-width: 560px) { .free-band .btn { width: 100%; } }
+
+/* The worried door, placed immediately after the price. Deliberately NOT a pricing card:
+   a different shape, a different background, and no price - otherwise it would read as a
+   third tier and compete with the paid product all over again. */
+.worry-band {
+  max-width: 720px; margin: 0 auto; text-align: center;
+  padding: 30px 28px 26px; border-radius: var(--radius-card);
+  background: var(--alt); border: 1px dashed var(--accent);
+}
+.worry-band__title { font-family: var(--font-head); font-weight: 900;
+                     font-size: var(--fs-h3); margin-bottom: 10px; }
+.worry-band__text { font-size: var(--fs-body); line-height: 1.6; color: var(--muted);
+                    margin: 0 auto 18px; max-width: 56ch; }
+.worry-band__note { margin-top: 10px; font-size: var(--fs-micro); color: var(--soft); }
+
+/* The second entry in the hero: a quiet text link. It names a STATE, not a product, and
+   is deliberately quieter than the paid button - someone who came to buy will not notice
+   it, and someone who came worried will recognise themselves. */
+.hero__worry {
+  display: inline-block; margin-left: 16px; vertical-align: middle;
+  font-size: var(--fs-small); font-weight: 600; color: var(--accent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.hero__worry:hover { color: var(--accent-2); }
+@media (max-width: 560px) { .hero__worry { display: block; margin: 14px 0 0; } }
+
+/* A standalone centred button in an ordinary section. */
+.cta-row { text-align: center; margin-top: 28px; }
+@media (max-width: 560px) { .cta-row .btn { display: block; width: 100%; } }
+.cta-zone--center { text-align: center; }
+.case-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+             gap: 16px; margin-top: 8px; }
+.case-item { font-size: var(--fs-body); line-height: 1.5; }
+.case-note { margin-top: 18px; color: var(--muted); font-size: var(--fs-small);
+             line-height: 1.6; }

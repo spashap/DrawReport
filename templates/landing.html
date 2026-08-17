@@ -38,7 +38,7 @@
 {% include "_header.html" %}
 
 <!-- 1. HERO: full-bleed photo + frosted card. Cold traffic: clean hook, CTA bonus. -->
-<section class="hero">
+<section class="hero" data-track-section="hero">
   <div class="hero__in">
     <div class="hero__card">
       <span class="hero__eyebrow">{{ _('Every drawing has a voice') }}</span>
@@ -46,7 +46,10 @@
       <p class="lead"><strong>{{ _('Understand what your child is expressing:') }}</strong>
         {{ _('we’ll show you their strengths, what to nurture, and how to support them at home — grounded in the developmental stages of children’s art.') }}</p>
       <div class="cta-zone">
-        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="landing_hero_order">{{ _('Get the report — $%(price)s', price=min_price) }}</a><span class="cta-info" tabindex="0" role="button" aria-label="{{ _('What’s inside the report') }}">{{ _('what’s inside') }} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        {# ENTRY 1 of 3 into the free reading. A quiet text link that names a STATE, not a
+           product: someone who came to buy will not notice it, someone who came worried
+           will recognise themselves. Deliberately quieter than the paid button. #}
+        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="landing_hero_order">{{ _('Get the report — $%(price)s', price=min_price) }}</a><a class="hero__worry" href="{{ url_for('free.page') }}" data-goal="landing_hero_free">{{ _('Worried about your child’s drawings?') }}</a><span class="cta-info" tabindex="0" role="button" aria-label="{{ _('What’s inside the report') }}">{{ _('what’s inside') }} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <div class="cta-pop">
           <div class="note">
             <svg width="34" height="22" viewBox="0 0 46 30" aria-hidden="true"><path d="M2 6 C 18 26, 30 24, 42 12 M42 12 l-9 0 M42 12 l-2 9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
@@ -63,7 +66,7 @@
 </section>
 
 <!-- 2. What you'll learn -->
-<section class="section" id="inside">
+<section class="section" id="inside" data-track-section="whats_inside">
   <div class="wrap">
     <h2 class="reveal">{{ _('What you’ll learn about your child') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('Most parents don’t want to raise an artist — they want to understand their child. The report reads your child as a person, through their drawing: who they are, not how they hold a pencil.') }}</div>
@@ -82,7 +85,7 @@
 </section>
 
 <!-- 3. How the conclusion is built -->
-<section class="section section--soft" id="logic">
+<section class="section section--soft" id="logic" data-track-section="how_we_read">
   <div class="wrap">
     <h2 class="reveal">{{ _('How the conclusion is built') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('Every observation starts from something visible in the drawing, becomes a gentle suggestion grounded in the developmental and art literature, and ends by turning back to your child.') }}</div>
@@ -146,7 +149,7 @@
 </section>
 
 <!-- 5. No myths -->
-<section class="section section--soft" id="no-myths">
+<section class="section section--soft" id="no-myths" data-track-section="no_myths">
   <div class="wrap">
     <h2 class="reveal">{{ _('No myths, no scary interpretations') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('We don’t hunt for hidden diagnoses in colors and symbols. We read your child carefully and seriously, grounded in the developmental and art literature — as a suggestion and a hint, never a diagnosis.') }}</div>
@@ -188,7 +191,7 @@
 </section>
 
 <!-- 7. Illustrative scenarios (examples, never real clients) -->
-<section class="section section--soft" id="scenarios">
+<section class="section section--soft" id="scenarios" data-track-section="cases">
   <div class="wrap">
     <h2 class="reveal">{{ _('For example, situations like these') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('These aren’t real clients — they’re examples of what the report can do: how it reveals what a child expresses through a drawing, and what it suggests to the parent.') }}</div>
@@ -196,6 +199,17 @@
       {% for c in scenarios %}
       <div class="card card--pad case"><p><strong>{{ _('For example, a situation like this:') }}</strong> {{ c }}</p></div>
       {% endfor %}
+    </div>
+    {# ENTRY 2 of 3. The place is chosen: the worry has just been named in the reader's
+       own words. "Check it" is avoided deliberately - it promises the result of a check,
+       i.e. a diagnosis. #}
+    <div class="free-band reveal reveal--d1">
+      <div class="free-band__text">
+        <b>{{ _('A similar story?') }}</b>
+        {{ _('Add one drawing and we’ll show you what’s visible in it. Free, in about a minute.') }}
+      </div>
+      <a class="btn btn--primary" href="{{ url_for('free.page') }}"
+         data-goal="landing_cases_free">{{ _('Read a drawing free') }}</a>
     </div>
   </div>
 </section>
@@ -218,28 +232,48 @@
 <section class="section section--soft" id="pricing" data-track-section="pricing">
   <div class="wrap">
     <h2 class="reveal">{{ _('Choose your report') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('To start, a report on 1–3 drawings from the same period is available. The over-time development report comes later.') }}</div>
-    <div class="price-grid">
-      {% for code, p in products.items() %}
-      <div class="card price-card{% if not p.enabled %} price-card--soon{% endif %} reveal reveal--d1">
-        {% if not p.enabled %}<span class="badge badge--corner">{{ _('soon') }}</span>{% endif %}
+    <div class="sub reveal reveal--d1">{{ _('A report on 1–3 drawings from the same period.') }}</div>
+    {# Only ENABLED products are shown. A "coming soon" card is a second option on the
+       page's most expensive screen: at the moment of deciding, it invites the visitor to
+       wait for something that does not exist yet. The disabled product still lives in
+       products.json and can be switched on from the admin. #}
+    <div class="price-grid price-grid--single">
+      {% for code, p in products.items() if p.enabled %}
+      <div class="card price-card reveal reveal--d1">
         <div class="p-title">{{ p.title }}</div>
         <div class="p-sub">{{ p.subtitle }}</div>
         <div class="p-prices">
-          {% if p.enabled %}<div class="p-launch">{{ _('Launch price') }}</div>{% endif %}
+          <div class="p-launch">{{ _('Launch price') }}</div>
           {% if p.old_price_usd %}<span class="p-old">${{ p.old_price_usd }}</span>{% endif %}
           <span class="p-price">${{ p.price_usd }}</span>
         </div>
         <ul class="p-features">
           {% for f in p.features %}<li>{{ f }}</li>{% endfor %}
         </ul>
-        {% if p.enabled %}
+        {# The price is IN the button on purpose: it filters out anyone who would drop at
+           checkout, and next to the word "free" a button with no price reads as a trap. #}
         <a class="btn btn--primary" href="{{ url_for('main.order', product=code) }}" data-goal="landing_price_order_{{ code }}">{{ _('Order the report — $%(price)s', price=p.price_usd) }}</a>
-        {% else %}
-        <span class="p-soon-note">{{ _('Available after the MVP launch') }}</span>
-        {% endif %}
+        <p class="p-note">{{ _('Not what you hoped for? We refund within 7 days.') }}</p>
       </div>
       {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- 9b. The worried door. It sits IMMEDIATELY after the price: the visitor has just seen
+     the number and is hesitating. Visually it is NOT a pricing card - otherwise it would
+     read as a third tier and compete with the paid product all over again. -->
+<section class="section" data-track-section="worry">
+  <div class="wrap">
+    <div class="worry-band reveal">
+      <h2 class="worry-band__title">{{ _('Something in the drawings worrying you?') }}</h2>
+      <p class="worry-band__text">{{ _('Black everywhere, monsters, the same scene again and
+        again, a child who draws themselves alone — there is almost always something behind
+        it, and almost never the thing parents fear. Tell us what you noticed, add one
+        drawing, and we’ll show you what’s visible in it.') }}</p>
+      <a class="btn btn--primary" href="{{ url_for('free.page') }}"
+         data-goal="landing_worry_free">{{ _('Read a drawing free') }}</a>
+      <p class="worry-band__note">{{ _('Free, about a minute, no card and no account.') }}</p>
     </div>
   </div>
 </section>
@@ -258,7 +292,7 @@
 
 {% if blog_posts %}
 <!-- 11. Blog -->
-<section class="section section--soft" id="blog">
+<section class="section section--soft" id="blog" data-track-section="blog">
   <div class="wrap">
     <h2 class="reveal">{{ _('Understanding children’s drawings — without myths or scary interpretations') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('Calm answers to the questions almost every parent has.') }}</div>
