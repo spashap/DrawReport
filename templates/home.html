@@ -1,0 +1,128 @@
+{% extends "_base.html" %}
+{# THE HOME PAGE. Its single job is to move the visitor into the free wizard at /free/.
+
+   Why this page is what sits at "/": DrawReport has no organic authority yet, so a
+   free-first front door is the acquisition strategy. Note this INVERTS the Russian
+   sibling, where the free product is deliberately demoted and kept off the landing so it
+   cannot cannibalize the paid one on commercial queries. That trade-off is deliberate
+   here and worth re-checking once there is real search traffic to protect.
+
+   ONE ACTION. There is a link to the paid report in the nav and one quiet line at the
+   bottom, and nothing else competing: every second call to action on this page spends a
+   visitor who was on their way into the funnel.
+
+   ⚠️ No .reveal classes here on purpose. That class is declared opacity:0 and the
+   observer that adds .is-in lives inside landing.html's inline script - on any other
+   page such a block would stay invisible forever. #}
+{% block title %}{{ _('What is your child’s drawing telling you? A free reading') }} — {{ site_name }}{% endblock %}
+{% block description %}{{ _('Tell us what you noticed in your child’s drawings and get a free reading of one drawing: what’s visible, what it may mean, and what to ask your child. No card, no account.') }}{% endblock %}
+
+{% block head %}
+<link rel="preload" as="image" href="{{ static }}/img/hero.jpg" type="image/jpeg" fetchpriority="high">
+{% endblock %}
+
+{% block body %}
+{# Every link goes to /free/ WITH the trailing slash: without it Werkzeug answers with a
+   308 redirect and every click spends an extra round trip. #}
+{% set FREE = url_for('free.page') %}
+
+<!-- HERO -->
+<section class="hero" data-track-section="home_hero">
+  <div class="hero__in">
+    <div class="hero__card">
+      <span class="hero__eyebrow">{{ _('Free · about a minute') }}</span>
+      <h1>{{ _('Something in your child’s drawings caught your eye?') }}</h1>
+      <p class="lead">{{ _('Tell us what you noticed, and we’ll read one drawing for you:
+        what’s actually visible on the page, what that detail may mean, and what to ask
+        your child today.') }}</p>
+      <p class="lead"><strong>{{ _('No drawing to hand right now?') }}</strong>
+        {{ _('That’s fine — you can start without a photo and add it later.') }}</p>
+      <div class="cta-zone">
+        <a class="btn btn--primary" href="{{ FREE }}"
+           data-goal="home_hero_cta">{{ _('Read a drawing free') }}</a>
+      </div>
+      <p class="hero__note">{{ _('No payment · No account · Photo can come later') }}</p>
+    </div>
+  </div>
+</section>
+
+<!-- RECOGNITION. These cards are TEXT, not a choice: the visitor recognizes their own
+     situation and moves on one button. The concern is chosen ONCE, inside the wizard. -->
+<section class="section" id="situations" data-track-section="home_situations">
+  <div class="wrap">
+    <h2>{{ _('Parents usually arrive with one of these') }}</h2>
+    <div class="sub">{{ _('Any of them is a good enough reason to look at one drawing properly.') }}</div>
+    <div class="case-list">
+      {% for c in concerns if c.key != 'neutral' %}
+      <div class="card card--pad case-item">{{ c.label }}</div>
+      {% endfor %}
+    </div>
+    <p class="case-note">{{ _('Or nothing worries you at all and you’re simply curious what
+      the drawing says about your child — that’s one of the options too.') }}</p>
+    <div class="cta-zone cta-zone--center">
+      <a class="btn btn--primary" href="{{ FREE }}"
+         data-goal="home_cases_cta">{{ _('Start with one drawing') }}</a>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT YOU GET. Concrete, and in the parent's language: naming what exists sells
+     better than any promise, and it is checkable. -->
+<section class="section section--soft" id="inside" data-track-section="home_inside">
+  <div class="wrap">
+    <h2>{{ _('What you get back') }}</h2>
+    <div class="card card--pad check-list">
+      <ul>
+        <li>{{ _('What’s visible on the page — the medium, the scale, the details that are easy to walk past') }}</li>
+        <li>{{ _('One detail worth holding on to — and what it may mean, offered as a suggestion grounded in the developmental and art literature') }}</li>
+        <li>{{ _('A short portrait: the theme holding your child right now, read through their own choices') }}</li>
+        <li>{{ _('One question to ask your child today — their answer beats any adult’s guess') }}</li>
+        <li>{{ _('And what this one page honestly cannot show') }}</li>
+      </ul>
+    </div>
+    <p class="case-note">{{ _('Educational observation, never a diagnosis. We don’t detect
+      hidden problems and we don’t read fortunes in colors.') }}</p>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how" data-track-section="home_how">
+  <div class="wrap">
+    <h2>{{ _('How it works') }}</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step__n">1</div>
+        <h3>{{ _('Three short questions') }}</h3>
+        <p>{{ _('Your child’s first name, their age, and what you’ve noticed. About a minute, on your phone.') }}</p>
+      </div>
+      <div class="step">
+        <div class="step__n">2</div>
+        <h3>{{ _('We show you where to look') }}</h3>
+        <p>{{ _('Before any photo: what your answers and your child’s age can honestly tell you, and one thing to look at yourself.') }}</p>
+      </div>
+      <div class="step">
+        <div class="step__n">3</div>
+        <h3>{{ _('Add one drawing') }}</h3>
+        <p>{{ _('Photograph the whole sheet in ordinary light. The reading comes back in about a minute, here and by email.') }}</p>
+      </div>
+    </div>
+    <div class="cta-zone cta-zone--center">
+      <a class="btn btn--primary" href="{{ FREE }}"
+         data-goal="home_how_cta">{{ _('Read a drawing free') }}</a>
+      <p class="hero__note">{{ _('We keep the photo for 90 days, then delete it.') }}</p>
+    </div>
+  </div>
+</section>
+
+<!-- The paid product gets ONE quiet line, below everything. It is in the nav for anyone
+     looking for it; putting a price block here would compete with the free entry that
+     this whole page exists to feed. -->
+<section class="section section--soft" data-track-section="home_paid">
+  <div class="wrap">
+    <p class="case-note">{{ _('Looking for the full picture rather than one drawing?
+      The full report reads 1–3 drawings together across seven dimensions, with a chapter
+      about your child as a person.') }}
+      <a href="{{ url_for('main.report_page') }}" data-goal="home_to_report">{{ _('See the full report →') }}</a></p>
+  </div>
+</section>
+{% endblock %}

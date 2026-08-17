@@ -50,6 +50,12 @@
     <form class="order-form card card--pad" method="post" action="{{ url_for('main.order') }}"
           enctype="multipart/form-data" data-goal-submit="order_submit" data-max="{{ drawings_max }}">
       <input type="hidden" name="product" value="{{ product_code }}">
+      {# Carries the free-reading token through the POST so the purchase can be attributed
+         to the analysis it came from. Without this the link survives only in the URL and
+         is lost the moment the form is submitted. #}
+      {% if request.args.get('free') %}
+      <input type="hidden" name="free" value="{{ request.args.get('free') }}">
+      {% endif %}
 
       <h3>{{ _('About the child') }}</h3>
       {% for f in child_fields %}{{ field(f, 'child_', values, errors) }}{% endfor %}

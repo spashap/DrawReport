@@ -1,0 +1,20 @@
+{% extends "_email_base.html" %}
+{# The "no drawing to hand" exit. This email buys exactly ONE thing - the link back with
+   the answers kept - and it must not promise anything else. No discount, no promo code:
+   inventing an incentive here would make the honest exit into a bait. #}
+{% block content %}
+<h2 style="font-size:22px; margin:0 0 14px">Your place is saved</h2>
+<p style="font-size:15px; line-height:1.6; margin:0 0 14px">
+  Whenever you find a drawing, open this link and add the photo. You won't have to answer
+  the questions again.
+</p>
+<p style="margin:0 0 18px">
+  <a href="{{ base_url }}/free/r/{{ token }}"
+     style="display:inline-block; background:#3E4E78; color:#fff; text-decoration:none;
+            padding:13px 22px; border-radius:10px; font-size:15px; font-weight:600">
+    Add the drawing</a>
+</p>
+<p style="font-size:14px; line-height:1.6; margin:0; color:#6B5B4B">
+  A reading of one drawing is free while we're launching.
+</p>
+{% endblock %}

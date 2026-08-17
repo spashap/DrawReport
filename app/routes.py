@@ -114,6 +114,20 @@ def _schema_jsonld(locale: str, min_price) -> str:
 
 @bp.get("/")
 def index():
+    """THE HOME PAGE is the free-first landing; the paid product lives at /report.
+
+    The event is `home_view`, not `landing_view` - the two doors of the funnel are told
+    apart by exactly this (see app/admin_funnels.py). Renaming one of these without the
+    other silently empties a door in the admin."""
+    track_event("home_view")
+    from config import free_texts
+    return render_template("home.html", concerns=free_texts.CONCERNS)
+
+
+@bp.get("/report")
+def report_page():
+    """The paid product page: what used to be the home page, unchanged, at its own URL
+    and one nav item."""
     locale = g.lang_code
     track_event("landing_view")
     products = settings.get_products()
@@ -231,7 +245,16 @@ def order_submit():
     except FormError as e:
         track_event("order_form_errors", {"fields": list(e.errors)})
         return _render_order_form(values=request.form.to_dict(), errors=e.errors, status=400)
-    track_event("order_created", {"order_id": order_id, "drawings": len(files)})
+    # Attribution "free reading -> purchase". The indirect joins (email, visitor_id)
+    # remain available but are guesswork; the token carried through from /free/to-order is
+    # the only exact link, and without storing it here it was simply lost.
+    free_token = (request.form.get("free") or request.args.get("free") or "").strip()[:64]
+    if free_token:
+        get_db().execute("UPDATE orders SET free_token = ? WHERE id = ?",
+                         (free_token, order_id))
+        get_db().commit()
+    track_event("order_created", {"order_id": order_id, "drawings": len(files),
+                                  "from_free": bool(free_token)})
     order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     return redirect(create_payment(order_id, order["price_cents"]))
 
@@ -556,7 +579,10 @@ def legal(page):
 
 # --- Root (non-locale) routes: robots + sitemap ---------------------------
 
-SEO_DISALLOW = ["/admin", "/cabinet", "/r/", "/order"]
+# /free is disallowed and kept out of the sitemap. Two separate reasons, both sufficient:
+# a result page carries a real child's first name and their drawing, and an indexable free
+# page would compete with the home page for the same queries.
+SEO_DISALLOW = ["/admin", "/cabinet", "/r/", "/order", "/free"]
 
 
 @bp_root.get("/robots.txt")
@@ -574,7 +600,7 @@ def sitemap():
     today = datetime.date.today().isoformat()
     items = []
     for loc in settings.LOCALES:
-        paths = [("/", "1.0"), ("/blog", "0.7"),
+        paths = [("/", "1.0"), ("/report", "0.9"), ("/blog", "0.7"),
                  ("/legal/privacy", "0.2"), ("/legal/terms", "0.2"),
                  ("/legal/refund", "0.2")]
         paths += [(f"/sample/{s.token}", "0.8") for s in get_samples(loc)]

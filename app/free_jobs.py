@@ -96,6 +96,14 @@ def run_free(conn, analysis_id: int) -> str:
          1 if result.hypothesis_dropped else 0, result.elapsed_s, now(), analysis_id))
     _record_interpretation(conn, analysis_id, a, row["age"])
     conn.commit()
+    if row["email"]:
+        # The emailed copy is why the parent gave us the address at upload. A mail
+        # failure must never turn a finished reading into a failed one.
+        try:
+            from app.mailer import send_free_ready
+            send_free_ready(conn, row["email"], row["token"], row["child_name"])
+        except Exception as e:
+            log.warning("free #%s: could not send the ready email: %s", analysis_id, e)
     log.info("free #%s: done in %.1fs (%d words, repairs=%d, dropped=%s)",
              analysis_id, result.elapsed_s, a.word_count(), result.repair_rounds,
              result.hypothesis_dropped)

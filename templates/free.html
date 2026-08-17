@@ -1,0 +1,149 @@
+{% extends "_base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}{{ _('What your child’s drawing says about them') }} — {{ site_name }}{% endblock %}
+{% block description %}{{ _('A free reading of one child’s drawing.') }}{% endblock %}
+{% block body %}
+{# THE WIZARD. Three questions, ONE SCREEN EACH, no scrolling on a phone: the visitor is
+   a parent on a phone, late in the evening, after the child is asleep. Every extra screen
+   and every extra field costs us a person.
+   noindex on purpose: the wizard and the result carry a real child's name and drawing.
+   The indexed page is the home page that leads here. #}
+<section class="section">
+  <div class="wrap wrap--narrow">
+
+    <div id="free-wizard">
+      <div class="car-dots" id="free-dots" aria-hidden="true">
+        <span class="car-dot is-active"></span><span class="car-dot"></span>
+        <span class="car-dot"></span>
+      </div>
+
+      {# --- Screen 1: name + age band. The pronoun is not its own step - it defaults to
+             "they" and is changed with one tap, because guessing gender from a name is
+             exactly the mistake the product must not make. --- #}
+      <div class="wizard__step is-on" data-step="0">
+        <h1 class="h2">{{ _('What does your child’s drawing say about them?') }}</h1>
+        <p class="sub">{{ _('Three short questions, and we’ll show you what to look at in
+          your child’s drawings. You can add a photo now or later.') }}</p>
+        <div class="form-card">
+          <div class="field">
+            <label for="f-name">{{ _('What’s your child’s name?') }}</label>
+            <div class="hint">{{ _('The name will be used in the reading') }}</div>
+            <input class="input" id="f-name" type="text" autocomplete="off"
+                   maxlength="40" placeholder="{{ _('First name') }}">
+          </div>
+
+          <div class="field">
+            <label>{{ texts.ADDRESS_QUESTION }}</label>
+            <div class="hint">{{ _('We never guess this from the name') }}</div>
+            <div class="choice choice--grid" id="f-address">
+              {% for key, label in texts.ADDRESS_LABELS.items() %}
+              <label class="choice__opt"><input class="visually-hidden" type="radio"
+                     name="address" value="{{ key }}"
+                     {% if key == 'they' %}checked{% endif %}><span>{{ label }}</span></label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label>{{ _('How old?') }}</label>
+            <div class="hint">{{ _('Drawing works differently at every age') }}</div>
+            <div class="choice choice--grid" id="f-band">
+              {% for b in bands %}
+              <label class="choice__opt"><input class="visually-hidden" type="radio"
+                     name="band" value="{{ b.key }}"><span>{{ b.label }}</span></label>
+              {% endfor %}
+            </div>
+          </div>
+          <p class="err" id="f-err0" hidden></p>
+          <button class="btn btn--primary btn--block" data-next="0"
+                  data-goal="free_step1">{{ _('Next') }}</button>
+        </div>
+      </div>
+
+      {# --- Screen 2: what you notice. Choosing moves on immediately - a "next" button
+             here would be one tap the parent does not need to make. --- #}
+      <div class="wizard__step" data-step="1">
+        <button class="wiz-back" data-back type="button" data-goal="free_back">← {{ _('Back') }}</button>
+        <h2 class="h2" id="f-concern-q">{{ _('What do you notice in their drawings?') }}</h2>
+        <div class="form-card">
+          <div class="choice choice--tight" id="f-concern">
+            {% for c in concerns %}
+            <label class="choice__opt"><input class="visually-hidden" type="radio"
+                   name="concern" value="{{ c.key }}"
+                   data-goal="free_concern_{{ c.key }}"><span>{{ c.label }}</span></label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {# --- Screen 3: how long + the optional free text. --- #}
+      <div class="wizard__step" data-step="2">
+        <button class="wiz-back" data-back type="button" data-goal="free_back">← {{ _('Back') }}</button>
+        <h2 class="h2" id="f-dur-q">{{ texts.DURATION_QUESTION }}</h2>
+        <div class="form-card">
+          <div class="choice choice--grid choice--wide" id="f-duration">
+            {% for d in durations %}
+            <label class="choice__opt"><input class="visually-hidden" type="radio"
+                   name="duration" value="{{ d.key }}"><span
+                   data-raw="{{ d.label }}">{{ d.label }}</span></label>
+            {% endfor %}
+          </div>
+          <div class="field field--gap">
+            <label for="f-text" id="f-text-q">{{ texts.FREE_TEXT_QUESTION }}</label>
+            <textarea class="input input--optional" id="f-text" rows="2" maxlength="2000"
+                      placeholder="{{ texts.FREE_TEXT_PLACEHOLDER }}"></textarea>
+          </div>
+          <button class="btn btn--primary btn--block" data-next="2"
+                  data-goal="free_summary">{{ _('Show me what to look at') }}</button>
+        </div>
+      </div>
+
+      {# --- The summary, composed on the server and injected here. --- #}
+      <div class="wizard__step" data-step="3">
+        <button class="wiz-back" data-back type="button"
+                data-goal="free_back">← {{ _('Change my answers') }}</button>
+        <div id="f-summary"></div>
+      </div>
+    </div>
+
+    {# --- The waiting screen: their photo and their own question, not a fake progress bar. --- #}
+    <div id="free-wait" hidden>
+      <div class="form-card wait-card">
+        <img class="wait-photo" id="w-photo" alt="{{ _('The drawing you uploaded') }}">
+        <p class="free-lead" id="w-hint"></p>
+        <div class="wait-bar"><i id="w-bar"></i></div>
+        <p class="wait-stage" id="w-stage">{{ _('Looking at the drawing…') }}
+          <span class="dots-wait"><i></i><i></i><i></i></span></p>
+        <div id="w-late" hidden>
+          <p class="sub">{{ _('This is taking longer than usual. We’ll email it as soon as
+            it’s ready — you can close the page.') }}</p>
+          <p class="hint">{{ _('Or save the link — the reading will be here:') }}<br>
+            <a id="w-link" href="#"></a></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{{ super() }}
+<script>
+  window.FREE_TEXT = {
+    stoppedQuestion: {{ texts.DURATION_QUESTION_STOPPED | tojson }},
+    stages: {{ [_('Preparing the photo…'), _('Looking at the drawing…'),
+                _('Finding a detail worth holding on to…'),
+                _('Re-reading the wording…'), _('Almost there…')] | tojson }},
+    errors: {{ {
+      'too_big': _('That file is over 15 MB — please choose a smaller photo.'),
+      'format': _('Format: JPG, PNG, HEIC or WebP.'),
+      'broken': _('That file is damaged, or it isn’t a photo.'),
+      'email': _('Please check the email address.'),
+      'no_file': _('Choose a photo of the drawing.'),
+      'cap': _('We’ve read the maximum number of drawings for today. Leave your email and we’ll send you a link tomorrow.'),
+      'network': _('No connection. Please try again.'),
+      'other': _('That didn’t upload. Please try again.')
+    } | tojson }}
+  };
+</script>
+<script src="{{ static }}/js/free.js?v={{ version }}" defer></script>
+{% endblock %}

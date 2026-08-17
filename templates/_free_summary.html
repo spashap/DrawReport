@@ -1,0 +1,93 @@
+{# The summary after the questions. Composed ON THE SERVER, joined only at paragraph
+   boundaries: joining inside a sentence is the one thing absolutely forbidden here, and
+   in a client-side assembler the bug would be invisible.
+
+   This is not a form but the point where the free offer is sold: first the authored
+   summary, then the offer heading, what the parent gets, the authored ask for a drawing
+   under its own heading, upload and email in one step, then the call to action. #}
+{% if limit_token %}
+<div class="form-card">
+  <h2 class="h2">{{ limit_title }}</h2>
+  <p>{{ texts.LIMIT_BODY }}</p>
+  <a class="btn btn--primary btn--block" href="{{ url_for('free.result', token=limit_token) }}"
+     data-goal="free_limit_open">{{ limit_cta }}</a>
+</div>
+{% else %}
+{# The paragraphs render BY ROLE: the mirror leads, the age anchor is background, the lens
+   is a pulled-out box with an action, the transition bridges to the offer. The text does
+   not change - only its presentation. #}
+<div class="summary">
+  <div class="summary__label">{{ texts.SUMMARY_LABEL }}</div>
+  <h2 class="h2 summary__title">{{ texts.SUMMARY_TITLE.format(name_poss=texts.possessive(name)) }}</h2>
+  <p class="summary__explainer">{{ texts.SUMMARY_EXPLAINER }}</p>
+
+  {% for p in paragraphs %}
+    {% set kind = kinds[loop.index0] if kinds and loop.index0 < kinds|length else 'path' %}
+    {% if kind == 'lens' and lens_question %}
+      <div class="summary__lens">
+        <div class="summary__lens-label">{{ texts.SUMMARY_LENS_LABEL }}</div>
+        <p class="summary__lens-q">{{ lens_question }}</p>
+      </div>
+    {% elif kind == 'transition' %}
+      <p class="summary__transition">{{ p }}</p>
+    {% else %}
+      <p class="summary__p{% if kind == 'mirror' %} summary__p--lead{% endif %}">{{ p }}</p>
+    {% endif %}
+  {% endfor %}
+</div>
+
+{% set offer = texts.offer_block(name, address) %}
+<div class="offer" id="f-upload" data-token="{{ token }}" data-wait-hint="{{ wait_hint }}">
+  <span class="badge">{{ _('Free while we launch') }}</span>
+  <h2 class="h2 offer__title">{{ offer.title }}</h2>
+  <p class="offer__lead">{{ offer.lead }}</p>
+
+  <ul class="check-list offer__list">
+    {% for b in offer.bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+
+  {# We ask for ANY drawing: demanding a particular one added friction at the most
+     expensive step. The hint about the useful drawing stays, but as a nicety. #}
+  <h3 class="h3 offer__how">{{ offer.how }}</h3>
+  <p class="offer__ask">{{ ask }}</p>
+  {% if ask_note %}<p class="offer__asknote">{{ ask_note }}</p>{% endif %}
+
+  <div class="field offer__drop">
+    <label class="file-drop" for="f-file">
+      <img class="preview" hidden alt="">
+      <div class="fd-icon" aria-hidden="true">🖼️</div>
+      <div class="fd-text">{{ _('Tap to choose a photo — JPG, PNG or HEIC, up to 15 MB') }}</div>
+      <input type="file" id="f-file" accept=".jpg,.jpeg,.png,.heic,.heif,.webp,image/*"
+             data-goal="free_add_drawing">
+    </label>
+    <div class="hint field--gap-sm">{{ _('Only the analysis system sees the drawing — we
+      never publish children’s work and never pass it to anyone else.') }}</div>
+  </div>
+
+  <h3 class="h3 offer__how">{{ texts.UPLOAD_TITLE }}</h3>
+  <p>{{ texts.UPLOAD_BODY }}</p>
+  <div class="field">
+    <input class="input" id="f-email" type="email" inputmode="email"
+           autocomplete="email" placeholder="you@example.com">
+  </div>
+
+  <button class="btn btn--primary offer__cta" id="f-go"
+          data-goal="free_upload_submit">{{ texts.UPLOAD_BUTTON }}</button>
+  <p class="offer__note">{{ offer.free_note }}</p>
+  <p class="hint">{{ texts.UPLOAD_NOSPAM }} {{ texts.STORAGE_NOTICE }}</p>
+  <p class="err" id="f-uperr" hidden></p>
+</div>
+
+<details class="form-card">
+  <summary><b>{{ texts.NO_DRAWING_TITLE }}</b></summary>
+  <p>{{ texts.NO_DRAWING_BODY }}</p>
+  <div class="field">
+    <input class="input" id="f-nodraw-email" type="email" inputmode="email"
+           placeholder="you@example.com">
+  </div>
+  <button class="btn btn--ghost" id="f-nodraw-btn" data-token="{{ token }}"
+          data-goal="free_no_drawing">{{ _('Save my place and come back later') }}</button>
+  <p class="hint" id="f-nodraw-ok" hidden>{{ _('Done. We’ve emailed you the link — come
+    back when you find a drawing.') }}</p>
+</details>
+{% endif %}

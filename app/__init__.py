@@ -37,6 +37,10 @@ def create_app() -> Flask:
     from app.routes import bp, bp_root
     app.register_blueprint(bp, url_prefix="/<lang_code>")
     app.register_blueprint(bp_root)  # robots.txt, sitemap.xml at site root
+    from app.free import bp_free
+    # The free funnel sits at the site root, NOT behind /<lang_code>: it is the front
+    # door, the URL is shared and pasted, and an extra locale segment on it buys nothing.
+    app.register_blueprint(bp_free)
     from app.admin import bp_admin
     app.register_blueprint(bp_admin)  # /admin (own password, English-only)
 

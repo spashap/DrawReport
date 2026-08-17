@@ -120,6 +120,21 @@ def send_admin_alert(subject: str, body_text: str) -> Path | None:
                       html, kind="alert")
 
 
+def send_free_save_place(db, to: str, token: str) -> Path | None:
+    """The "no drawing to hand" exit: the link back, with the answers kept."""
+    html = render_email("free_save_place.html", token=token)
+    return send_email(to, f"Your place is saved - {settings.SITE_NAME}", html,
+                      kind="free_save_place")
+
+
+def send_free_ready(db, to: str, token: str, name: str) -> Path | None:
+    """The finished free reading. The link is the product here; the paid offer stays on
+    the page rather than being pushed into the message."""
+    html = render_email("free_ready.html", token=token, name=name)
+    return send_email(to, f"{name}'s drawing - your reading is ready", html,
+                      kind="free_ready")
+
+
 def _outbox_write(to: str, subject: str, html_body: str,
                   attachments: list[Path], kind: str) -> Path:
     settings.OUTBOX_DIR.mkdir(parents=True, exist_ok=True)

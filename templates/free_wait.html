@@ -1,0 +1,24 @@
+{% extends "_base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}{{ _('Reading %(name)s’s drawing…', name=name) }} — {{ site_name }}{% endblock %}
+{% block body %}
+{# The standalone waiting page, reached by opening the saved link before the reading is
+   ready. The in-wizard wait screen is the same idea inside free.html; this one exists so
+   that the link we email actually works while the queue is still running. #}
+<section class="section">
+  <div class="wrap wrap--narrow">
+    <div class="form-card wait-card" data-token="{{ token }}" id="wait-standalone">
+      <h1 class="h2">{{ _('Reading %(name)s’s drawing', name=name) }}</h1>
+      <p class="free-lead">{{ hint }}</p>
+      <div class="wait-bar"><i id="w-bar"></i></div>
+      <p class="wait-stage" id="w-stage">{{ _('Looking at the drawing…') }}
+        <span class="dots-wait"><i></i><i></i><i></i></span></p>
+      <p class="hint">{{ _('You can close this page — we’ll email the reading when it’s
+        ready, and this link will keep working.') }}</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block footer %}{{ super() }}
+<script src="{{ static }}/js/free_wait.js?v={{ version }}" defer></script>
+{% endblock %}
