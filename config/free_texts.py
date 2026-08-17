@@ -80,11 +80,14 @@ CONCERNS: list[dict] = [
     {"key": "black", "label": "Draws only in black or very dark colors"},
     {"key": "monsters", "label": "Draws monsters, weapons, fights, frightening scenes"},
     {"key": "alone", "label": "Draws themselves alone, with no other people"},
-    {"key": "faceless", "label": "People with no faces or hands, very schematic"},
+    # Every label starts with a present-tense verb about the CHILD, so the list scans as
+    # one grammatical shape on the home page. "very schematic" was also a word no US
+    # parent uses about a drawing - it is the reviewer's term, not the customer's.
+    {"key": "faceless", "label": "Draws people with no faces or hands, just outlines"},
     {"key": "repeat", "label": "Draws the same thing over and over"},
     {"key": "pressure", "label": "Presses hard, scribbles over, tears the paper"},
-    {"key": "stopped", "label": "Stopped drawing, or gives up when it doesn't come out right"},
-    {"key": "neutral", "label": "Nothing worries me - I'm just curious what the "
+    {"key": "stopped", "label": "Has stopped drawing, or gives up when it doesn’t come out right"},
+    {"key": "neutral", "label": "Nothing worries me — I’m just curious what the "
                                 "drawing says about my child"},
 ]
 CONCERN_KEYS = [c["key"] for c in CONCERNS]
@@ -128,11 +131,11 @@ MIRROR: dict[str, str] = {
     "monsters": "your child draws monsters, weapons, fights",
     "alone": "your child draws themselves alone, without other people",
     "faceless": "people in the drawings come out without faces or without hands, "
-                "very schematic",
+                "just outlines",
     "repeat": "your child draws the same thing over and over",
     "pressure": "your child presses hard on the pencil, scribbles over the drawing "
                 "or tears it",
-    "stopped": "your child has stopped drawing, or gives up when it doesn't come "
+    "stopped": "your child has stopped drawing, or gives up when it doesn’t come "
                "out right",
 }
 

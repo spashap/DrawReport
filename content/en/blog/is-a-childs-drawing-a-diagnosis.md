@@ -1,6 +1,6 @@
 ---
-title: Is a child's drawing a diagnosis? (No — and here's what it actually shows)
-description: A child's drawing isn't a psychological test. Here's the honest, educational way to read one — by what's visible on the page.
+title: Is a child’s drawing a diagnosis? (No — and here’s what it actually shows)
+description: A child’s drawing isn’t a psychological test. Here’s the honest, educational way to read one — by what’s visible on the page.
 date: 2026-06-10
 ---
 

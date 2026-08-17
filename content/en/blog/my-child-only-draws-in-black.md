@@ -1,6 +1,6 @@
 ---
 title: My child only draws in black — should I worry?
-description: A calm, evidence-based take on the "black drawings" worry, and what a single color choice really tells you.
+description: A calm, evidence-based take on the “black drawings” worry, and what a single color choice really tells you.
 date: 2026-06-14
 ---
 

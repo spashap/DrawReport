@@ -1,6 +1,6 @@
 ---
-title: What you can actually learn from your child's drawing
-description: Beyond "a house and a sun" — the visible skills a drawing reveals, and simple ways to support them at home.
+title: What you can actually learn from your child’s drawing
+description: Beyond “a house and a sun” — the visible skills a drawing reveals, and simple ways to support them at home.
 date: 2026-06-12
 ---
 

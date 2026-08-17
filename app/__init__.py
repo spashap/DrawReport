@@ -77,6 +77,7 @@ def create_app() -> Flask:
             "site_domain": settings.SITE_DOMAIN,
             "ga_id": settings.GA_MEASUREMENT_ID,
             "version": settings.APP_VERSION,
+            "show_version": settings.SHOW_VERSION,
             "locale": g.get("lang_code", settings.DEFAULT_LOCALE),
             "locales": settings.LOCALES,
             "public_base_url": settings.PUBLIC_BASE_URL,

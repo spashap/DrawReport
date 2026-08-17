@@ -191,6 +191,13 @@ except OSError:
     APP_VERSION = "0.000"
 # Base url for links in emails (becomes https://drawreport.com on the VPS).
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:5000")
+# The version badge in the page footer is a DEV aid - "V0.031" under the disclaimer reads
+# to a visiting parent like unfinished software. It is derived rather than configured so
+# nobody has to remember to set it: the base url already distinguishes the two worlds, and
+# a build that forgets to flip a flag would show the badge in production, which is the
+# failure that matters. SHOW_VERSION=1 in .env forces it on when debugging a live box.
+SHOW_VERSION = os.getenv("SHOW_VERSION", "").strip().lower() in ("1", "true", "yes") or \
+    any(h in PUBLIC_BASE_URL for h in ("localhost", "127.0.0.1"))
 PALETTE = ""  # css class on <html>: "" = Golden Hour (default), "pu" | "dk" | "cl"
 
 # --- Report generation ---
