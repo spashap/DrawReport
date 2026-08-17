@@ -28,7 +28,7 @@
 <link rel="preload" href="{{ static }}/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{{ static }}/fonts/caveat-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" href="{{ static }}/img/hero.jpg" type="image/jpeg" fetchpriority="high">
-<link rel="stylesheet" href="{{ static }}/css/fonts.css">
+<link rel="stylesheet" href="{{ static }}/css/fonts.css?v={{ version }}">
 <style>{{ inline_css | safe }}</style>
 <script type="application/ld+json">{{ schema_jsonld | safe }}</script>
 {% include "_analytics.html" %}
@@ -107,7 +107,7 @@
 </section>
 
 <!-- 4. Examples -->
-<section class="section" id="examples">
+<section class="section" id="examples" data-track-section="examples">
   <div class="wrap">
     <h2 class="reveal">{{ _('See the kind of observations parents get') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('Open real examples: inside you’ll find the drawing, the context, strengths, observations, and activities for parents.') }}</div>
@@ -175,7 +175,7 @@
 </section>
 
 <!-- 6. How it works -->
-<section class="section" id="how">
+<section class="section" id="how" data-track-section="how">
   <div class="wrap">
     <h2 class="reveal">{{ _('How it works') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('Three steps — and a personal report lands in your inbox.') }}</div>
@@ -213,7 +213,9 @@
 </section>
 
 <!-- 9. Pricing -->
-<section class="section section--soft" id="pricing">
+{# data-track-section -> goal sec_pricing once the block has been half-visible for
+   500ms. This is the "Reached the pricing" observation step of the funnel. #}
+<section class="section section--soft" id="pricing" data-track-section="pricing">
   <div class="wrap">
     <h2 class="reveal">{{ _('Choose your report') }}</h2>
     <div class="sub reveal reveal--d1">{{ _('To start, a report on 1–3 drawings from the same period is available. The over-time development report comes later.') }}</div>
@@ -243,7 +245,7 @@
 </section>
 
 <!-- 10. FAQ -->
-<section class="section" id="faq">
+<section class="section" id="faq" data-track-section="faq">
   <div class="wrap">
     <h2 class="reveal">{{ _('Frequently asked questions') }}</h2>
     <div class="reveal reveal--d1">

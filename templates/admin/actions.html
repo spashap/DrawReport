@@ -1,23 +1,52 @@
 {% extends "admin/_base_admin.html" %}
 {% block title %}Actions{% endblock %}
 {% block content %}
-<h1>Actions</h1>
-<div class="periods">
-  {% for d, lbl in periods %}<a href="{{ url_for('admin.actions', days=d, q=q) }}" class="{% if d == days %}is-active{% endif %}">{{ lbl }}</a>{% endfor %}
+<div class="admin-head">
+  <h1 class="h2">Actions</h1>
+  <div class="admin-periods">
+    {% for val, label in periods %}
+    <a class="status-pill {% if days == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.actions') }}?days={{ val }}{% if q %}&q={{ q }}{% endif %}">{{ label }}</a>
+    {% endfor %}
+  </div>
 </div>
-<form method="get" style="margin:12px 0"><input type="hidden" name="days" value="{{ days }}">
-  <input type="text" name="q" value="{{ q }}" placeholder="filter event type..." style="max-width:280px"></form>
-<p class="hint">total events: {{ total }}</p>
 
-<h3>By type</h3>
-<table class="adm">
-  <tr><th>Type</th><th>Count</th><th>Unique users</th><th>Last</th></tr>
-  {% for s in summary %}<tr><td>{{ s.type }}</td><td>{{ s.n }}</td><td>{{ s.users }}</td><td>{{ s.last }}</td></tr>{% endfor %}
+<form method="get" class="admin-filter">
+  <input type="hidden" name="days" value="{{ days }}">
+  <input class="input" type="text" name="q" value="{{ q }}"
+         placeholder="filter by event, e.g. order, click: or checkout_pay">
+  <button class="btn btn--ghost" type="submit">Filter</button>
+  {% if q %}<a class="btn btn--ghost" href="{{ url_for('admin.actions') }}?days={{ days }}">Reset</a>{% endif %}
+</form>
+
+<p class="hint">Total firings (humans only) in the period{% if q %} (filter "{{ q }}"){% endif %}: <b>{{ total }}</b>{% if bots %} · bots filtered out: {{ bots }}{% endif %}.
+  Server-side funnel events (<code>landing_view</code>…) and UI clicks (<code>click:*</code>) together.</p>
+
+<table>
+  <thead><tr><th>Event</th><th>Firings</th><th>Unique</th><th>Last (UTC)</th></tr></thead>
+  <tbody>
+  {% for s in summary %}
+  <tr><td>{{ s.type }}</td><td><b>{{ s.n }}</b></td><td>{{ s.users }}</td>
+      <td class="nowrap">{{ s.last }}</td></tr>
+  {% else %}
+  <tr><td colspan="4">No events in the period</td></tr>
+  {% endfor %}
+  </tbody>
 </table>
 
-<h3>Recent</h3>
-<table class="adm">
-  <tr><th>Time</th><th>Type</th><th>Who</th><th>Device</th><th>Payload</th></tr>
-  {% for e in recent %}<tr><td>{{ e.time }}</td><td>{{ e.type }}</td><td>{{ e.who }}</td><td>{{ e.device }}</td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>{% endfor %}
+<h2 class="admin-gap">Action feed <span class="hint">(up to 100)</span></h2>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Time (UTC)</th><th>Event</th><th>Who</th><th>Device</th><th>Data</th></tr></thead>
+  <tbody>
+  {% for e in recent %}
+  <tr><td class="nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
+      <td><code>{{ e.who }}</code></td><td>{{ e.device }}</td>
+      <td><code>{{ e.payload }}</code></td></tr>
+  {% else %}
+  <tr><td colspan="5">No events in the period</td></tr>
+  {% endfor %}
+  </tbody>
 </table>
+</div>
 {% endblock %}

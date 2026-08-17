@@ -1,0 +1,64 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="h2">Tasks</h1>
+  <span class="hint">open: <b>{{ open_n }}</b> · closed: {{ done_n }}</span>
+</div>
+{% if msg %}<p class="admin-flash admin-flash--ok">{{ msg }}</p>{% endif %}
+<p class="hint">Work that has to be done by hand and does not live in code: key events
+  in GA4, credentials, a legal review. Collapsed shows only the title; expand to see
+  exactly what to do.</p>
+
+{# A collapsed task = one row. Details in <details>, no JS. #}
+<div class="vis-list">
+  {% for t in tasks %}
+  <details class="drill drill--src">
+    <summary>
+      <span>{% if t.done %}<s>{{ t.title }}</s>{% else %}{{ t.title }}{% endif %}</span>
+      <span>{% if t.done %}<span class="status-pill status-pill--ready">done</span>
+            {% else %}<span class="status-pill status-pill--wait">open</span>{% endif %}</span>
+      <span class="hint">{{ t.created }}</span>
+      <span class="hint">{% if t.done %}closed {{ t.done_at }}{% endif %}</span>
+      <span class="hint">details ▾</span>
+    </summary>
+    <div class="vis-body">
+      {% if t.details %}
+      <div class="admin-pre">{{ t.details }}</div>
+      {% else %}
+      <p class="hint">No description.</p>
+      {% endif %}
+      <div class="admin-row-actions">
+        <form method="post" action="{{ url_for('admin.todo_toggle', task_id=t.id) }}">
+          <button class="status-pill {{ 'status-pill--wait' if t.done else 'status-pill--ready' }}"
+                  type="submit">{{ 'reopen' if t.done else 'mark as done' }}</button>
+        </form>
+        {% if not t.seeded %}
+        <form method="post" action="{{ url_for('admin.todo_delete', task_id=t.id) }}"
+              onsubmit="return confirm('Delete the task “{{ t.title }}”?')">
+          <button class="status-pill status-pill--warn" type="submit">delete</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </details>
+  {% else %}
+  <p class="hint">No tasks.</p>
+  {% endfor %}
+</div>
+
+<h2 class="h3 admin-gap">Add a task</h2>
+<form method="post" action="{{ url_for('admin.todo_add') }}" class="form-card admin-form">
+  <div class="field">
+    <label for="t-title">Title</label>
+    <input class="input" id="t-title" name="title" type="text"
+           maxlength="200" placeholder="What needs doing" required>
+  </div>
+  <div class="field">
+    <label for="t-details">Details <span class="hint">(optional)</span></label>
+    <textarea class="input" id="t-details" name="details" rows="4"
+              maxlength="8000" placeholder="What exactly to do, where, and why"></textarea>
+  </div>
+  <button class="btn btn--primary" type="submit">Add</button>
+</form>
+{% endblock %}

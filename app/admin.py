@@ -18,6 +18,8 @@ import re
 from flask import (Blueprint, Response, abort, redirect, render_template, request,
                    url_for)
 
+from app import admin_funnels as fn
+from app import admin_tasks as tasks
 from app import geoip, jobs
 from app.db import get_db
 from config import settings
@@ -26,29 +28,24 @@ bp_admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 ADMIN_COOKIE = "dr_a"
 
+# Sidebar: (endpoint, label). Tasks is first on purpose - it is the only section that
+# asks the owner to do something.
 SECTIONS = [
+    ("admin.todo", "Tasks"),
     ("admin.analytics", "Analytics"),
     ("admin.visits", "Visits"),
     ("admin.actions", "Actions"),
     ("admin.orders", "Orders"),
     ("admin.clients", "Clients"),
     ("admin.coupons", "Coupons"),
+    ("admin.prices", "Prices"),
     ("admin.site_settings", "Site settings"),
     ("admin.report_texts", "Report texts"),
     ("admin.emails", "Emails"),
 ]
 
-FUNNEL_STEPS = [
-    ("landing_view", "Landing"),
-    ("engaged", "Engaged (scroll/15s)"),
-    ("sample_view", "Viewed samples"),
-    ("order_form_view", "Opened the form"),
-    ("form_started", "Started filling"),
-    ("order_created", "Created an order"),
-    ("checkout_view", "Reached checkout"),
-    ("order_paid", "Paid"),
-    ("report_delivered", "Got the report"),
-]
+# Funnel steps moved to app/admin_funnels.py: there they are counted by VISIT and are
+# nested by construction. Only the sidebar and the periods live here.
 
 PERIODS = [("1", "today"), ("7", "7 days"), ("30", "30 days"), ("all", "all time")]
 
@@ -150,6 +147,40 @@ def _drill_member(row):
     }
 
 
+@bp_admin.get("/todo")
+def todo():
+    """What has to be done BY HAND: key events in GA4, credentials, a legal review.
+    First in the sidebar on purpose - it is the only section that asks for action."""
+    _guard()
+    return _render("admin.todo", "admin/todo.html", **tasks.load(get_db()),
+                   msg=request.args.get("msg"))
+
+
+@bp_admin.post("/todo/add")
+def todo_add():
+    _guard()
+    title = (request.form.get("title") or "").strip()
+    if not title:
+        return redirect(url_for("admin.todo", msg="A task needs a title"))
+    tasks.add(get_db(), title, (request.form.get("details") or "").strip())
+    return redirect(url_for("admin.todo"))
+
+
+@bp_admin.post("/todo/<int:task_id>/toggle")
+def todo_toggle(task_id):
+    _guard()
+    tasks.toggle(get_db(), task_id)
+    return redirect(url_for("admin.todo"))
+
+
+@bp_admin.post("/todo/<int:task_id>/delete")
+def todo_delete(task_id):
+    _guard()
+    ok = tasks.delete(get_db(), task_id)
+    return redirect(url_for("admin.todo", msg=None if ok else
+                            "This task cannot be deleted - it can only be closed"))
+
+
 @bp_admin.get("/analytics")
 def analytics():
     _guard()
@@ -186,31 +217,10 @@ def analytics():
         "conversion": f"{paid['c'] / visitors * 100:.1f}%" if visitors else "-",
     }
 
-    ftypes = [ev for ev, _ in FUNNEL_STEPS]
-    ph = ",".join("?" * len(ftypes))
-    counts = {r["type"]: r["c"] for r in db.execute(
-        "SELECT type, COUNT(DISTINCT COALESCE(visitor_id, 'c' || customer_id)) c FROM events"
-        f" WHERE type IN ({ph}) AND {NOT_BOT} AND created_at >= ?{eng} GROUP BY type",
-        (*ftypes, since, *eng_p))}
-    fmembers = {}
-    for row in db.execute(
-            "SELECT type, COALESCE(visitor_id, 'c' || customer_id) who, visitor_id,"
-            " MAX(geo_country) gc, MAX(geo_region) gr, MAX(device) dev,"
-            " MAX(customer_id) cid, MAX(created_at) last FROM events"
-            f" WHERE type IN ({ph}) AND {NOT_BOT} AND created_at >= ?{eng}"
-            " GROUP BY type, who ORDER BY last DESC", (*ftypes, since, *eng_p)):
-        lst = fmembers.setdefault(row["type"], [])
-        if len(lst) < DRILL_CAP:
-            lst.append(_drill_member(row))
-    funnel, prev = [], None
-    for ev, label in FUNNEL_STEPS:
-        n = counts.get(ev, 0)
-        funnel.append({
-            "label": label, "n": n, "type": ev, "members": fmembers.get(ev, []),
-            "pct_prev": f"{n / prev * 100:.0f}%" if prev else "",
-            "pct_top": (f"{n / funnel[0]['n'] * 100:.1f}%" if funnel and funnel[0]["n"] else ""),
-        })
-        prev = n or None
+    # Funnels by VISIT (app/admin_funnels.py). The old funnel divided nine independent
+    # sets of unique visitors by one another - the steps were not nested, and "paid"
+    # arrived from a webhook with no visitor at all.
+    funnels = fn.build(db, since)
 
     sources, src_members = {}, {}
     for row in db.execute(
@@ -249,7 +259,7 @@ def analytics():
                     for name, s in sorted(sources.items(), key=lambda kv: -kv[1]["visitors"])]
     return _render("admin.analytics", "admin/analytics.html",
                    days=days, periods=PERIODS, show=request.args.get("show"),
-                   kpi=kpi, funnel=funnel, sources=sources_view, events=events_view,
+                   kpi=kpi, funnels=funnels, sources=sources_view, events=events_view,
                    bots=bots, humans=humans, engaged=engaged, landing_only=landing_only,
                    ga_configured=bool(settings.GA_MEASUREMENT_ID))
 
@@ -289,6 +299,11 @@ def visits():
         f" {engaged_expr} engaged FROM events WHERE visitor_id IS NOT NULL AND {NOT_BOT}"
         f" AND created_at >= ? GROUP BY visitor_id{having} ORDER BY last_seen DESC LIMIT 200",
         (since,)).fetchall()
+
+    ids = [r["visitor_id"] for r in rows]
+    timeline = _visitor_timelines(db, ids, since)
+    orders_by_vis = _visitor_orders(db, ids)
+
     visitors_view = [{
         "id": (r["visitor_id"] or "")[:10], "device": r["device"] or "-",
         "utm": _utm_label(r["utm_json"]), "referer": (r["referer"] or "")[:60] or "(direct)",
@@ -297,6 +312,8 @@ def visits():
         "geo": geoip.geo_label(r["geo_country"], r["geo_region"]),
         "first": r["first_seen"][:16].replace("T", " "),
         "last": r["last_seen"][:16].replace("T", " "),
+        "timeline": timeline.get(r["visitor_id"], []),
+        "orders": orders_by_vis.get(r["visitor_id"], []),
     } for r in rows]
 
     total = db.execute(
@@ -306,11 +323,60 @@ def visits():
         "SELECT COUNT(DISTINCT visitor_id) c FROM events"
         f" WHERE visitor_id IS NOT NULL AND {NOT_BOT} AND type = 'engaged' AND created_at >= ?",
         (since,)).fetchone()["c"]
+    bots = db.execute(
+        "SELECT COUNT(DISTINCT visitor_id) c FROM events"
+        " WHERE visitor_id IS NOT NULL AND device = 'bot' AND created_at >= ?",
+        (since,)).fetchone()["c"]
     bounce = f"{(total - engaged) / total * 100:.0f}%" if total else "-"
     return _render("admin.visits", "admin/visits.html",
-                   days=days, periods=PERIODS, show=show, devices=devices_view,
-                   sources=sources, geo=geo_view, visitors=visitors_view,
-                   total=total, engaged=engaged, bounce=bounce)
+                   days=days, periods=PERIODS, show=show, shown=len(rows),
+                   devices=devices_view, sources=sources, geo=geo_view,
+                   visitors=visitors_view, total=total, engaged=engaged,
+                   bounce=bounce, bots=bots)
+
+
+def _visitor_timelines(db, ids, since, cap=100):
+    """Full event feed for the visitors on screen (up to cap each)."""
+    if not ids:
+        return {}
+    ph = ",".join("?" * len(ids))
+    rows = db.execute(
+        "SELECT visitor_id, type, payload_json, device, referer,"
+        " geo_country, geo_region, created_at"
+        f" FROM events WHERE visitor_id IN ({ph}) AND created_at >= ?"
+        " ORDER BY id DESC", (*ids, since)).fetchall()
+    out = {}
+    for e in rows:
+        lst = out.setdefault(e["visitor_id"], [])
+        if len(lst) >= cap:
+            continue
+        lst.append({
+            "time": e["created_at"][:19].replace("T", " "),
+            "type": e["type"],
+            "payload": (e["payload_json"] or ""),
+            "device": e["device"] or "",
+            "referer": (e["referer"] or ""),
+            "geo": geoip.geo_label(e["geo_country"], e["geo_region"]),
+        })
+    return out
+
+
+def _visitor_orders(db, ids):
+    """Orders tied to the visitors on screen (orders.visitor_id)."""
+    if not ids:
+        return {}
+    ph = ",".join("?" * len(ids))
+    out = {}
+    try:
+        rows = db.execute(
+            f"SELECT id, visitor_id, status FROM orders WHERE visitor_id IN ({ph})",
+            tuple(ids)).fetchall()
+    except Exception:
+        return {}
+    for r in rows:
+        out.setdefault(r["visitor_id"], []).append(
+            {"id": r["id"], "status": r["status"]})
+    return out
 
 
 @bp_admin.get("/actions")
@@ -324,6 +390,11 @@ def actions():
     if q:
         where += " AND type LIKE ?"
         params.append(f"%{q}%")
+    bots = db.execute(
+        "SELECT COUNT(*) c FROM events WHERE created_at >= ? AND device = 'bot'"
+        + (" AND type LIKE ?" if q else ""),
+        [since] + ([f"%{q}%"] if q else [])).fetchone()["c"]
+
     summary = db.execute(
         f"SELECT type, COUNT(*) n, COUNT(DISTINCT visitor_id) u, MAX(created_at) last"
         f" FROM events WHERE {where} GROUP BY type ORDER BY n DESC", params).fetchall()
@@ -339,7 +410,7 @@ def actions():
                     "payload": (e["payload_json"] or "")[:80]} for e in recent]
     return _render("admin.actions", "admin/actions.html",
                    days=days, periods=PERIODS, q=q,
-                   summary=summary_view, total=total, recent=recent_view)
+                   summary=summary_view, total=total, recent=recent_view, bots=bots)
 
 
 @bp_admin.get("/orders")
@@ -461,6 +532,63 @@ def coupons_toggle(code):
     return redirect(url_for("admin.coupons"))
 
 
+def _load_products_for_edit():
+    src = settings.PRODUCTS_RUNTIME_FILE if settings.PRODUCTS_RUNTIME_FILE.exists() \
+        else settings.PRODUCTS_DEFAULT_FILE
+    return json.loads(src.read_text(encoding="utf-8"))
+
+
+def _atomic_write_json(path, data):
+    """Temp file + rename: a reader never sees half a JSON document."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+@bp_admin.get("/prices")
+def prices():
+    """Product prices: before the discount (struck through) and payable (after).
+    PayPal is charged the PAYABLE price, minus any coupon - see orders.py."""
+    _guard()
+    return _render("admin.prices", "admin/prices.html",
+                   products=settings.get_products(),
+                   saved=request.args.get("saved"),
+                   err=request.args.get("err"))
+
+
+@bp_admin.post("/prices/save")
+def prices_save():
+    """Edits ONLY the price fields on top of the current products.json: the other keys
+    (texts, features, enabled) are left alone."""
+    _guard()
+    data = _load_products_for_edit()
+    for code, p in data.items():
+        f = lambda k: request.form.get(f"{code}_{k}", "").strip()
+        try:
+            price = int(f("price_usd"))
+        except ValueError:
+            return redirect(url_for("admin.prices", err="Payable price must be a whole number of $"))
+        if price < 1:
+            return redirect(url_for("admin.prices", err="Payable price must be above zero"))
+        # The pre-discount price is optional: empty => no struck-through price on the site.
+        old = f("old_price_usd")
+        if old:
+            try:
+                old_price = int(old)
+            except ValueError:
+                return redirect(url_for("admin.prices", err="Pre-discount price must be a whole number of $"))
+            if old_price <= price:
+                return redirect(url_for("admin.prices",
+                                        err="Pre-discount price must be higher than the payable price"))
+            p["old_price_usd"] = old_price
+        else:
+            p.pop("old_price_usd", None)
+        p["price_usd"] = price
+    _atomic_write_json(settings.PRODUCTS_RUNTIME_FILE, data)
+    return redirect(url_for("admin.prices", saved="ok"))
+
+
 @bp_admin.get("/settings")
 def site_settings():
     _guard()
@@ -475,29 +603,22 @@ def site_settings():
 
 @bp_admin.post("/settings/products")
 def settings_products_save():
+    """Edits products on top of the current products.json: only the editable fields
+    change, unknown keys are preserved as they are."""
     _guard()
-    path = settings.BASE_DIR / "config" / "products.json"
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = _load_products_for_edit()
     for code, p in data.items():
         f = lambda k: request.form.get(f"{code}_{k}", "").strip()
         p["enabled"] = bool(request.form.get(f"{code}_enabled"))
         if f("title"):
             p["title"] = f("title")
         p["subtitle"] = f("subtitle")
-        try:
-            p["price_usd"] = int(f("price_usd"))
-            old = f("old_price_usd")
-            if old:
-                p["old_price_usd"] = int(old)
-            else:
-                p.pop("old_price_usd", None)
-        except ValueError:
-            return redirect(url_for("admin.site_settings", saved="err"))
+        # Prices are edited on their own page (/admin/prices).
         p["features"] = [ln.strip() for ln in
                          request.form.get(f"{code}_features", "").splitlines() if ln.strip()]
     if not any(p["enabled"] for p in data.values()):
-        return redirect(url_for("admin.site_settings", saved="err"))
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return redirect(url_for("admin.site_settings", saved="err"))  # a site with no products
+    _atomic_write_json(settings.PRODUCTS_RUNTIME_FILE, data)
     return redirect(url_for("admin.site_settings", saved="ok"))
 
 
@@ -513,9 +634,8 @@ def report_texts():
 
 @bp_admin.post("/report-texts/save")
 def report_texts_save():
-    """Overwrite config/report_texts.json. Empty field = block not rendered in the report."""
+    """Overwrite data/report_texts.json. Empty field = block not rendered in the report."""
     _guard()
-    path = settings.BASE_DIR / "config" / "report_texts.json"
     g = lambda k: request.form.get(k, "").strip()
     data = {
         "upsell": {n: g(f"upsell_{n}") for n in ("1", "2", "3")},
@@ -523,7 +643,7 @@ def report_texts_save():
         "disclaimer_by_count": {n: g(f"disclaimer_by_count_{n}") for n in ("1", "2", "3")},
         "free_text": g("free_text"),
     }
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_json(settings.REPORT_TEXTS_RUNTIME_FILE, data)
     return redirect(url_for("admin.report_texts", saved="ok"))
 
 

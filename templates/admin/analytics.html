@@ -1,47 +1,175 @@
 {% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
 {% block title %}Analytics{% endblock %}
+
+{# Table of visitors under an expanded source #}
+{% macro members_table(members) %}
+<table class="vis-events">
+  <thead><tr><th>Who</th><th>Geo</th><th>Device</th><th>Customer</th><th>When (UTC)</th></tr></thead>
+  <tbody>
+  {% for m in members %}
+  <tr>
+    <td><code>{{ m.id }}</code></td>
+    <td>{{ m.geo }}</td><td>{{ m.device }}</td>
+    <td>{% if m.customer %}<code>{{ m.customer }}</code>{% endif %}</td>
+    <td class="nowrap">{{ m.time }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="hint">Nobody</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
 {% block content %}
-<h1>Analytics</h1>
-<div class="periods">
-  {% for d, lbl in periods %}<a href="{{ url_for('admin.analytics', days=d, show=show) }}" class="{% if d == days %}is-active{% endif %}">{{ lbl }}</a>{% endfor %}
-  &nbsp;|&nbsp;
-  <a href="{{ url_for('admin.analytics', days=days) }}" class="{% if show != 'all' %}is-active{% endif %}">engaged</a>
-  <a href="{{ url_for('admin.analytics', days=days, show='all') }}" class="{% if show == 'all' %}is-active{% endif %}">all humans</a>
+<div class="admin-head">
+  <h1 class="h2">Analytics</h1>
+  {{ period_filter(periods, days, url_for("admin.analytics")) }}
+</div>
+{% if not ga_configured %}
+<p class="hint">Google Analytics is not connected — add <code>GA_MEASUREMENT_ID</code>
+  to <code>.env</code> and the tag appears on every page of the site. Everything below
+  is our own first-party data and does not depend on it.</p>
+{% endif %}
+
+<div class="admin-head admin-head--tight">
+  <p class="hint">
+    {% if show == 'all' %}Counting <b>all people</b>: {{ humans }}{% else %}Counting <b>engaged</b> only: {{ engaged }}{% endif %}
+    · landing-only (bounces): <b>{{ landing_only }}</b>{% if humans %} of {{ humans }} ({{ (landing_only / humans * 100) | round | int }}%){% endif %}{% if bots %} · bots excluded: {{ bots }}{% endif %}.<br>
+    "Engaged" = scrolled, clicked, pressed a key, or spent 15s+ on the page.
+    landing-only = arrived and left.
+  </p>
+  <div class="admin-periods">
+    <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.analytics') }}?days={{ days }}">Without bounces</a>
+    <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.analytics') }}?days={{ days }}&show=all">All people</a>
+  </div>
 </div>
 
-<div class="kpis">
-  <div class="kpi"><b>{{ kpi.visitors }}</b><span>visitors</span></div>
-  <div class="kpi"><b>{{ kpi.orders }}</b><span>orders</span></div>
-  <div class="kpi"><b>{{ kpi.paid }}</b><span>paid</span></div>
-  <div class="kpi"><b>${{ kpi.revenue_usd }}</b><span>revenue</span></div>
-  <div class="kpi"><b>{{ kpi.conversion }}</b><span>conversion (paid/visitor)</span></div>
+<div class="admin-kpis">
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.visitors }}</div><div class="admin-kpi__l">{% if show == 'all' %}visitors{% else %}engaged{% endif %}</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.orders }}</div><div class="admin-kpi__l">orders created</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.paid }}</div><div class="admin-kpi__l">paid</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">${{ kpi.revenue_usd }}</div><div class="admin-kpi__l">revenue</div></div>
+  <div class="form-card admin-kpi"><div class="admin-kpi__n">{{ kpi.conversion }}</div><div class="admin-kpi__l">{% if show == 'all' %}visitor{% else %}engaged{% endif %} → paid</div></div>
 </div>
-<p class="hint">humans: {{ humans }} · engaged: {{ engaged }} · landing-only: {{ landing_only }} · bots: {{ bots }}
-  · GA4: {{ 'configured' if ga_configured else 'not set' }}</p>
 
-<h3>Funnel</h3>
-<table class="adm">
-  <tr><th>Step</th><th>People</th><th style="width:40%">share</th><th>% of prev</th><th>% of top</th></tr>
-  {% for f in funnel %}
-  <tr><td>{{ f.label }}</td><td><b>{{ f.n }}</b></td>
-    <td><div class="bar"><i style="width: {{ f.pct_top or '0%' }}"></i></div></td>
-    <td>{{ f.pct_prev }}</td><td>{{ f.pct_top }}</td></tr>
+{% macro funnel_table(f) %}
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Step</th><th>Kind</th><th>Visits</th><th>From prev.</th><th>From top</th>
+    <th>Lost</th><th>Mob.</th><th>Desk.</th></tr></thead>
+  <tbody>
+  {% for s in f.steps %}
+  <tr>
+    <td>{{ s.label }}</td>
+    <td class="hint">{% if s.kind == 'gate' %}step{% else %}observation{% endif %}</td>
+    <td><b>{{ s.n }}</b></td>
+    <td>{{ s.pct_prev }}</td>
+    <td>{{ s.pct_top }}</td>
+    <td>{% if s.lost > 0 %}<span class="admin-status admin-status--failed">−{{ s.lost }}</span>{% endif %}</td>
+    <td>{{ s.mobile }}</td>
+    <td>{{ s.desktop }}</td>
+  </tr>
   {% endfor %}
+  </tbody>
 </table>
+</div>
+<p class="hint">Visits through this door: <b>{{ f.visits }}</b>
+  {%- if f.revenue %} · revenue from them: <b>${{ f.revenue }}</b>{% endif %}</p>
+{% endmacro %}
 
-<h3>Sources (UTM)</h3>
-<table class="adm">
-  <tr><th>Source</th><th>Visitors</th><th>Orders</th><th>Paid</th><th>Revenue</th></tr>
+<h2 class="admin-gap">Funnels by visit</h2>
+<p class="hint">The unit is a <b>visit</b> (one sitting, with no gap longer than 30
+  minutes), not a person over a period. Two kinds of row, and they must not be confused:<br>
+  <b>step</b> — you cannot get past it, so it is filled in from the deepest one reached:
+  a beacon that never arrived does not tear the funnel apart, and "paid" can never
+  exceed "created an order".<br>
+  <b>observation</b> — "scrolled as far as the pricing". Counted as it is, with no
+  filling-in: someone may have arrived on a direct link straight to the form, and
+  crediting them with "saw the pricing" for the sake of a tidy decreasing table would be
+  a lie. That is why the transition from observations to steps can exceed 100% — a
+  finding, not an error: that many people reached the form without the landing.<br>
+  "Paid" comes from the order, not from an event: payment is confirmed by a webhook in
+  which there is no browser at all. One visit can appear in both doors.
+  Who exactly did what — the <a href="{{ url_for('admin.visits') }}?days={{ days }}">Visits</a> section.</p>
+
+{% for d in funnels.doors %}
+<h3 class="admin-gap">{{ d.title }}</h3>
+{% if d.visits %}
+{{ funnel_table(d) }}
+{% else %}
+<p class="hint">No visits through this door in the period.</p>
+{% endif %}
+{% endfor %}
+
+<h2 class="admin-gap">Channels (by visit)</h2>
+<p class="hint">The channel is decided by the visit's own tags: <code>ads</code> — a
+  click id (gclid/fbclid/msclkid) or an advertising utm_medium, <code>organic</code> — a
+  referral from search, <code>internal</code> — a move within the site. This is the
+  LAST touch: the purchase is brought by the click after which the person bought, not
+  by the one through which they first heard of us.</p>
+<table>
+  <thead><tr><th>Channel</th><th>Visits</th><th>Orders</th><th>Paid</th><th>Revenue</th><th>Conversion</th></tr></thead>
+  <tbody>
+  {% for name, ch in funnels.channels %}
+  <tr>
+    <td>{{ name }}</td>
+    <td>{{ ch.visits }}</td>
+    <td>{{ ch.orders }}</td>
+    <td>{{ ch.paid }}</td>
+    <td>${{ ch.usd }}</td>
+    <td>{% if ch.visits %}{{ (ch.paid / ch.visits * 100) | round(1) }}%{% else %}—{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="hint">No visits in the period</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="hint">Visits in the period: <b>{{ funnels.visits_total }}</b> ·
+  devices: {% for d, n in funnels.devices %}{{ d }} — {{ n }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+
+<h2 class="admin-gap">Sources (first touch, by person)</h2>
+<p class="hint">Not to be confused with the channels table above. Here it is <b>how the
+  person FIRST heard</b> of us (first-touch UTM, kept for a year) and people are counted.
+  In "Channels" it is what brought them <b>this particular time</b>, and visits are
+  counted. To decide where to put money, look at Channels: the purchase comes from the
+  last click. Click a source to see who arrived.</p>
+<div class="vis-list">
+  <div class="drill-head drill-head--src">
+    <span>Source</span><span>Visitors</span><span>Orders</span><span>Paid</span><span>Revenue</span>
+  </div>
   {% for name, s, members in sources %}
-  <tr><td>{{ name }}</td><td>{{ s.visitors }}</td><td>{{ s.orders }}</td><td>{{ s.paid }}</td><td>${{ s.usd }}</td></tr>
+  <details class="drill drill--src">
+    <summary>
+      <span>{{ name }}</span>
+      <span><b>{{ s.visitors }}</b></span>
+      <span>{{ s.orders }}</span>
+      <span>{{ s.paid }}</span>
+      <span>${{ s.usd }}</span>
+    </summary>
+    <div class="vis-body">{{ members_table(members) }}</div>
+  </details>
+  {% else %}
+  <p class="hint">Nothing yet</p>
   {% endfor %}
-</table>
+</div>
 
-<h3>Recent events</h3>
-<table class="adm">
-  <tr><th>Time</th><th>Type</th><th>Who</th><th>Device</th><th>Geo</th><th>Payload</th></tr>
+<h2 class="admin-gap">Latest events <span class="hint">(up to 60)</span></h2>
+<div class="admin-scroll">
+<table>
+  <thead><tr><th>Time (UTC)</th><th>Event</th><th>Geo</th><th>Device</th><th>Who</th><th>Data</th></tr></thead>
+  <tbody>
   {% for e in events %}
-  <tr><td>{{ e.time }}</td><td>{{ e.type }}</td><td>{{ e.who }}</td><td>{{ e.device }}</td><td>{{ e.geo }}</td><td><code style="font-size:12px">{{ e.payload }}</code></td></tr>
+  <tr><td class="nowrap">{{ e.time }}</td><td>{{ e.type }}</td>
+      <td>{{ e.geo }}</td><td>{{ e.device }}</td>
+      <td><code>{{ e.who }}</code></td>
+      <td><code>{{ e.payload }}</code></td></tr>
+  {% else %}
+  <tr><td colspan="6">No events in the period</td></tr>
   {% endfor %}
+  </tbody>
 </table>
+</div>
 {% endblock %}

@@ -67,8 +67,15 @@ DB_PATH = DATA_DIR / "drawreport.sqlite3"
 # Product model (same as Golos):
 #   snapshot    — up to 3 drawings -> ONE consolidated report; price independent of count
 #   development — 2 drawing sets >= 6 months apart (may be "coming soon" at launch)
-# All numbers come from config/products.json (future admin). Never hardcode prices.
-_PRODUCTS_FILE = BASE_DIR / "config" / "products.json"
+# All numbers come from products.json (edited in the admin). Never hardcode prices.
+#
+# TWO files on purpose. config/products.json is the DEFAULT and is tracked in git;
+# data/products.json is what the admin writes and is not. Writing admin edits back
+# into config/ would put a local modification on a git-tracked file, and the next
+# `git pull` in deploy.sh would either refuse to run or silently discard the owner's
+# prices. data/ is also the only directory owned by the service user on the server.
+PRODUCTS_DEFAULT_FILE = BASE_DIR / "config" / "products.json"
+PRODUCTS_RUNTIME_FILE = DATA_DIR / "products.json"
 _products_cache: "tuple[float, dict] | None" = None
 
 
@@ -76,16 +83,21 @@ def get_products() -> dict:
     """Read products.json with an mtime cache — edits visible without restart."""
     global _products_cache
     import json
-    mtime = _PRODUCTS_FILE.stat().st_mtime
+    path = PRODUCTS_RUNTIME_FILE if PRODUCTS_RUNTIME_FILE.exists() \
+        else PRODUCTS_DEFAULT_FILE
+    mtime = path.stat().st_mtime
     if _products_cache is None or _products_cache[0] != mtime:
-        _products_cache = (mtime, json.loads(_PRODUCTS_FILE.read_text(encoding="utf-8")))
+        _products_cache = (mtime, json.loads(path.read_text(encoding="utf-8")))
     return _products_cache[1]
 
 
 # Admin-controlled blocks appended to the END of a report (upsell by drawing count +
 # disclaimers + a free block). Source: config/report_texts.json, edited at
 # /admin/report-texts. The job picks the upsell/disclaimer by drawing count; empty = hidden.
-_REPORT_TEXTS_FILE = BASE_DIR / "config" / "report_texts.json"
+# Same two-file split as products.json above: config/ is the tracked default, data/ is
+# what the admin writes (see PRODUCTS_RUNTIME_FILE for why).
+REPORT_TEXTS_DEFAULT_FILE = BASE_DIR / "config" / "report_texts.json"
+REPORT_TEXTS_RUNTIME_FILE = DATA_DIR / "report_texts.json"
 _report_texts_cache: "tuple[float, dict] | None" = None
 # Safe defaults so a render never crashes if the file is missing/corrupt.
 _REPORT_TEXTS_DEFAULT = {
@@ -101,13 +113,15 @@ def get_report_texts() -> dict:
     Returns safe empty defaults if the file is missing/corrupt (a report still renders)."""
     global _report_texts_cache
     import json
+    path = REPORT_TEXTS_RUNTIME_FILE if REPORT_TEXTS_RUNTIME_FILE.exists() \
+        else REPORT_TEXTS_DEFAULT_FILE
     try:
-        mtime = _REPORT_TEXTS_FILE.stat().st_mtime
+        mtime = path.stat().st_mtime
     except OSError:
         return dict(_REPORT_TEXTS_DEFAULT)
     if _report_texts_cache is None or _report_texts_cache[0] != mtime:
         try:
-            data = json.loads(_REPORT_TEXTS_FILE.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return dict(_REPORT_TEXTS_DEFAULT)
         _report_texts_cache = (mtime, data)

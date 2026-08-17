@@ -1,0 +1,44 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Prices{% endblock %}
+{% block content %}
+<div class="admin-head"><h1 class="h2">Prices</h1></div>
+
+{% if saved == "ok" %}<p class="admin-flash admin-flash--ok">Saved — the product page, the order form and checkout already use the new prices (no restart needed).</p>{% endif %}
+{% if err %}<p class="admin-flash admin-flash--err">Not saved: {{ err }}.</p>{% endif %}
+
+<p class="hint">Edits are saved to <code>data/products.json</code> (the default is
+<code>config/products.json</code>). The site shows both prices: "before discount"
+struck through, "payable" as the live one. <b>PayPal is charged the payable price, minus
+the buyer's coupon if they entered one.</b> An empty "before discount" price means no
+struck-through price is shown.</p>
+
+<form method="post" action="{{ url_for('admin.prices_save') }}">
+  <div class="admin-products">
+    {% for code, p in products.items() %}
+    <div class="form-card" data-product="{{ code }}">
+      <h3>{{ p.title }} <code>{{ code }}</code>
+        {% if p.enabled %}<span class="admin-status admin-status--delivered">on sale</span>
+        {% else %}<span class="admin-status admin-status--created">off ("coming soon")</span>{% endif %}
+      </h3>
+      <div class="field"><label>Price before discount (struck through), $</label>
+        <input class="input" name="{{ code }}_old_price_usd" type="number" min="2"
+               value="{{ p.old_price_usd or '' }}" data-price-old
+               placeholder="empty — no struck-through price"></div>
+      <div class="field"><label>Payable price (after discount), $</label>
+        <input class="input" name="{{ code }}_price_usd" type="number" min="1"
+               value="{{ p.price_usd }}" data-price-new required></div>
+      <p class="hint" data-discount-note>
+        {% if p.old_price_usd %}Discount shown on the site: −{{ ((p.old_price_usd - p.price_usd) * 100 / p.old_price_usd) | round | int }}%{% else %}No struck-through price is shown.{% endif %}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn--primary" type="submit">Save prices</button>
+</form>
+
+<p class="hint admin-gap">Coupons (an extra discount at checkout) are in
+<a href="{{ url_for('admin.coupons') }}">Coupons</a>. Product names and descriptions are in
+<a href="{{ url_for('admin.site_settings') }}">Site settings</a>.</p>
+
+<script src="{{ static }}/js/admin_prices.js?v={{ version }}"></script>
+{% endblock %}

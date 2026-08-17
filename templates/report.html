@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ s.report_title }} — {{ report.child.name }}, {{ report.child.age_display }} · {{ site_name }}</title>
 <meta name="robots" content="noindex, nofollow">
+{# NO ?v= here, unlike every other template. This file is rendered twice: once for the
+   browser and once for WeasyPrint with static="static", a path on disk. A query string
+   on a filesystem path makes WeasyPrint look for "fonts.css?v=0.018", fail to find it,
+   and silently fall back to system fonts in the PDF - which the project forbids. #}
 <link rel="stylesheet" href="{{ static }}/css/fonts.css">
 <link rel="stylesheet" href="{{ static }}/css/tokens.css">
 {% if site_header %}<link rel="stylesheet" href="{{ static }}/css/components.css">{% endif %}

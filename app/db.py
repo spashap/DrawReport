@@ -131,6 +131,25 @@ CREATE TABLE IF NOT EXISTS web_visits (
     geo_region TEXT,
     customer_id INTEGER
 );
+-- Work that has to be done BY HAND, in someone else's interface (GA4 key events,
+-- PayPal credentials, a legal review). Such a task has nowhere to live in code and
+-- disappears from a chat log, so it lives here. See app/admin_tasks.py.
+CREATE TABLE IF NOT EXISTS admin_tasks (
+    id INTEGER PRIMARY KEY,
+    key TEXT UNIQUE,                      -- set = seeded task; can be closed, never deleted
+    title TEXT NOT NULL,
+    details TEXT,
+    status TEXT NOT NULL DEFAULT 'open',  -- open / done
+    created_at TEXT NOT NULL,
+    done_at TEXT
+);
+-- Liveness of the background units. deploy.sh does not start a new unit and there is
+-- no monitoring - without this row, after a reboot of the box reports would silently
+-- stop being generated.
+CREATE TABLE IF NOT EXISTS service_heartbeat (
+    name TEXT PRIMARY KEY,                -- 'worker' / 'free_worker'
+    last_seen_at TEXT NOT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type, created_at);
 CREATE INDEX IF NOT EXISTS idx_events_visitor ON events(visitor_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_visits_started ON web_visits(started_at);

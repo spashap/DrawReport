@@ -1,37 +1,112 @@
 {% extends "admin/_base_admin.html" %}
+{% from "admin/_period.html" import period_filter %}
 {% block title %}Visits{% endblock %}
 {% block content %}
-<h1>Visits</h1>
-<div class="periods">
-  {% for d, lbl in periods %}<a href="{{ url_for('admin.visits', days=d, show=show) }}" class="{% if d == days %}is-active{% endif %}">{{ lbl }}</a>{% endfor %}
-  &nbsp;|&nbsp;
-  <a href="{{ url_for('admin.visits', days=days) }}" class="{% if show != 'all' %}is-active{% endif %}">bounced</a>
-  <a href="{{ url_for('admin.visits', days=days, show='all') }}" class="{% if show == 'all' %}is-active{% endif %}">all</a>
+<div class="admin-head">
+  <h1 class="h2">Visits</h1>
+  {{ period_filter(periods, days, url_for("admin.visits")) }}
 </div>
-<p class="hint">total {{ total }} · engaged {{ engaged }} · bounce {{ bounce }}</p>
+<p class="hint">{{ total }} unique human visitors in the period · <b>engaged: {{ engaged }}</b> · bounce rate: {{ bounce }}{% if bots %} · bots filtered out: {{ bots }}{% endif %}.<br>
+  "Engaged" = scrolled, clicked, pressed a key, or 15s+ of visible time. UTM is
+  first-touch; device, origin and geo come from the events.</p>
 
-<div style="display:flex; gap:24px; flex-wrap:wrap">
-  <div style="flex:1; min-width:220px">
-    <h3>Devices</h3>
-    <table class="adm">{% for d in devices %}<tr><td>{{ d.device }}</td><td>{{ d.n }}</td></tr>{% endfor %}</table>
+<div class="admin-cols admin-cols--3">
+  <div>
+    <h2>Devices</h2>
+    <table>
+      <thead><tr><th>Type</th><th>Visitors</th></tr></thead>
+      <tbody>
+      {% for d in devices %}
+      <tr><td>{{ d.device }}</td><td><b>{{ d.n }}</b></td></tr>
+      {% else %}
+      <tr><td colspan="2">Nothing yet</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
-  <div style="flex:1; min-width:220px">
-    <h3>Sources</h3>
-    <table class="adm">{% for name, n in sources %}<tr><td>{{ name }}</td><td>{{ n }}</td></tr>{% endfor %}</table>
+  <div>
+    <h2>Sources (UTM)</h2>
+    <table>
+      <thead><tr><th>Source</th><th>Visitors</th></tr></thead>
+      <tbody>
+      {% for name, n in sources %}
+      <tr><td>{{ name }}</td><td><b>{{ n }}</b></td></tr>
+      {% else %}
+      <tr><td colspan="2">Nothing yet</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
-  <div style="flex:1; min-width:220px">
-    <h3>Countries</h3>
-    <table class="adm">{% for g in geo %}<tr><td>{{ g.country }}</td><td>{{ g.n }}</td></tr>{% endfor %}</table>
+  <div>
+    <h2>Geography</h2>
+    <table>
+      <thead><tr><th>Country</th><th>Visitors</th></tr></thead>
+      <tbody>
+      {% for gview in geo %}
+      <tr><td>{{ gview.country }}</td><td><b>{{ gview.n }}</b></td></tr>
+      {% else %}
+      <tr><td colspan="2">The geo database has not been built yet</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 
-<h3>Visitors</h3>
-<table class="adm">
-  <tr><th>ID</th><th>Device</th><th>UTM</th><th>Referer</th><th>Events</th><th>Engaged</th><th>Customer</th><th>Geo</th><th>Last</th></tr>
+<div class="admin-head admin-gap">
+  <h2>Visitors <span class="hint">(showing {{ shown }}, up to 200)</span></h2>
+  <div class="admin-periods">
+    <a class="status-pill {% if show != 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.visits') }}?days={{ days }}">Not engaged</a>
+    <a class="status-pill {% if show == 'all' %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+       href="{{ url_for('admin.visits') }}?days={{ days }}&show=all">All</a>
+  </div>
+</div>
+<p class="hint">Click a row — everything we collected about that visitor expands.</p>
+
+<div class="vis-list">
+  <div class="vis-head">
+    <span>Eng.</span><span>Visitor</span><span>Geo</span><span>Device</span>
+    <span>Source</span><span>Events</span><span>Customer</span><span>Last seen</span>
+  </div>
   {% for v in visitors %}
-  <tr><td>{{ v.id }}</td><td>{{ v.device }}</td><td>{{ v.utm }}</td><td>{{ v.referer }}</td>
-    <td>{{ v.events }}</td><td>{{ 'yes' if v.engaged else '' }}</td><td>{{ v.customer }}</td>
-    <td>{{ v.geo }}</td><td>{{ v.last }}</td></tr>
+  <details class="vis">
+    <summary>
+      <span>{% if v.engaged %}✓{% else %}<span class="hint">—</span>{% endif %}</span>
+      <code>{{ v.id }}</code>
+      <span>{{ v.geo }}</span>
+      <span>{{ v.device }}</span>
+      <span>{{ v.utm }}</span>
+      <span>{{ v.events }}</span>
+      <span>{{ v.customer }}</span>
+      <span class="nowrap">{{ v.last }}</span>
+    </summary>
+    <div class="vis-body">
+      <p class="hint">
+        First visit: {{ v.first }} · Origin: <code>{{ v.referer }}</code>
+        {%- if v.orders %} · Orders:
+          {% for o in v.orders %}<code>#{{ o.id }} {{ o.status }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+        {%- endif %}
+      </p>
+      <table class="vis-events">
+        <thead><tr><th>Time</th><th>Event</th><th>Device</th><th>Geo</th><th>Origin / payload</th></tr></thead>
+        <tbody>
+        {% for e in v.timeline %}
+        <tr>
+          <td class="nowrap">{{ e.time }}</td>
+          <td><code>{{ e.type }}</code></td>
+          <td>{{ e.device }}</td>
+          <td>{{ e.geo }}</td>
+          <td><code>{{ e.payload or e.referer }}</code></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="hint">No events</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+  {% else %}
+  <p class="hint">{% if show == 'all' %}No visitors in the period.{% else %}No non-engaged visitors in the period — try "All".{% endif %}</p>
   {% endfor %}
-</table>
+</div>
 {% endblock %}

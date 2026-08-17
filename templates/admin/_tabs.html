@@ -1,0 +1,11 @@
+{# Section tabs: the same pills as the period filter, so the admin needs no new CSS
+   classes. counts - an optional {key: number} dict for a counter in the label. #}
+{% macro tabs(items, current, base_url, extra="", counts=None) %}
+<div class="admin-periods">
+  {% for val, label in items %}
+  <a class="status-pill {% if current == val %}status-pill--ready{% else %}status-pill--wait{% endif %}"
+     href="{{ base_url }}?tab={{ val }}{{ extra }}">{{ label }}{%
+     if counts and counts.get(val) is not none %} · {{ counts.get(val) }}{% endif %}</a>
+  {% endfor %}
+</div>
+{% endmacro %}
