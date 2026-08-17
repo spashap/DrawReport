@@ -2,11 +2,16 @@
 
 Backend via settings.MAIL_BACKEND:
 - 'outbox' - saved as an HTML file in data/outbox/ + an ASCII log line (dev);
-- 'resend' - Resend HTTP API (https://api.resend.com/emails). From = MAIL_FROM_EMAIL.
-  On a network/API failure the email is NOT lost: we fall back to outbox + log ERROR
-  (the worker / auth flow never crashes).
+- 'smtp'   - any SMTP provider (Brevo, SES, ZeptoMail, Zoho...). Host/port/credentials
+  from .env. This is the PORTABLE backend: switching provider is four lines of config
+  rather than a new code path, which matters because free tiers change and a provider
+  that fits today may not next year.
+- 'resend' - Resend HTTP API. Kept because it is already wired and tested.
 
-Calling code (worker, auth, payments) is identical for both backends.
+Whatever the backend, a transport failure NEVER loses the email: it falls back to the
+outbox and logs an ERROR, so the worker and the auth flow keep running.
+
+Calling code (worker, auth, payments) is identical for every backend.
 """
 from __future__ import annotations
 
@@ -48,15 +53,65 @@ def send_email(to: str, subject: str, html_body: str,
     """Send via the current backend. kind = slug for the file name / log.
     Returns the outbox file path (None on a successful Resend send)."""
     attachments = attachments or []
-    if settings.MAIL_BACKEND == "resend":
+    sender = {"resend": _resend_send, "smtp": _smtp_send}.get(settings.MAIL_BACKEND)
+    if sender is not None:
         try:
-            _resend_send(to, subject, html_body, attachments, kind)
+            sender(to, subject, html_body, attachments, kind)
             return None
         except Exception as e:  # network/API/timeout - don't lose the email
-            log.error("EMAIL [%s] -> %s | Resend FAILED (%s) - fallback to outbox",
-                      kind, to, e)
+            log.error("EMAIL [%s] -> %s | %s FAILED (%s) - fallback to outbox",
+                      kind, to, settings.MAIL_BACKEND, e)
             return _outbox_write(to, subject, html_body, attachments, kind)
     return _outbox_write(to, subject, html_body, attachments, kind)
+
+
+def _smtp_send(to: str, subject: str, html_body: str,
+               attachments: list[Path], kind: str) -> None:
+    """Send over SMTP. Works with any provider - Brevo, SES, ZeptoMail, Zoho.
+
+    Sent as multipart/alternative (plain text + HTML): a text part measurably helps
+    deliverability and is what a spam filter looks for when deciding whether an
+    HTML-only message is worth trusting.
+    """
+    import smtplib
+    from email.message import EmailMessage
+
+    if not settings.SMTP_HOST:
+        raise MailSendError("SMTP_HOST is empty")
+    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+        raise MailSendError("SMTP_USER / SMTP_PASSWORD not set")
+
+    msg = EmailMessage()
+    msg["From"] = f"{settings.MAIL_FROM_NAME} <{settings.MAIL_FROM_EMAIL}>"
+    msg["To"] = to
+    msg["Subject"] = subject
+    msg.set_content(_html_to_text(html_body))
+    msg.add_alternative(html_body, subtype="html")
+
+    for p in attachments:
+        p = Path(p)
+        ctype = _MIME.get(p.suffix.lower(), "application/octet-stream")
+        maintype, _, subtype = ctype.partition("/")
+        msg.add_attachment(p.read_bytes(), maintype=maintype, subtype=subtype,
+                           filename=p.name)
+
+    # Port 465 is implicit TLS (SMTP_SSL); 587 is plaintext-then-STARTTLS. Choosing by
+    # port rather than a flag removes a way to misconfigure it: 587 with SSL on, or 465
+    # with STARTTLS, both fail with unhelpful handshake errors.
+    if int(settings.SMTP_PORT) == 465:
+        with smtplib.SMTP_SSL(settings.SMTP_HOST, 465,
+                              timeout=settings.SMTP_TIMEOUT) as s:
+            s.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            s.send_message(msg)
+    else:
+        with smtplib.SMTP(settings.SMTP_HOST, int(settings.SMTP_PORT),
+                          timeout=settings.SMTP_TIMEOUT) as s:
+            s.ehlo()
+            s.starttls()
+            s.ehlo()
+            s.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            s.send_message(msg)
+    log.info("EMAIL [%s] -> %s | sent via SMTP (%s)", kind, to, settings.SMTP_HOST)
 
 
 def _resend_send(to: str, subject: str, html_body: str,

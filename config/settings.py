@@ -201,13 +201,23 @@ UPLOAD_MAX_BYTES = 15 * 1024 * 1024
 # --- Worker / email (Resend) ---
 WORKER_POLL_SECONDS = 5                # poll period for orders.status='paid'
 WORKER_LOG = DATA_DIR / "worker.log"   # UTF-8 worker log (console output stays ASCII!)
-MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")   # 'outbox' (files) | 'resend'
+MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")   # 'outbox' (files) | 'smtp' | 'resend'
 OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': emails as HTML files (dev)
 MAIL_FROM_EMAIL = os.getenv("MAIL_FROM_EMAIL", "hello@drawreport.com")
 MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", SITE_NAME)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 RESEND_API_URL = os.getenv("RESEND_API_URL", "https://api.resend.com/emails")
 RESEND_TIMEOUT = 20                    # seconds per HTTP request to Resend
+
+# SMTP - the PORTABLE backend. Any provider (Brevo, SES, ZeptoMail, Zoho) is a config
+# change rather than a new code path, which matters because free tiers move and the
+# provider that fits today may not next year.
+# Port decides the encryption: 465 = implicit TLS, anything else (587) = STARTTLS.
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_TIMEOUT = 30                      # seconds per SMTP conversation
 
 # --- Auth (Golos spec §9) ---
 SESSION_DAYS = 30
