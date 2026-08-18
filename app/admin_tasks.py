@@ -80,17 +80,80 @@ _SEEDS = [
      "Drop the real logo artwork into data/Images/ and run build_logos.py",
      "Placeholders ship today. The hero image is already built from your artwork; only\n"
      "the wordmark is still a placeholder. venv\\Scripts\\python.exe scripts\\build_logos.py"),
+    ("seo_analytics_connected",
+     "Connect GA4, Search Console, Bing and IndexNow",
+     "DONE 2026-08-18 (V0.043). Recorded here because all four live in someone else's\n"
+     "interface, so nothing in the code proves they are still connected.\n"
+     "\n"
+     "GA4          G-FBQFBZNBRC, property 'DrawReport' (account Pasha_webAnalytics).\n"
+     "             Confirmed emitting on / and /en/report, absent on /admin, and a\n"
+     "             realtime hit was seen. Linked to Search Console, so organic query\n"
+     "             data reaches GA4.\n"
+     "SEARCH       Verified as a DNS DOMAIN property, which covers www/non-www,\n"
+     "CONSOLE      http/https and every subdomain. This is why GOOGLE_SITE_VERIFICATION\n"
+     "             is empty and should STAY empty. Sitemap accepted: 12 URLs.\n"
+     "BING         Verified by META TAG (BING_SITE_VERIFICATION), deliberately NOT by\n"
+     "             importing from Search Console: that import wants a Google OAuth\n"
+     "             grant covering EVERY property on the account (cosmyday,\n"
+     "             belgradebest, fidgetgo, shepotzvezd). The tag is scoped to this site\n"
+     "             alone. Bing RE-CHECKS it - removing the tag un-verifies the site.\n"
+     "INDEXNOW     Key file live at /<INDEXNOW_KEY>.txt, 12 URLs submitted.\n"
+     "\n"
+     "WARNING. All four values live in the SERVER .env only, never in git. Rebuild the\n"
+     "box without them and measurement stops SILENTLY - every template renders nothing\n"
+     "when its value is empty and nothing warns you. The values are written down in\n"
+     "drawreportDeploy/README.md, and Site settings shows which are currently set.\n"
+     "\n"
+     "NOT done by this: marking key events in GA4 - that is its own task, and it only\n"
+     "became possible now that the tag is finally on the page.",
+     "done"),
+    ("seo_ahrefs_awt",
+     "Sign up for Ahrefs Webmaster Tools (free) and run the first site audit",
+     "WHY. The best free tool after Search Console, and it covers the two things GSC\n"
+     "does not: a crawl-based technical audit of every page, and our own backlink\n"
+     "profile. We currently have no idea who links to us.\n"
+     "\n"
+     "HOW. ahrefs.com/webmaster-tools -> create the account (free, no card) -> add\n"
+     "drawreport.com -> verify VIA GOOGLE SEARCH CONSOLE. That path is one click\n"
+     "because the GSC domain property already exists; the alternative is another meta\n"
+     "tag. Then run Site Audit and read the errors before the warnings.\n"
+     "\n"
+     "NOTE. Needs an account, so it cannot be done for you. Expect the audit to flag\n"
+     "thin content on the legal pages - that is expected and not worth fixing."),
+    ("seo_uptime_monitor",
+     "Put drawreport.com on an uptime monitor (UptimeRobot free tier)",
+     "WHY. release.bat health-checks ONCE, at deploy time, and nothing watches the site\n"
+     "between deploys. Two separate costs: a paying customer hits a dead checkout, and\n"
+     "a crawler that meets a 5xx reads it as a site-quality signal rather than as bad\n"
+     "luck. There is also no alert if gunicorn dies without nginx dying with it.\n"
+     "\n"
+     "HOW. uptimerobot.com -> free tier -> HTTP(s) monitor on\n"
+     "https://drawreport.com/en/ every 5 minutes, alert to ADMIN_ALERT_EMAIL.\n"
+     "Monitor /en/ rather than / : / only proves nginx answered and redirected, while\n"
+     "/en/ is rendered by the app, so a 200 there proves gunicorn is actually alive.\n"
+     "\n"
+     "NOTE. This watches the WEB unit only. drawreport-worker and drawreport-free can\n"
+     "die without the site going down - that is what the service_heartbeat table and\n"
+     "the Tasks/Analytics pages are for."),
 ]
 
 
 def _seed(db) -> None:
     """Idempotent: a task with a given key is created once in the life of the database."""
-    for key, title, details in _SEEDS:
+    for seed in _SEEDS:
+        # A 4th element is an optional starting status. It exists so a step that was
+        # already finished can be RECORDED here instead of appearing as outstanding
+        # work someone then has to tick off - the point of those rows is the detail
+        # text, which is the only place the settings live outside another company's UI.
+        key, title, details = seed[:3]
+        status = seed[3] if len(seed) > 3 else "open"
         row = db.execute("SELECT id FROM admin_tasks WHERE key = ?", (key,)).fetchone()
         if row is None:
             db.execute(
-                "INSERT INTO admin_tasks (key, title, details, status, created_at)"
-                " VALUES (?, ?, ?, 'open', ?)", (key, title, details, now()))
+                "INSERT INTO admin_tasks (key, title, details, status, created_at,"
+                " done_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (key, title, details, status, now(),
+                 now() if status == "done" else None))
     db.commit()
 
 
