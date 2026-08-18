@@ -39,27 +39,37 @@ _CORE_GOALS = [
 
 def _ga4_details() -> str:
     lines = [
-        "WHY. GA4 reports a conversion only for an event you have marked as a key",
-        "event. Dozens of goals fire on the site, but until the event is marked, it",
-        "shows up as a plain event and cannot be used as a campaign objective.",
-        "Our own analytics does not depend on this: Analytics and Actions already",
-        "show all of it.",
+        "CLOSED 2026-08-18 by owner decision: not worth the effort. Kept as a record so",
+        "nobody reopens it without knowing what was already established.",
         "",
-        "HOW. GA4 -> Admin -> Events -> mark as key event. The identifier is the left",
-        "column, entered EXACTLY as written, no spaces.",
+        "WHAT IT WOULD HAVE BOUGHT. GA4 collects every one of these events on its own",
+        "and reports them as events. Marking one as a KEY event only changes whether it",
+        "also counts in the conversion column and can be used as a campaign objective -",
+        "which matters when there are ad campaigns to optimise, and not before. Our own",
+        "Analytics and Actions sections already show all of it either way, so nothing is",
+        "unmeasured while this stays closed.",
+        "",
+        "IF IT EVER BECOMES WORTH DOING. GA4 -> Admin -> Data display -> Events -> Key",
+        "events tab. Star an event that is already listed, or use New key event to",
+        "register one by name before it has ever fired. Names go in EXACTLY as written,",
+        "no spaces. Note purchase is normally a key event by default in a new property.",
         "",
     ]
     for n, (ident, label) in enumerate(_CORE_GOALS, start=1):
         lines.append(f"{n:>3}. {ident:<22} {label}")
     lines += [
         "",
-        "NOTE. GA_MEASUREMENT_ID is set (G-FBQFBZNBRC, since 2026-08-18), so the tag",
-        "is on the page and these events do arrive. Before that it was not, which is",
-        "why this task sat undoable for so long.",
+        "THE PART THAT DID MATTER, AND IS DONE (V0.046). The old version of this list",
+        "named order_submit_form and checkout_pay, which exist nowhere in the codebase,",
+        "and purchase, which was tracked SERVER-side only - so GA4 could show sessions",
+        "and zero revenue forever, with no way to tell which channel actually sells.",
+        "templates/order_success.html now fires purchase with transaction_id, value and",
+        "USD, gated on paid_at. That was a real defect and no amount of clicking in GA4",
+        "would have fixed it. The seven names above are all verified to reach gtag.",
         "",
-        "purchase carries transaction_id, value and currency from",
-        "templates/order_success.html. GA4 de-duplicates on transaction_id, so a",
-        "buyer reloading the thank-you page does not book the sale twice.",
+        "Scroll depth is deliberately absent: scroll_50/75 are engagement, not",
+        "conversions, and marking them would make every conversion report count a",
+        "scroll as a sale.",
     ]
     return "\n".join(lines)
 
@@ -85,8 +95,8 @@ _SEEDS = [
      "without taking money - fine for testing the pipeline, fatal if left on in\n"
      "production. Verify with one small real purchase after switching."),
     ("ga4_key_events",
-     "Mark 7 key events in GA4 (~10 minutes, by hand)",
-     _ga4_details()),
+     "Mark key events in GA4 - closed, not worth the effort",
+     _ga4_details(), "done"),
     ("legal_review",
      "Have a lawyer review the privacy policy and terms",
      "The drafts cover children's data (COPPA), refunds and PayPal, and keep the\n"
