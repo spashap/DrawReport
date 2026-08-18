@@ -863,3 +863,36 @@ accounts the owner has to open personally.
 The Bash tool's heredoc mangles backslashes, so a Python patch script written that way turns a
 source-literal `\n` into a real newline and the match silently fails (this is UseCase #31 wearing a
 different hat). Build such sequences with `chr(92)` instead of typing them.
+
+---
+
+## V0.046 — GA4 could never see a sale; the key-event list named three events that do not exist
+
+Going to tick off the seeded `ga4_key_events` task exposed that the list it carried was
+partly fiction. Verified every name against what actually reaches `gtag`:
+
+- `order_submit_form` — **does not exist**. The real goal on that button is `order_pay`.
+- `checkout_pay` — **does not exist anywhere.** Checkout is hosted by PayPal; `checkout_view`
+  is server-side only.
+- `purchase` — existed as a NAME only. A sale is `track_event("order_paid", ...)` fired
+  **server-side** (PayPal webhook / stub confirm), and `track_event` writes to our own DB;
+  only `window.drGoal` mirrors into `gtag`. **GA4 therefore showed sessions and zero revenue,
+  with no way to tell which channel actually sells.**
+
+A key event that never fires is worse than a missing one: GA4 reports it at a confident zero
+rather than as an error, so nobody goes looking.
+
+### Fixed
+- **`templates/order_success.html` now fires `purchase`** with `transaction_id`, `value` and
+  `currency: USD`. The thank-you page is the only moment the buyer's browser is present after
+  payment. `transaction_id` is what makes it safe: GA4 de-duplicates on it, and this page is a
+  plain GET that can be reloaded or reached again from history.
+- Gated on **`order["paid_at"]`, not on `status`** — status moves on through
+  generating/delivered/failed, so a status test would have to be kept in step with the worker.
+  The gate matters because the URL is reachable by order id alone; without it an unpaid order
+  would report revenue that was never taken. Verified both ways: a paid row emits the event with
+  the right id and value, an unpaid row emits nothing.
+- `_CORE_GOALS` in `app/admin_tasks.py` corrected to seven names that all verifiably fire.
+  **Scroll depth was dropped on purpose**: `scroll_50`/`scroll_75` are engagement, not
+  conversions, and marking them as key events makes every conversion report and campaign
+  objective count a scroll as a sale. They remain visible in our own Analytics section.

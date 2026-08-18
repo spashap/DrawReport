@@ -15,3 +15,29 @@
   </div>
 </div>
 {% endblock %}
+{% block footer %}{{ super() }}
+{% if purchase_id %}
+{# The ONE place a completed sale reaches GA4. Everything else about payment happens
+   server-side (PayPal webhook / stub confirm), and a server-side track_event never
+   touches gtag - so without this block GA4 shows sessions and zero revenue, and no
+   channel can be told apart by whether it actually sells.
+
+   transaction_id is what makes a page reload safe: GA4 de-duplicates purchases by it,
+   and this page is a plain GET the buyer can refresh or return to from their history.
+   drGoal also mirrors the goal into our own /t/e beacon, so the Actions section shows
+   it too - and it degrades quietly to beacon-only when GA is not configured. #}
+<script>
+  (function () {
+    function fire() {
+      if (!window.drGoal) { return; }
+      window.drGoal("purchase", {
+        transaction_id: "{{ purchase_id }}",
+        value: {{ purchase_value }},
+        currency: "USD"
+      });
+    }
+    if (window.drGoal) { fire(); } else { window.addEventListener("load", fire); }
+  }());
+</script>
+{% endif %}
+{% endblock %}

@@ -311,7 +311,19 @@ def order_success(order_id):
     order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
     if order is None:
         abort(404)
-    return render_template("order_success.html", email=order["email"])
+    # A sale is marked paid on the SERVER (stub confirm / PayPal webhook), and a
+    # server-side track_event never reaches gtag - so until V0.046 GA4 could see
+    # traffic but never revenue, which makes every "which source actually sells"
+    # question unanswerable. This page is the only moment the buyer's browser is
+    # present after payment, so the purchase event has to be fired from here.
+    # Gated on paid_at, not on status: status moves on through generating/delivered/
+    # failed, so any status test would have to be kept in step with the worker.
+    # The gate matters because this URL is reachable by order id alone - without it
+    # an unpaid order would report revenue that was never taken.
+    return render_template(
+        "order_success.html", email=order["email"],
+        purchase_id=order_id if order["paid_at"] else None,
+        purchase_value="%.2f" % (order["price_cents"] / 100))
 
 
 # --- PayPal return/cancel (Phase 8). Webhook is on bp_root (no locale). ---

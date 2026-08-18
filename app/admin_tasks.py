@@ -15,14 +15,25 @@ from app.db import now
 
 # The events that matter most as GA4 conversions. Ours are recorded regardless - this
 # list only exists because GA4 counts a conversion only for an event marked as one.
+#
+# Every name here is verified to actually reach gtag. That is not a formality: the
+# first version of this list named order_submit_form and checkout_pay, which exist
+# nowhere in the codebase, and `purchase`, which was tracked SERVER-side only and so
+# could never arrive in GA4 at all (fixed in V0.046 - templates/order_success.html).
+# A name that never fires is worse than a missing one: GA4 shows the key event at a
+# confident zero rather than as an error.
+#
+# Scroll depth is deliberately NOT here. scroll_50/75 are engagement, not conversions;
+# marking them as key events makes every conversion report and campaign objective
+# count a scroll as a sale. They are already visible in our own Analytics section.
 _CORE_GOALS = [
-    ("order_submit_form", "Order form submitted"),
-    ("purchase", "Paid"),
-    ("landing_hero_order", "Hero CTA clicked"),
-    ("checkout_pay", "Reached checkout"),
-    ("sec_pricing", "Scrolled to the pricing"),
-    ("scroll_50", "Scrolled half the page"),
-    ("scroll_75", "Scrolled three quarters"),
+    ("purchase", "Paid - the sale itself"),
+    ("order_pay", "Order form submitted, heading to payment"),
+    ("free_upload_submit", "Free wizard: drawing uploaded"),
+    ("free_to_order", "Free reading -> paid order"),
+    ("landing_hero_order", "/en/report hero CTA"),
+    ("home_hero_cta", "Home page primary CTA"),
+    ("sec_pricing", "Scrolled to the pricing block"),
 ]
 
 
@@ -42,8 +53,13 @@ def _ga4_details() -> str:
         lines.append(f"{n:>3}. {ident:<22} {label}")
     lines += [
         "",
-        "NOTE. GA_MEASUREMENT_ID must be set in the server .env first, otherwise the",
-        "tag is not on the page at all and nothing reaches GA4.",
+        "NOTE. GA_MEASUREMENT_ID is set (G-FBQFBZNBRC, since 2026-08-18), so the tag",
+        "is on the page and these events do arrive. Before that it was not, which is",
+        "why this task sat undoable for so long.",
+        "",
+        "purchase carries transaction_id, value and currency from",
+        "templates/order_success.html. GA4 de-duplicates on transaction_id, so a",
+        "buyer reloading the thank-you page does not book the sale twice.",
     ]
     return "\n".join(lines)
 
