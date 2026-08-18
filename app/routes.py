@@ -177,11 +177,16 @@ def hosted_report(token):
     s = get_sample_by_token(token, g.lang_code)
     if s is not None:
         data = json.loads(s.report_path.read_text(encoding="utf-8"))
-        # the sample's drawing sits next to its report under the matching def
-        from app.samples import _SAMPLE_DEFS  # local: small internal lookup
+        # the sample's drawings sit next to its report under the matching def
+        from app.samples import _SAMPLE_DEFS, sample_drawings  # local: small internal lookup
         sd = next((d for d in _SAMPLE_DEFS.get(g.lang_code, []) if d["token"] == token), None)
-        drawing = settings.BASE_DIR / sd["drawing"] if sd else None
-        specs = [{"path": drawing, "caption": s.caption}] if drawing else []
+        paths = sample_drawings(sd) if sd else []
+        # Caption exactly like a real multi-drawing report (see jobs.py / generate_report.py):
+        # numbered when there is more than one, the child's name when there is only one.
+        n = len(paths)
+        specs = [{"path": settings.BASE_DIR / p,
+                  "caption": f"Drawing {i + 1}" if n > 1 else s.caption}
+                 for i, p in enumerate(paths)]
         return _render_report_page(data, specs, g.lang_code)
     # DB-backed order report (public, unguessable token)
     row = get_db().execute(

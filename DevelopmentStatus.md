@@ -603,3 +603,49 @@ acceptance number, and it would make both reports pass. Owner's call.
 Technique sections are now genuinely thin (2 sentences). `/en/report` and `config/products.json`
 still read true — they promise "7 areas, each with a score and a plain-language explanation",
 which remains accurate — so no marketing copy was edited.
+
+---
+
+## Session — 2026-08-18 · The approved en-4.2 samples go live (V0.038)
+
+The two V2 sample reports were reviewed and approved, so they are now the site's published
+examples. **These are the first samples on the site that are real, unedited output of the live
+pipeline** (prompt en-4.2) from real children's drawings — until now the landing showed one
+adapted built-in example.
+
+### What shipped
+- `pipeline/samples/alisia_report.json` + `alisia_drawing.jpg` — Alisia, 4y4m, one drawing.
+- `pipeline/samples/dilan_report.json` + `dilan_drawing_{1,2,3}.jpg` — Dilan, 6y5m, **three**
+  drawings, which is the case `/en/report` actually sells ("1-3 drawings together") and which
+  the site had no example of.
+- Both registered in `app/samples.py`; `sample-liam` kept last so its indexed URL does not 404.
+
+### Two things the wiring needed
+1. **The sample system only supported ONE drawing per sample.** `_SAMPLE_DEFS` had a singular
+   `drawing` key and `/r/<token>` built a single-item `specs` list, so Dilan's report would have
+   rendered with one image and a report body discussing three. Changed to a `drawings` LIST,
+   with `n_drawings` now DERIVED from it (it was a hand-maintained field that could drift), and
+   `/r/<token>` captions them exactly like a paid multi-drawing report — "Drawing 1..N" when
+   there are several, the child's name when there is one. `sample_drawings()` still accepts the
+   old singular key so an older locale definition keeps loading.
+2. **Image weight.** `/r/<token>` embeds every drawing as a base64 data URI. The originals are
+   PNGs up to 890 KB, which would have made the Dilan sample page ~4 MB. They ship as optimized
+   JPEGs (1400 px long side, q82): 890 KB -> 94 KB, 821 KB -> 100 KB. The rendered 3-drawing
+   sample page is **298 KB**.
+
+Note `data/` is gitignored, so a sample cannot be served from `data/reports/images/` — the
+approved files had to be copied into the tracked tree to deploy at all.
+
+### Verified
+All three sample pages and all three hosted reports return 200; Dilan's renders 3 drawings; no
+Cyrillic anywhere (the en-4.2 footer fix holds); the landing carousel shows all three with the
+"sample · 3 drawings" badge on Dilan; the sitemap lists all three.
+
+### Worth the owner's attention
+Card quotes are pulled from `about_child` automatically, and they landed well —
+*"Dilan is a builder of worlds."* / *"Alisia is drawn to beauty, decoration, and the pleasure of
+making something feel complete."* Nothing was hand-picked.
+
+`sample-liam` is now the odd one out: it is en-4.0-era content and is no longer what a buyer
+receives. It was kept only to avoid a dead URL. Retiring it (and 301-ing the URL) is a small
+follow-up once the two real samples have settled.
