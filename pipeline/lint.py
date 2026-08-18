@@ -97,13 +97,25 @@ HEDGE = {
         r"\bis\s+sometimes\s+(?:associated|read|linked)|\boften\s+(?:associated|read|linked)|"
         r"\blooks?\s+like|\bgives?\s+(?:the\s+)?impression|\bseems?\s+to|\bappears?\s+to|"
         r"\bone\s+reading|read\s+this\s+way|a\s+hypothesis|not\s+a\s+conclusion|"
+        # en-4.1 added these to the prompt's rotation list - keep the two in step (UseCase #24)
+        r"\boften\s+goes\s+with\b|\breads?\s+like\b|\bmay\s+point\s+to\b|"
         r"\bas\s+if\b|\bperhaps\b|\bmaybe\b", re.IGNORECASE),
 }
 # attribution to a tradition/author (frame condition 1)
+# ⚠️ COUPLED TO pipeline/prompt.py (en-4.1): the prompt now ROTATES the generic, name-free
+# attribution wording so that one stock phrase does not open every framed statement in the
+# report. EVERY form the prompt offers must match here. If it does not, _frame_scan reads a
+# correctly framed zone-3 sentence as unattributed, spends a repair call, and the repair
+# rewrites it back into the stock phrase - the fix would silently undo itself and cost a
+# paid call per report. See UseCasesData.md #24.
 ATTRIBUTION = {
     "en": re.compile(
         r"projective|tradition|approach|Machover|Lowenfeld|Vygotsky|Piaget|Kellogg|"
-        r"Goodnow|Burkitt|according\s+to|in\s+the\s+\w+\s+tradition|developmental\s+tradition",
+        r"Goodnow|Burkitt|according\s+to|in\s+the\s+\w+\s+tradition|developmental\s+tradition|"
+        r"people\s+who\s+study\s+children'?s?\s+(?:draw\w+|art)|"
+        r"research\s+on\s+children'?s?\s+(?:draw\w+|art)|"
+        r"in\s+the\s+(?:analysis|reading|study|practice)\s+of\s+(?:reading\s+)?children'?s?\s+draw\w+|"
+        r"one\s+common\s+reading",
         re.IGNORECASE),
 }
 # the term refers to the ARTWORK (character OF THE LINE, mood OF THE DRAWING), not the child:

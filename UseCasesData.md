@@ -227,3 +227,32 @@ converting, do not assume: read the cmap with fontTools and assert the codepoint
 (`’ “ ” — – $ … ·` all are, in all seven faces). Then verify on the OUTPUT, not the input: render
 the sample and read `/BaseFont` off every page - `Caveat / Inter / Rubik` only, no Segoe or
 Verdana, and the extracted text still contains the curly characters.
+
+## #27 · A frame the prompt OFFERS but the linter cannot SEE burns a paid call, silently
+Found while applying #24 to the paid prompt. `pipeline/prompt.py` had, since en-4.0, offered two
+generic name-free attributions as a valid safe frame. One of them —
+`"in the practice of reading children's drawings this is sometimes read as…"` — was **never matched
+by `ATTRIBUTION` in `pipeline/lint.py`**: that regex keys off `tradition|approach|<author name>|
+according to`, and this phrase contains none of them. So a model that obeyed the prompt exactly,
+picked that form, and attached it to a HEAVY term produced a report that `_frame_scan` reported as
+unframed. The report was correct; the linter could not tell. Cost: one repair call per occurrence,
+and the repair — told to "ADD the frame" — rewrites the sentence into the phrasing the regex *does*
+know, so the output silently converges on the one stock phrase the copy audit later flagged.
+Nothing ever surfaced, because a repaired report still ships.
+**The check that finds this class of bug takes three lines and belongs in every prompt edit:**
+assert that every hedge/attribution the prompt offers is (a) actually present in
+`system_prompt()` and (b) matched by the regex the linter uses. Both directions matter — (a) catches
+a linter that has drifted ahead of the prompt, (b) catches a prompt that has drifted ahead of the
+linter. Related: [[#24]], which is the same coupling in the FREE pipeline.
+
+## #28 · Look for the prompt line behind a bad phrase in the OUTPUT, not for a better adjective
+When shipped copy reads as machine-written, the instinct is to edit the copy. For anything the model
+wrote, that fixes one instance and leaves the generator untouched. `pipeline/samples/sample_report.json`
+is real output of `pipeline/prompt.py`, so every tell in it is traceable evidence:
+`"small but real authorial decisions"` <- the prompt's `"authorial solutions"`;
+`"follows a familiar template"` x2 <- `"departures from the template"`;
+`"or engineering, as examples."` x2 <- an ALLOWED example that ended `"…as examples."`;
+`"The overall register of this drawing"` x2 <- `"emotional register"` in the zone list.
+Four defects, four prompt lines, none of them a matter of taste. **Grep the generated artifact for
+the phrase, then grep the prompt for its source; if the source is there, fix the prompt — the copy
+edit is only cleanup of the samples already shipped.**

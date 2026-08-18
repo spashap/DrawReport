@@ -83,13 +83,15 @@ log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
 7. **No `llms.txt`.**
 
 **Product / business.**
-8. ✅ **DONE (V0.035) — freemium + site-wide English pass.** The whole site (freemium wizard,
-   emails, PDF strings, sample report, blog, legal) was repaired against
-   `projectSpec/DrawReport-English-Copy-Repair-Report.md`. ⚠️ **`pipeline/prompt.py` — the PAID
-   report prompt — was NOT audited and is the top remaining copy risk:** the free prompt carried
-   British spellings, calqued examples and mandatory sentence templates, and the paid one very
-   likely still does, into the 8-page PDF customers pay for. See UseCase #24 before touching it —
-   prompt wording that `lint.py` also matches must change in both files, in one commit.
+8. ✅ **DONE (V0.035 + V0.036) — English pass across every copy surface.** The site (freemium
+   wizard, emails, PDF strings, sample report, blog, legal) was repaired in V0.035 against
+   `projectSpec/DrawReport-English-Copy-Repair-Report.md`; **`pipeline/prompt.py`, the PAID report
+   prompt, followed in V0.036** (`PROMPT_VERSION` en-4.1) — language and tone only, no rule or
+   safe-frame change. It gained the `HOW THE ENGLISH MUST SOUND` section it never had.
+   ⚠️ Before editing either prompt, read **UseCases #24 and #27**: hedge/attribution wording is
+   matched by `lint.py` / `free_lint.py`, so it changes in both files in one commit, and you assert
+   the coupling both ways. **Not yet verified on live output:** no en-4.1 report has been generated,
+   so read one fresh paid report against the voice rules before assuming they took.
 9. **Legal pages are DRAFT** and have not been reviewed by counsel (COPPA / children's data,
    refunds, PayPal, FTC "educational, not diagnosis" claims).
 10. **Blog has only 3 posts.**

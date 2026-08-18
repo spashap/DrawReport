@@ -442,3 +442,86 @@ unset**, the sitemap still omits the blog posts, `lastmod` is still `today`, the
 mandatory sentence templates, no English-voice instruction) is very likely also shaping the
 8-page PDF customers pay $29 for; `sample_report.json` was indirect evidence of exactly that.
 That is the highest-value follow-up.
+
+---
+
+## Session — 2026-08-18 · Paid report prompt: language and tone (V0.036)
+
+The follow-up named in V0.035 and in Appendix C of the copy report: `pipeline/prompt.py`, the PAID
+report prompt, was the last unaudited copy surface and the one behind the $29 PDF.
+**Language and tone only — no rule, ban, zone, score rule or safe-frame condition was changed.**
+`PROMPT_VERSION` en-4.0 -> en-4.1.
+
+### What the audit actually found (checked, not assumed from the free-prompt findings)
+Two of the free prompt's biggest problems **do not exist here**, and were not "fixed":
+- **British spellings: none.** The free prompt had 11; this one is clean.
+- **Contradictory word budgets: none.** `about_child` is 110-170 in both the prose and the JSON
+  contract, and `pipeline/schema.py` sets no word ceiling at all.
+
+What did transfer was evidenced from `pipeline/samples/sample_report.json` — real output of this
+prompt — rather than asserted (see UseCase #28):
+
+| prompt line | what it produced in shipped output |
+|---|---|
+| `"authorial solutions"` | `"small but real authorial decisions"` |
+| `"departures from the template"` | `"follows a familiar template"` x2 |
+| ALLOWED example ending `"…as examples."` | `"or engineering, as examples."` x2 |
+| `"emotional register"` | `"The overall register of this drawing"` x2 |
+
+Plus: line 86 **mandated** the canned openers `"Notice how…" / "Look at the way…" /
+"What matters here is…"`; line 64 offered two fixed generic attributions as *the* preferred form;
+and the prompt carried 63 em dashes in 3,258 words.
+
+**The gap: this prompt was WEAKER than the free one had been.** Its entire English-voice
+instruction was the five words *"The report language is English."* The free prompt at least said
+"American English", which the audit had already judged insufficient.
+
+### Changes
+- **Added `HOW THE ENGLISH MUST SOUND`** — the F-119 equivalent, written for this prompt rather than
+  copied from the free one. US spelling/vocabulary, sentence-length variation, rationed em dashes,
+  no rule-of-three default, no `not X but Y`, a banned-vocabulary list, no consulting/clinical
+  register, no self-praising tone labels, parent-language nouns for the drawing, read-it-back-as-
+  the-parent. **Its first rule is paid-specific:** the seven dimension observations are seven
+  parallel blocks, so writing them to one shape is the most visible template risk in the product —
+  nothing previously forbade it.
+- De-templated the observation formula (kept the logic, removed the visible three-beat pattern) and
+  downgraded the canned openers from required to "examples of the move, cap of one per report".
+- The generic attributions and the hypothesis hedges must now **rotate**; added `may point to`,
+  `often goes with`, `reads like`.
+- Removed the studio-critic vocabulary traced above, and the sentence-final `as examples` calque.
+- Rewrote the **gold-standard zone-3 sentence** — the register-setter for the report's highest-value
+  block — dash-free and concrete. All four frame conditions still visibly demonstrated, and
+  `"a hypothesis, not a conclusion"` kept verbatim because `lint.py` `HEDGE` matches that literal.
+- The **repair instruction** now carries a VOICE line: adding the safe frame must not add a dash, a
+  triad, a `not X but Y`, or clinical vocabulary — otherwise the repair pass reintroduces exactly
+  the register the prompt just removed.
+- Fixed a self-contradiction the new rules exposed: the prompt banned `"the work"` for a child's
+  drawing while still using it twice itself.
+
+### `pipeline/lint.py` — the coupled half (UseCase #24)
+`_frame_scan` requires `ATTRIBUTION` to match within ±220 chars for heavy terms, so new attribution
+wording that the regex cannot see turns a correctly framed report into a repair call. `ATTRIBUTION`
+and `HEDGE` extended in the same commit to cover every form the prompt now offers.
+
+**This surfaced a pre-existing bug — see UseCase #27.** The phrase
+`"in the practice of reading children's drawings this is sometimes read as…"` has been offered by
+the prompt as a valid frame since en-4.0 and was **never matched by `ATTRIBUTION`**. Every report
+that used it on a heavy term burned a repair call, and the repair rewrote it into the one stock
+phrase the regex did know — which is part of why that phrasing became ubiquitous. Now matched.
+
+### Verification
+- Both files compile; the system prompt assembles (4,025 words) and the user prompt builds.
+- **Coupling test:** all 5 attribution rotations and all 8 hedges are (a) present in
+  `system_prompt()` and (b) matched by the linter regex. This is the check UseCase #27 asks for.
+- **Safety regression suite:** bare diagnosis, unframed state, hidden trauma, colour fortune-telling,
+  fate-as-fact and command tone are all still caught (1-3 hits each).
+- The shipped sample still lints clean; the 7 dimension keys and order are unchanged.
+- No LLM call was made — generating a report costs money on the live key, and nothing in this change
+  can be validated by one run anyway. The next real report will be tagged `en-4.1`; **that output is
+  what should be read before assuming the voice change worked.**
+
+### Follow-up
+`PROMPT_VERSION` is recorded per report by `pipeline/llm.py`, so en-4.0 and en-4.1 reports are
+distinguishable in the DB. Worth reading one fresh en-4.1 report end to end against the
+`HOW THE ENGLISH MUST SOUND` list — especially whether the seven observations now vary in shape,
+which is the rule with the least prior art behind it.
