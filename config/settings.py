@@ -87,6 +87,36 @@ ADMIN_PASS = os.getenv("ADMIN_PASS", "")
 # Google Analytics 4 measurement id, e.g. "G-XXXXXXXXXX". Empty = no GA snippet.
 # Owner supplies the real id later; placeholder until then.
 GA_MEASUREMENT_ID = os.getenv("GA_MEASUREMENT_ID", "")
+# --- Search-engine ownership verification (env-driven <meta> tags) ---
+# Google Search Console and Bing Webmaster Tools both accept a <meta> tag in the
+# <head> of the home page as proof of ownership. Each is just the token (the
+# content="..." value), NOT the whole tag - paste what the console shows between
+# the quotes. Empty = no tag rendered.
+# NOTE: for Google, DNS TXT verification of the DOMAIN property is better when the
+# owner has registrar access (it covers www/non-www, http/https and every
+# subdomain at once). This meta path is the fallback, and it verifies the
+# URL-prefix property https://drawreport.com/ only.
+# Bing does not need its own token if the site is imported from Search Console.
+# Rendered by templates/_verification.html, which BOTH _base.html and landing.html
+# include - landing.html has its own <head> and does not extend _base.html.
+GOOGLE_SITE_VERIFICATION = os.getenv("GOOGLE_SITE_VERIFICATION", "")
+BING_SITE_VERIFICATION = os.getenv("BING_SITE_VERIFICATION", "")
+# sitemap.xml <lastmod> for the pages whose content is not dated by anything else
+# (home, /report, legal, samples). Blog posts use their own frontmatter date, so
+# this does not cover them. Bump it by hand when public copy really changes.
+# It used to be date.today() on every URL on every request, which told crawlers the
+# whole site changed today, every day - a signal that is false often enough that it
+# stops being read at all, and takes the honest dates down with it.
+SITEMAP_LASTMOD = os.getenv("SITEMAP_LASTMOD", "2026-08-18")
+# --- IndexNow (Bing, Yandex, Seznam - NOT Google) ---
+# Push a changed URL to the index instead of waiting to be crawled. Ownership is
+# proved by serving the key back as plain text at /<key>.txt, so the key is public
+# by design - it is a handle, not a secret, and nothing is lost if it leaks.
+# Worth having here for one specific reason: Bing is what Copilot and ChatGPT
+# search read, and this product is found by someone typing a question, not a
+# keyword. Empty = the key route is not registered and scripts/indexnow_submit.py
+# refuses to run.
+INDEXNOW_KEY = os.getenv("INDEXNOW_KEY", "")
 # Dev cheat: on localhost this email is shown its login code right on the page.
 DEV_LOGIN_CODE_EMAIL = os.getenv("DEV_LOGIN_CODE_EMAIL", "spashap@gmail.com")
 

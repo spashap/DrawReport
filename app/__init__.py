@@ -76,6 +76,8 @@ def create_app() -> Flask:
             "site_name": settings.SITE_NAME,
             "site_domain": settings.SITE_DOMAIN,
             "ga_id": settings.GA_MEASUREMENT_ID,
+            "google_verification": settings.GOOGLE_SITE_VERIFICATION,
+            "bing_verification": settings.BING_SITE_VERIFICATION,
             "version": settings.APP_VERSION,
             "show_version": settings.SHOW_VERSION,
             "locale": g.get("lang_code", settings.DEFAULT_LOCALE),

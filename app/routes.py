@@ -616,18 +616,139 @@ def robots():
 
 @bp_root.get("/sitemap.xml")
 def sitemap():
+    """Every indexable URL, each with a lastmod that means something.
+
+    Two things were wrong here until V0.043 and both cost the same thing - crawl
+    attention on the only pages that can earn organic traffic:
+      1. the blog POSTS were missing (only /blog, the index, was listed), and the
+         three articles are the entire long-tail surface the site has;
+      2. lastmod was date.today() on every URL on every request, so the sitemap
+         claimed the whole site changed today, every day. A date that is always
+         now carries no information, and a crawler that learns to ignore it also
+         ignores the one occasion when a page really did change.
+    Now: posts date themselves from their frontmatter, everything else uses
+    settings.SITEMAP_LASTMOD, bumped by hand when the copy actually changes.
+    """
     base = settings.PUBLIC_BASE_URL.rstrip("/")
-    today = datetime.date.today().isoformat()
+    static_lastmod = settings.SITEMAP_LASTMOD
     items = []
     for loc in settings.LOCALES:
-        paths = [("/", "1.0"), ("/report", "0.9"), ("/blog", "0.7"),
-                 ("/legal/privacy", "0.2"), ("/legal/terms", "0.2"),
-                 ("/legal/refund", "0.2")]
-        paths += [(f"/sample/{s.token}", "0.8") for s in get_samples(loc)]
-        for path, prio in paths:
-            items.append(f"<url><loc>{base}/{loc}{path}</loc>"
-                         f"<lastmod>{today}</lastmod><priority>{prio}</priority></url>")
+        posts = get_posts(loc)
+        # The index is only as fresh as its newest article, never fresher.
+        blog_lastmod = max((p.date for p in posts), default=None)
+        blog_lastmod = blog_lastmod.isoformat() if blog_lastmod else static_lastmod
+        # (path, priority, lastmod)
+        urls = [(f"/{loc}/", "1.0", static_lastmod),
+                (f"/{loc}/report", "0.9", static_lastmod),
+                (f"/{loc}/blog", "0.7", blog_lastmod),
+                (f"/{loc}/legal/privacy", "0.2", static_lastmod),
+                (f"/{loc}/legal/terms", "0.2", static_lastmod),
+                (f"/{loc}/legal/refund", "0.2", static_lastmod)]
+        urls += [(f"/{loc}/sample/{s.token}", "0.8", static_lastmod)
+                 for s in get_samples(loc)]
+        # Articles rank on their own; the index page only links to them.
+        urls += [(f"/{loc}/blog/{p.slug}", "0.6", p.date.isoformat()) for p in posts]
+        for path, prio, lastmod in urls:
+            items.append(f"<url><loc>{base}{path}</loc>"
+                         f"<lastmod>{lastmod}</lastmod><priority>{prio}</priority></url>")
     xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
            + "\n".join(items) + "\n</urlset>")
     return Response(xml, mimetype="application/xml")
+
+
+# --- /llms.txt -------------------------------------------------------------
+# The proposed convention (llmstxt.org) for telling an AI assistant what a site is
+# and which URLs are worth reading, in markdown rather than through the rendered
+# HTML. No crawler is obliged to honour it and none of the big ones promise to,
+# so this is a cheap bet, not a channel.
+#
+# It matters more here than it would for most sites: the product is bought after
+# someone asks a question in words ("what does it mean that my child only draws in
+# black?"), and that question is increasingly asked of an assistant rather than of
+# a search box. The one line worth getting right is the boundary - educational
+# observation, not diagnosis - because an assistant that repeats it accurately
+# sends the right parent and, more importantly, does not promise the wrong one a
+# screening tool we do not sell.
+@bp_root.get("/llms.txt")
+def llms_txt():
+    base = settings.PUBLIC_BASE_URL.rstrip("/")
+    loc = settings.DEFAULT_LOCALE
+    price = min((p.get("price_usd") for p in settings.get_products().values()
+                 if p.get("enabled")), default=None)
+    price_s = f"${price:g}" if price is not None else "a flat fee"
+
+    lines = [
+        f"# {settings.SITE_NAME}",
+        "",
+        f"> {settings.SITE_NAME} turns a photo of a child's drawing into a written "
+        "report for the parent: what the child's drawing shows about their "
+        "development, interests and emerging skills, and simple activities to try "
+        "at home. It is an educational observation grounded in the developmental "
+        "stages of children's art - it is NOT a psychological or medical diagnosis, "
+        "not a screening tool, and it does not detect disorders or hidden trauma.",
+        "",
+        "Parents upload 1-3 drawings and some context about the child (age, gender, "
+        "first name). A report covering all the drawings arrives as a PDF by email, "
+        f"usually within an hour, for {price_s} regardless of how many drawings are "
+        "sent. A free single-drawing reading is available without payment.",
+        "",
+        "## Main pages",
+        "",
+        f"- [Home and free reading]({base}/{loc}/): what the product is, plus the "
+        "free reading of one drawing",
+        f"- [Full report]({base}/{loc}/report): what the paid report covers, price, "
+        "and how to order",
+        f"- [Blog]({base}/{loc}/blog): articles for parents about what children's "
+        "drawings do and do not show",
+        "",
+        "## Sample reports",
+        "",
+        "Real, unedited reports, published with permission. They are the most "
+        "accurate answer to what the product actually produces:",
+        "",
+    ]
+    for s in get_samples(loc):
+        n = s.n_drawings
+        plural = "" if n == 1 else "s"
+        lines.append(f"- [{s.name}, {s.age_display}, {n} drawing{plural}]"
+                     f"({base}/{loc}/sample/{s.token})")
+    lines += ["", "## Articles", ""]
+    for p in get_posts(loc):
+        desc = f": {p.description}" if p.description else ""
+        lines.append(f"- [{p.title}]({base}/{loc}/blog/{p.slug}){desc}")
+    lines += [
+        "",
+        "## What this is not",
+        "",
+        "- Not a diagnosis, screening, or assessment of any condition.",
+        "- Not a verdict on whether a child is developing normally. The report does "
+        "not answer that question and says so.",
+        "- Not color or symbol fortune-telling. Every observation is tied to "
+        "something visible in the drawing.",
+        "- Interpretation is offered as a hypothesis for the parent to check with "
+        "their own child, never as a fact about them.",
+        "",
+        "## Legal",
+        "",
+        f"- [Privacy]({base}/{loc}/legal/privacy) - includes how children's images "
+        "and data are handled",
+        f"- [Terms]({base}/{loc}/legal/terms)",
+        f"- [Refunds]({base}/{loc}/legal/refund)",
+        "",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+
+# --- IndexNow key file ----------------------------------------------------
+# Proof of ownership for IndexNow: the key must be readable as plain text at
+# https://<host>/<key>.txt and the body must be exactly the key. Registered only
+# when the key is set, and at its literal path rather than through a <key>.txt
+# converter, so it can never shadow robots.txt or llms.txt.
+# Submitting URLs is scripts/indexnow_submit.py - deliberately a manual script and
+# not a deploy hook: IndexNow is for pages that CHANGED, and re-announcing the whole
+# site on every deploy is the behaviour that gets a host throttled.
+if settings.INDEXNOW_KEY:
+    @bp_root.get(f"/{settings.INDEXNOW_KEY}.txt")
+    def indexnow_key():
+        return Response(settings.INDEXNOW_KEY, mimetype="text/plain")

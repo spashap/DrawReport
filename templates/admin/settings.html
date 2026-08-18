@@ -6,6 +6,8 @@
 {% elif saved == 'err' %}<p class="admin-flash admin-flash--err">Not saved — at least one product must stay enabled.</p>{% endif %}
 
 <p class="hint">GA4: {{ ga_id or 'not set (set GA_MEASUREMENT_ID in .env)' }} ·
+  Search Console: {{ 'verified via meta tag' if google_verification else 'no meta tag (fine if verified by DNS)' }} ·
+  Bing: {{ 'verified via meta tag' if bing_verification else 'no meta tag (fine if imported from Search Console)' }} ·
   Mail: {{ mail_backend }}{% if mail_backend == 'resend' %} (key {{ 'set' if resend_key else 'MISSING' }}){% endif %},
   from {{ mail_from }} · Payment: {{ payment_backend }}</p>
 <p class="hint">Edits are saved to <code>data/products.json</code> (the default is

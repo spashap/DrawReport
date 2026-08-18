@@ -88,26 +88,40 @@ release.bat --deploy-only           deploy what is already on GitHub
 `deploy.sh` re-execs itself after `git pull` (it rewrites itself mid-run otherwise — UseCase in the
 log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
 
-### 🔴 WHAT IS MISSING (verified 2026-08-17 — this is the resume list)
-**Analytics & search — nothing is measuring anything right now.**
-1. **GA4 — NOT set up.** `GA_MEASUREMENT_ID` is EMPTY on the server, so `templates/_analytics.html`
-   renders no snippet and **zero pages emit gtag**. Owner must create the GA4 property and put the
-   `G-XXXXXXXXXX` id in the server `.env`. The template is ready; this is a value, not a code change.
-2. **Google Search Console — NOT verified.** No `google-site-verification` meta tag on the site,
-   sitemap never submitted.
-3. **Bing Webmaster Tools — NOT verified.** No `msvalidate.01` meta tag. Bing matters beyond Bing:
-   it feeds Copilot and ChatGPT search. IndexNow also lives here.
-4. **There is no mechanism for verification meta tags at all** — adding GSC/Bing needs a small
-   feature (env-driven `<meta>` tags in `_base.html` + `landing.html`), not just a pasted value.
-   Note `landing.html` has its OWN `<head>` and does not extend `_base.html`, so any head change
-   must be made in BOTH files.
+### 🔴 WHAT IS MISSING (verified 2026-08-18 — this is the resume list)
+**Analytics & search — the PLUMBING is now built (V0.043); the CONSOLE ACCOUNTS are the open half.**
+The code no longer blocks any of this: every id below is an `.env` value on the server plus a
+`bash restart.sh`, never a code change. `templates/_verification.html` renders the Google and Bing
+meta tags from `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` and is included by BOTH
+`_base.html` and `landing.html` — landing has its own `<head>`, so a head change made in one file
+only is invisible on half the site. `/admin/settings` shows which of the three are set.
+1. **GA4 — property not created.** `GA_MEASUREMENT_ID` is EMPTY on the server, so
+   `templates/_analytics.html` renders no snippet and **zero pages emit gtag**. Note this does NOT
+   stop our own first-party analytics: `static/js/track.js` loads unconditionally and the admin
+   funnel keeps working with or without GA (that separation is deliberate — see the partial).
+2. **Google Search Console — not verified, sitemap never submitted.** Prefer DNS TXT on the DOMAIN
+   property if the registrar is reachable: it covers www/non-www, http/https and every subdomain,
+   where the meta tag verifies `https://drawreport.com/` alone.
+3. **Bing Webmaster Tools — not verified.** Fastest path is IMPORT from Search Console, which needs
+   no `msvalidate.01` at all. Bing matters beyond Bing: it feeds Copilot and ChatGPT search, and
+   this product is found by someone typing a question rather than a keyword.
+4. ✅ **DONE (V0.043) — the verification-tag mechanism.** See the paragraph above.
 
-**SEO gaps found while auditing (not yet fixed, deliberately left for the next session).**
-5. **The sitemap omits the blog posts.** `app/routes.py` emits `/en/blog` (the index) but none of the
-   three `/en/blog/<slug>` URLs. The articles are the only organic-search surface the site has.
-6. **`lastmod` is `today` on every URL on every request** — tells crawlers the whole site changed
-   today, every day, which is a false signal that devalues the real ones.
-7. **No `llms.txt`.**
+**SEO gaps found while auditing.**
+5. ✅ **DONE (V0.043) — the sitemap lists the blog POSTS**, not just `/blog`.
+6. ✅ **DONE (V0.043) — `lastmod` means something.** Posts date themselves from their frontmatter;
+   the blog index is as fresh as its newest post; everything else uses `settings.SITEMAP_LASTMOD`,
+   a tracked constant. **Bump `SITEMAP_LASTMOD` when public copy really changes** — that is the
+   whole point of it, and leaving it stale is the opposite failure to the `today` bug it replaced.
+7. ✅ **DONE (V0.043) — `/llms.txt`.** Generated, not static: price comes from `products.json`,
+   samples from `app/samples.py`, articles from the blog frontmatter, so it cannot drift. Its most
+   load-bearing lines are the "what this is not" ones — an assistant that repeats the boundary
+   accurately does not send us a parent who wants a screening tool.
+7b. ✅ **DONE (V0.043) — IndexNow.** `INDEXNOW_KEY` in `.env`; the key file is served at
+   `/<key>.txt` **only when the key is set**. Submit with
+   `venv\Scripts\python.exe scripts\indexnow_submit.py /en/blog/<slug>`. Deliberately MANUAL, not a
+   deploy hook: IndexNow is for pages that CHANGED, and re-announcing the whole site on every deploy
+   is what gets a host throttled. `--sitemap` is for the first run only.
 
 **Product / business.**
 8. ✅ **DONE (V0.035 + V0.036) — English pass across every copy surface.** The site (freemium

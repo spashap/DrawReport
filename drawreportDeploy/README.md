@@ -64,6 +64,9 @@ You copied the **dev** `.env`. Change these for production:
 | `PAYMENT_BACKEND` | `stub` | `paypal` once `PAYPAL_CLIENT_ID/SECRET/WEBHOOK_ID` are set (stub is fine to start) |
 | `PAYPAL_ENV` | `sandbox` | `sandbox` first, then `live` |
 | `GA_MEASUREMENT_ID` | (empty) | your `G-XXXXXXXXXX` when ready |
+| `GOOGLE_SITE_VERIFICATION` | (empty) | Search Console token, only if verifying by meta tag rather than DNS |
+| `BING_SITE_VERIFICATION` | (empty) | Bing Webmaster token, only if not importing from Search Console |
+| `SITEMAP_LASTMOD` | `2026-08-18` | bump when public copy really changes |
 
 There is no `PORT` in prod — gunicorn binds `127.0.0.1:8002` (set in the web unit).
 After editing `.env`, run `bash restart.sh`.

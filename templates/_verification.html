@@ -1,0 +1,15 @@
+{# Search-engine ownership verification tags (Google Search Console, Bing Webmaster
+   Tools). Values come from .env via config/settings.py; empty = nothing rendered,
+   so this partial is safe to include before the owner has the tokens.
+
+   INCLUDED IN TWO PLACES ON PURPOSE: landing.html has its own <head> and does not
+   extend _base.html, so a head change made in only one of them is invisible on the
+   other half of the site. Both consoles verify by fetching the HOME page, which is
+   _base.html -> home.html, but leaving /en/report unverifiable would break the
+   fallback if Google ever re-checks a different URL. #}
+{%- if google_verification %}
+<meta name="google-site-verification" content="{{ google_verification }}">
+{%- endif %}
+{%- if bing_verification %}
+<meta name="msvalidate.01" content="{{ bing_verification }}">
+{%- endif %}
