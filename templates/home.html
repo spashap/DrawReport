@@ -51,6 +51,13 @@
 
 <!-- RECOGNITION. These cards are TEXT, not a choice: the visitor recognizes their own
      situation and moves on one button. The concern is chosen ONCE, inside the wizard. -->
+{# The button names the OUTCOME and says FREE. It used to describe what the visitor has to
+   supply rather than what they get, and never mentioned the price - the single most
+   persuasive word available at this point. It has to work for BOTH the worry list above it
+   and the "or you are just curious" line directly before it, so it must not be worded
+   around a worry.
+   Jinja comment, not an HTML one: rationale like this should not be shipped to every
+   visitor. The <!-- --> block above predates this and is left as it was. #}
 <section class="section" id="situations" data-track-section="home_situations">
   <div class="wrap">
     <h2>{{ _('Most parents come to us with one of these') }}</h2>
@@ -64,7 +71,7 @@
       what the drawing says — that’s a good enough reason too.') }}</p>
     <div class="cta-zone cta-zone--center">
       <a class="btn btn--primary" href="{{ FREE }}"
-         data-goal="home_cases_cta">{{ _('Start with one drawing') }}</a>
+         data-goal="home_cases_cta">{{ _('Get a free reading of your child’s drawing') }}</a>
     </div>
   </div>
 </section>

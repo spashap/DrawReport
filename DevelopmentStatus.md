@@ -746,3 +746,19 @@ The FAQ text now appears on two indexable pages. `/en/report` carries the `FAQPa
 two most important pages. Worth a look once Search Console is verified and there is data to judge
 it by — the alternative (a shortened FAQ on the home page) trades away exactly the reassurance the
 section is there to provide.
+
+---
+
+## Session — 2026-08-18 · Home recognition-block CTA (V0.041)
+
+`"Start with one drawing"` -> **`"Get a free reading of your child's drawing"`**.
+
+Owner's call, and it was the odd button out: the home page's other two CTAs both say
+"Get a free reading", while this one described what the VISITOR has to supply rather than what
+they get, and never said free - the most persuasive word available at that point in the page.
+
+It sits under the worry list *and* under the "or maybe nothing worries you and you're just
+curious" line, so it deliberately is not worded around a worry.
+
+Minor: the rationale went in as an HTML comment first, which ships to every visitor. Moved to a
+Jinja `{# #}` comment so it stays in the source and out of the response.
