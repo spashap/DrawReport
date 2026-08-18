@@ -24,6 +24,59 @@
          reading is the front door, and a paid CTA here would compete with it on every
          page of the site. #}
       <a class="btn" href="{{ url_for('free.page') }}" data-goal="header_free">{{ _('Get a free reading') }}</a>
+      {# ≤880px the nav is hidden, and until now nothing replaced it: Full report,
+         Examples, Pricing and Blog were simply unreachable from a phone, which is the
+         device this product is designed around. This button opens them. #}
+      <button class="nav-burger" type="button" id="nav-burger" aria-expanded="false"
+              aria-controls="mobile-nav" aria-label="{{ _('Menu') }}" data-goal="header_menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
+
+  {# The mobile panel. "Sign in" moves in here too - on a 360px screen the row cannot hold
+     the logo, a text link, a CTA and a button without crowding the one thing that matters. #}
+  <nav class="mobile-nav" id="mobile-nav" hidden>
+    <div class="wrap">
+      <a href="{{ url_for('main.report_page') }}" data-goal="header_menu_report">{{ _('Full report') }}</a>
+      <a href="{{ url_for('main.report_page') }}#examples" data-goal="header_menu_examples">{{ _('Examples') }}</a>
+      <a href="{{ url_for('main.report_page') }}#pricing" data-goal="header_menu_prices">{{ _('Pricing') }}</a>
+      <a href="{{ url_for('main.blog_index') }}" data-goal="header_menu_blog">{{ _('Blog') }}</a>
+      <a href="{{ url_for('main.login') }}" data-goal="header_menu_login">{{ _('Sign in') }}</a>
+    </div>
+  </nav>
 </header>
+
+{# Lives with the header, not in _page_js.html: the header is on EVERY page, and
+   landing.html does not extend _base.html - a shared JS partial would have to be included
+   in two places and would eventually be forgotten in one of them. #}
+<script>
+(function () {
+  var b = document.getElementById("nav-burger");
+  var m = document.getElementById("mobile-nav");
+  if (!b || !m) return;
+  function set(open) {
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+    b.classList.toggle("is-open", open);
+    m.hidden = !open;
+  }
+  b.addEventListener("click", function (e) {
+    e.stopPropagation();
+    set(m.hidden);
+  });
+  // A tap anywhere else, Escape, or following a link all close it.
+  document.addEventListener("click", function (e) {
+    if (!m.hidden && !m.contains(e.target)) { set(false); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !m.hidden) { set(false); b.focus(); }
+  });
+  m.addEventListener("click", function (e) {
+    if (e.target.closest("a")) { set(false); }
+  });
+  // Resizing past the breakpoint must not leave a panel open over the desktop layout.
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 880 && !m.hidden) { set(false); }
+  });
+})();
+</script>

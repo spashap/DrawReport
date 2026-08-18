@@ -7,7 +7,7 @@
 > below; it overrides anything that contradicts it.
 
 ---
-## ✅ AS-BUILT STATUS — updated 2026-08-17, VERSION 0.033. **The site is LIVE and taking real payments.**
+## ✅ AS-BUILT STATUS — updated 2026-08-18, VERSION 0.042. **The site is LIVE and taking real payments.**
 
 Repo **https://github.com/spashap/DrawReport** (`main`). Live at **https://drawreport.com** (TLS via
 Let's Encrypt). All phases M0–M9 done, plus the Golos port (phases 1–6), the freemium funnel, the
@@ -25,6 +25,21 @@ full-deploy `release.bat`, and a native-US-English copy pass.
 | **Price** | **$29**, from the git-tracked `config/products.json`. The server has **no** `data/products.json`, so `config/` is what is live (see UseCase #23) |
 | **Locales** | `LOCALES=en` only. The i18n plumbing is real but the `en` catalog is empty and uncompiled, so `_('...')` returns the msgid — **English source text lives inline in the templates** |
 
+### Shared template partials — use them, do not re-inline (added V0.040)
+`landing.html` does NOT extend `_base.html`, so anything in the page frame exists in two places
+and WILL drift. It already did: the footer lost its legal links on every page except `/en/report`.
+These partials are the single source; include them, never copy them:
+| partial | what | used by |
+|---|---|---|
+| `_footer.html` | brand + disclaimer + Privacy/Terms/Refunds/Blog | `_base.html`, `landing.html` |
+| `_faq.html` | FAQ (copy from `app/content.py`), takes `goal_prefix` | `home.html`, `landing.html` |
+| `_samples.html` | sample carousel, takes `goal_prefix` / `soft` / `heading` | `home.html`, `landing.html` |
+| `_page_js.html` | carousel + `.reveal` IntersectionObserver | `home.html`, `landing.html` |
+| `_header.html` | header, **burger menu and its JS live here** | every page |
+**`goal_prefix` is not cosmetic**: it keeps `home_*` and `landing_*` analytics goals apart, which is
+how the admin tells the two doors of the funnel apart. `.reveal` is `opacity:0` until `_page_js.html`
+adds `.is-in` — a page using the class without that include renders an invisible section.
+
 ### Site shape (this is the part that differs from Golos)
 - **`/` (`templates/home.html`) is the FREE-first front door** — its only job is to move the visitor
   into `/free/`. This deliberately INVERTS Golos, where the free product is demoted so it cannot
@@ -34,6 +49,13 @@ full-deploy `release.bat`, and a native-US-English copy pass.
   worker unit. Caps are admin-controlled (`daily_cap`, `per_email_daily`).
 - **`/admin`** — 13 sections, ported wholesale from Golos: Tasks, Analytics, Visits, Actions, Orders,
   Clients, Coupons, Prices, Site settings, Report texts, Emails, Freemium, Beta.
+- **Samples: three REAL reports** (`app/samples.py`), covering 1 / 2 / 3 drawings — the full range
+  `/en/report` sells. All are unedited en-4.2 pipeline output from real children's drawings, with
+  assets in `pipeline/samples/` (optimized JPEGs: `/r/<token>` embeds them as base64 data URIs).
+  `sample-liam` was retired in V0.039 — its image was vector clip art, not a child's drawing — and
+  its URL **301s**; do not reinstate a sample without a real drawing behind it.
+- **Mobile nav**: `≤880px` hides the inline nav and shows a burger (V0.042). Before that there was
+  no burger at all, so Full report / Examples / Pricing / Blog were unreachable on a phone.
 - Only the **snapshot** product is enabled; `development` is disabled on purpose (Golos decision).
 
 ### Copy standard — read this before writing ANY visible English
@@ -47,7 +69,12 @@ template, `app/content.py`, `config/products.json`, `config/free_texts.py`, and
 `content/en/blog/*.md` front matter (UseCase #21). Avoid the tells that got flagged: Britishisms,
 `and a hint`-style translation artifacts, repeated not-X/never-X contrast, em-dash density,
 rule-of-three lists, and gallery vocabulary (`work`, `piece`, `the medium`, `palette`) for a
-child's drawing. Typography is curly (`’ “ ”`) and dashes are real em dashes — never a spaced
+child's drawing.
+⚠️ **This standard governs the WEBSITE, not generated report prose** (UseCase #30, owner decision).
+Inside a report, em-dash density, "not X but Y" and occasional British spelling are ACCEPTED: it is
+a personal document, nobody audits its style, and eight pages in two minutes is self-evidently
+machine-assisted. Professional and readable is the bar there. Do not spend prompt text or linter
+rules on report prose style, and do not "helpfully" re-fix it in a later session. Typography is curly (`’ “ ”`) and dashes are real em dashes — never a spaced
 ASCII hyphen. **Copy that lives in a PROMPT is different work:** it steers the model's own English,
 and if the linter matches the same phrasing it must change in both files (UseCase #24). Curly
 characters bound for the PDF need a font-subset check first (UseCase #26).
@@ -95,6 +122,13 @@ log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
 9. **Legal pages are DRAFT** and have not been reviewed by counsel (COPPA / children's data,
    refunds, PayPal, FTC "educational, not diagnosis" claims).
 10. **Blog has only 3 posts.**
+12. **`insufficient_input` does not fire on non-drawings.** en-4.2 has an explicit rule to reject an
+    image that is not a child's drawing; fed flat vector clip art it produced a full, confident
+    report praising the "confident and direct" lines of a computer-drawn graphic. Low impact (real
+    customers photograph paper), but the rejection path is weaker than the prompt claims.
+13. **The materials cap is the one en-4.2 acceptance check still failing**, off by exactly one on
+    both samples: the model spends one allowance inside a direction and one in `art_recommendations`,
+    satisfying each rule locally. A counter in `lint.py` spanning both would close it (UseCase #29).
 11. **Launch price framing undecided.** Live is a flat $29. A `$59 → $39` strike-through variant
     exists only in the local dev `data/products.json` and is NOT on the server.
 
@@ -102,8 +136,11 @@ log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
 Admin `/admin/login` (pass = `ADMIN_PASS`). The footer version badge shows on localhost and is
 hidden in production — `settings.SHOW_VERSION`, derived from `PUBLIC_BASE_URL`.
 
-**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#23) ·
-copy task `projectSpec/drawreportcopyfixtask.md` · plan `development-plan.md`.
+**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#31 —
+**#24/#27 prompt↔linter coupling, #29 unenforced rules collapse on long output, #30 the two English
+standards, #31 `` becomes a backspace when writing regexes programmatically**) · copy tasks
+`projectSpec/drawreportcopyfixtask.md`, `projectSpec/DrawReport-English-Copy-Repair-Report.md`,
+`projectSpec/TASK-paid-report-en-4.2-north-star.md` · plan `development-plan.md`.
 
 ---
 
@@ -190,6 +227,16 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
   For "the LLM must not say X": prompt + a **programmatic linter + repair call** (now a **frame-check** —
   add the safe frame, don't delete meaning — not a blunt word-ban), not prompt alone. Mirror the RU v4.0
   implementation (`pipeline/prompt.py` PROMPT_VERSION 4.0, `schema.py`, `lint.py`), adapt to English.
+  **Now at `PROMPT_VERSION = "en-4.2"`** (free prompt `1.1`). en-4.1 added the `HOW THE ENGLISH MUST
+  SOUND` section; **en-4.2 is the NORTH STAR pass** (`projectSpec/TASK-paid-report-en-4.2-north-star.md`):
+  activities must change something BETWEEN parent and child, materials capped at ONE per report,
+  skill drills banned, every activity NAMED, directions 6-7 capped at 2 sentences, and **normality
+  verdicts about the child added to ALWAYS FORBIDDEN** — a reassurance verdict is a screening claim
+  and this report does not screen. ⚠️ **Before editing either prompt read UseCases #24 and #27:**
+  hedge/attribution wording is ALSO matched by `lint.py` / `free_lint.py`, so it changes in both
+  files in ONE commit, and you assert the coupling both ways. Rules carrying product or legal weight
+  get a linter check — UseCase #29 measured a prompt-only rule holding on a short report and
+  collapsing on a long one.
 - **Child gender** only from the explicit gender field. Report name format "First L." (last initial);
   landing shows first name only.
 - **Fonts self-hosted, own subsets**; `$` glyph required; after any font/report-CSS change verify the

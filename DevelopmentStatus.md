@@ -762,3 +762,47 @@ curious" line, so it deliberately is not worded around a worry.
 
 Minor: the rationale went in as an HTML comment first, which ships to every visitor. Moved to a
 Jinja `{# #}` comment so it stays in the source and out of the response.
+
+---
+
+## Session — 2026-08-18 · Mobile burger menu (V0.042) — end of session
+
+### The bug
+Owner reported no burger on mobile. It was not hidden — **it never existed**.
+`components.css` had, inherited from Golos:
+`.site-nav { display: none; }  /* мобайл: лого + Войти + CTA, без JS-бургера */`
+("mobile: logo + Sign in + CTA, no JS burger"). So at ≤880px the nav simply vanished and nothing
+replaced it: **Full report, Examples, Pricing and Blog were unreachable from a phone** — on a
+product whose whole design premise is "a parent on a phone, late in the evening."
+
+### The fix
+- `_header.html` gains a burger button and a dropdown panel. Its JS lives **in the header partial**,
+  not in `_page_js.html`: the header is on every page and `landing.html` does not extend
+  `_base.html`, so a shared JS partial would need including twice and would eventually be forgotten
+  in one of them.
+- "Sign in" moves into the panel at ≤880px — a 360px row cannot hold logo + link + CTA + burger
+  without squeezing the CTA, which is the one thing that must stay.
+- CSS through the design system (`components.css`, tokens only, no hardcoded colors). Burger
+  animates to an X; `prefers-reduced-motion` disables it.
+- Accessibility: real `<button>` with `aria-expanded` / `aria-controls` / `aria-label`, visible
+  focus ring, and it closes on outside click, Escape (returning focus), link click, and on resize
+  past the breakpoint so a stray open panel cannot overlay the desktop layout.
+- Analytics: `header_menu` plus `header_menu_*` per link.
+- The Russian comments in that CSS block were translated while there.
+
+### Verified in a real browser, not just in markup
+Chrome would not resize below ~1000px, so the responsive behaviour was tested inside a **390px
+iframe**, which gets its own viewport and therefore evaluates the real media query:
+- 390px: burger `display:flex`, 40x40, at x=321 — **on the same row as the logo, not under it**
+  (the owner's suspicion), inline nav hidden, Sign in hidden, panel starts `hidden`.
+- Opens/closes correctly; all 5 links render; panel sits below the header row; closes on outside
+  click, Escape and link click. Confirmed on `/en/report` too, which has its own `<head>` and
+  inlined CSS.
+- 1200px on home, landing and free: burger `none`, inline nav `flex`, Sign in visible — desktop
+  untouched.
+
+### Also this session
+`CLAUDE.md` brought up to date: AS-BUILT header to V0.042, a table of the shared template partials
+and why they exist, the three real samples, the mobile-nav rule, `PROMPT_VERSION en-4.2` with the
+prompt↔linter warning, the website-vs-report English split (UseCase #30), and two new resume items
+(the `insufficient_input` gap, the materials cap).
