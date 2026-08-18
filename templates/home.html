@@ -11,9 +11,10 @@
    bottom, and nothing else competing: every second call to action on this page spends a
    visitor who was on their way into the funnel.
 
-   ⚠️ No .reveal classes here on purpose. That class is declared opacity:0 and the
-   observer that adds .is-in lives inside landing.html's inline script - on any other
-   page such a block would stay invisible forever. #}
+   .reveal IS available here: the IntersectionObserver that adds .is-in moved out of
+   landing.html into templates/_page_js.html, which this page includes at the bottom.
+   Without that include the class is opacity:0 forever - so if you ever drop the include,
+   drop the .reveal classes with it. #}
 {% block title %}{{ _('What is your child’s drawing telling you? A free reading') }} — {{ site_name }}{% endblock %}
 {% block description %}{{ _('Tell us what you noticed in your child’s drawings and get a free reading of one drawing: what’s visible, what it may mean, and what to ask your child. No credit card. No account.') }}{% endblock %}
 
@@ -116,6 +117,15 @@
   </div>
 </section>
 
+<!-- SAMPLES. The same carousel as /en/report: the strongest proof we have that the
+     reading is real and specific, and until now it lived only on the paid page - a visitor
+     who lands here and never clicks through to /en/report never saw a single example. -->
+{% with goal_prefix = "home", soft = True %}{% include "_samples.html" %}{% endwith %}
+
+<!-- FAQ. Same answers as /en/report (one source: app/content.py), so the two doors of the
+     funnel cannot drift apart on what the product actually is. -->
+{% with goal_prefix = "home" %}{% include "_faq.html" %}{% endwith %}
+
 <!-- The paid product gets ONE quiet line, below everything. It is in the nav for anyone
      looking for it; putting a price block here would compete with the free entry that
      this whole page exists to feed. -->
@@ -127,4 +137,7 @@
       <a href="{{ url_for('main.report_page') }}" data-goal="home_to_report">{{ _('See the full report →') }}</a></p>
   </div>
 </section>
+{% endblock %}
+{% block footer %}{{ super() }}
+{% include "_page_js.html" %}
 {% endblock %}

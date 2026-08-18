@@ -1,0 +1,73 @@
+{# JS shared by any page that uses a .carousel or .reveal.
+
+   Both blocks used to live only in landing.html's inline script, which is why home.html
+   carried a warning that .reveal must never be used there - the class is opacity:0 and
+   nothing would ever add .is-in. Including this partial lifts that restriction.
+
+   Landing-only behaviour (the hero "what's inside" popup, the quote rotator) deliberately
+   stays in landing.html: no other page has those elements. #}
+<script>
+// Finite carousels (examples, blog): one dot per real card, no cloning — so the
+// dot count always matches the number of samples / blog posts (Golos behaviour).
+document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
+  var c = wrap.querySelector(".carousel");
+  if (!c || !c.children.length) return;
+  var cards = Array.prototype.slice.call(c.children);
+  var n = cards.length;
+  var dotsBox = wrap.querySelector(".car-dots");
+  var arrows = wrap.querySelectorAll(".car-btn[data-car]");
+
+  function gapPx() {
+    var s = getComputedStyle(c);
+    return parseFloat(s.columnGap || s.gap) || 16;
+  }
+  var step = cards[0].offsetWidth + gapPx();
+
+  arrows.forEach(function (b) {
+    b.addEventListener("click", function () {
+      c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
+    });
+  });
+
+  // one dot per card (only when there's more than one)
+  var dots = [];
+  if (dotsBox && n > 1) {
+    for (var i = 0; i < n; i++) {
+      var d = document.createElement("button");
+      d.className = "car-dot" + (i === 0 ? " is-active" : "");
+      d.type = "button"; d.setAttribute("aria-label", "Card " + (i + 1));
+      (function (idx) { d.addEventListener("click", function () {
+        c.scrollTo({ left: idx * step, behavior: "smooth" });
+      }); })(i);
+      dotsBox.appendChild(d); dots.push(d);
+    }
+  }
+  function updateDots() {
+    if (!dots.length) return;
+    var active = Math.max(0, Math.min(n - 1, Math.round(c.scrollLeft / step)));
+    dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
+  }
+  c.addEventListener("scroll", function () { requestAnimationFrame(updateDots); }, { passive: true });
+
+  // nothing to scroll -> hide the arrows (and any lone dot)
+  if (c.scrollWidth <= c.clientWidth + 2) {
+    arrows.forEach(function (b) { b.style.display = "none"; });
+  }
+});
+
+// Reveal on scroll (IntersectionObserver; respects reduce-motion)
+(function () {
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var els = document.querySelectorAll(".reveal");
+  if (reduce || !("IntersectionObserver" in window)) {
+    els.forEach(function (el) { el.classList.add("is-in"); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>

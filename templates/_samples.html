@@ -1,0 +1,43 @@
+{# The sample-reports carousel, shared by /en/report and the home page.
+   Needs the carousel JS in _page_js.html (arrows + dots) and the reveal observer that
+   lives in the same partial - .reveal is opacity:0 until .is-in is added, so a page that
+   includes this without _page_js.html renders an invisible section.
+   goal_prefix separates the two pages in analytics. #}
+{% set gp = goal_prefix | default('landing') %}
+<section class="section{{ ' section--soft' if soft }}" id="examples" data-track-section="examples">
+  <div class="wrap">
+    <h2 class="reveal">{{ heading | default(_('See the kind of observations you’ll get')) }}</h2>
+    <div class="sub reveal reveal--d1">{{ _('Open a real example — you’ll see the drawing, the context, strengths, observations, and activities to try at home.') }}</div>
+    {% if samples %}
+    <div class="carousel-wrap reveal reveal--d1">
+    <button class="car-btn car-btn--prev" type="button" aria-label="{{ _('Previous') }}" data-car="-1" data-goal="{{ gp }}_samples_prev">&lsaquo;</button>
+    <button class="car-btn car-btn--next" type="button" aria-label="{{ _('Next') }}" data-car="1" data-goal="{{ gp }}_samples_next">&rsaquo;</button>
+    <div class="carousel">
+      {% for s in samples %}
+      <article class="report-card">
+        <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}{{ _('sample · %(n)s drawings', n=s.n_drawings) }}{% else %}{{ _('sample report') }}{% endif %}</span>
+        <div class="report-card__top">
+          <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="{{ _('Drawing') }} — {{ s.caption }}" loading="lazy" width="84" height="84"></div>
+          <div class="report-card__name">{{ s.name }}</div>
+          <div class="report-card__age">{{ s.age_display }}</div>
+        </div>
+        <div class="report-card__body">
+          {% for t in s.top_scores %}
+          <div class="score-bar">
+            <span>{{ t.title }}</span>
+            <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
+            <b>{{ t.score }}</b>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="report-card__quote">“{{ s.quote }}”</div>
+        <a class="report-card__link" href="{{ url_for('main.sample', token=s.token) }}" data-goal="{{ gp }}_sample_open_{{ s.token }}">{{ _('See the sample report') }} &rarr;</a>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="car-dots" role="tablist" aria-label="{{ _('Scroll examples') }}"></div>
+    </div>
+    {% endif %}
+    <p class="scores-note reveal">{{ _('Scores describe a particular drawing, not the child as a whole. An average score doesn’t mean something is wrong; sometimes an area just doesn’t show up much in the subject your child picked.') }}</p>
+  </div>
+</section>

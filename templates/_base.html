@@ -44,10 +44,9 @@
 {% block body %}{% endblock %}
 <footer class="foot">
   <div class="wrap">
-    {% block footer %}
-    <span class="foot__brand">{{ site_name }}</span>
-    {{ _('Educational observation, not a medical or psychological diagnosis') }} · {{ site_domain }}
-    {% endblock %}
+    {# Child templates override this block ONLY to append scripts via {{ super() }} -
+       the footer content itself is the shared partial and should not be redefined. #}
+    {% block footer %}{% include "_footer.html" %}{% endblock %}
     {% if show_version %}<span class="foot-ver">V{{ version }}</span>{% endif %}
   </div>
 </footer>

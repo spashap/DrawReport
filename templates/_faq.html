@@ -1,0 +1,16 @@
+{# FAQ, shared by /en/report and the home page.
+   goal_prefix keeps the two pages apart in analytics ("landing_faq_open" vs
+   "home_faq_open") - without it the admin cannot tell which door a question was opened on.
+   Copy lives in app/content.py, so both pages always show the same answers.
+   <details>/<summary> is native: this partial needs no JavaScript. #}
+{% set gp = goal_prefix | default('landing') %}
+<section class="section" id="faq" data-track-section="faq">
+  <div class="wrap">
+    <h2 class="reveal">{{ _('Frequently asked questions') }}</h2>
+    <div class="reveal reveal--d1">
+    {% for q, a in faq %}
+    <details class="faq"><summary data-goal="{{ gp }}_faq_open">{{ q }}</summary><p>{{ a }}</p></details>
+    {% endfor %}
+    </div>
+  </div>
+</section>

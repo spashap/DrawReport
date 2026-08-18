@@ -121,7 +121,10 @@ def index():
     other silently empties a door in the admin."""
     track_event("home_view")
     from config import free_texts
-    return render_template("home.html", concerns=free_texts.CONCERNS)
+    # samples + faq are the same data /report renders, through the same partials, so the
+    # two doors of the funnel always show the same examples and the same answers.
+    return render_template("home.html", concerns=free_texts.CONCERNS,
+                           samples=get_samples(g.lang_code), faq=get_faq(g.lang_code))
 
 
 @bp.get("/report")

@@ -1,0 +1,17 @@
+{# THE SITE FOOTER, one copy for every page.
+
+   It used to exist twice - once in _base.html and once inline in landing.html, which does
+   not extend the base - and the two drifted: the base version had lost the legal links, so
+   every page except /en/report shipped a footer with no Privacy / Terms / Refunds. Keep it
+   here and include it in both places; a footer is exactly the kind of thing nobody notices
+   is wrong until a customer needs the refund policy.
+
+   The version badge is NOT here: it is rendered by whichever template owns the <footer>
+   element, because only they know whether they are inside the base layout. #}
+<span class="foot__brand">{{ site_name }}</span>
+{{ _('Educational observation, not a medical or psychological diagnosis') }}<br>
+<a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a> &middot;
+<a href="{{ url_for('main.legal', page='terms') }}">{{ _('Terms') }}</a> &middot;
+<a href="{{ url_for('main.legal', page='refund') }}">{{ _('Refunds') }}</a> &middot;
+<a href="{{ url_for('main.blog_index') }}">{{ _('Blog') }}</a><br>
+{{ site_domain }}

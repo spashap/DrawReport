@@ -696,3 +696,53 @@ it mattered here is that we were feeding it a synthetic asset.
 directions 6 and 7 both at exactly 2 sentences / 1 activity (the caps held) · scores 9/8/9/7/8/8/8.
 Prose-style items (23 em dashes, one "not X but Y") are accepted per UseCase #30 and were not
 touched.
+
+---
+
+## Session — 2026-08-18 · One shared footer; samples + FAQ on the home page (V0.040)
+
+### 🔴 The footer existed twice and had drifted
+`landing.html` does not extend `_base.html`, so it carried its own `<footer>`. The two copies
+diverged: the base version — used by **every page except `/en/report`** — had lost the legal
+links entirely. The home page, the free wizard, the order form, the blog, the sample pages and
+the 404 all shipped a footer with **no Privacy Policy, no Terms, no Refunds link**. On a page
+where someone is deciding whether to pay $29, and on the pages where they would go looking for
+the refund policy, that is the worst place to lose them.
+
+Fixed by extraction, not by copying: `templates/_footer.html` is now the single source, included
+by both `_base.html` and `landing.html`. The version badge stays with whichever template owns the
+`<footer>` element, since only it knows if it is inside the base layout. Verified identical on all
+nine page types including the 404.
+
+### Samples and FAQ added to the home page
+Both were on `/en/report` only, which meant a visitor landing on `/` and going straight into the
+free funnel **never saw a single example of the product**. Both sections are now shared partials
+rendered on both pages:
+- `templates/_samples.html` — the sample carousel (all three reports).
+- `templates/_faq.html` — the FAQ, from the one source in `app/content.py`, so the two doors of
+  the funnel cannot drift on what the product is.
+- `templates/_page_js.html` — the carousel and reveal-observer JS, lifted out of `landing.html`.
+
+`app/routes.py index()` now passes `samples` and `faq`.
+
+**Analytics stays separable.** Both partials take a `goal_prefix`, so the home page emits
+`home_faq_open` / `home_sample_open_<token>` and the landing keeps `landing_*`. Without that the
+admin could not tell which door a sample was opened from — the same reasoning that keeps
+`home_view` and `landing_view` distinct.
+
+### The `.reveal` restriction is lifted
+`home.html` carried a standing warning that `.reveal` must never be used there: the class is
+`opacity:0` and the observer that adds `.is-in` lived inside `landing.html`'s inline script, so
+any `.reveal` block on another page would stay invisible forever. That observer now lives in
+`_page_js.html`, which home includes — the warning in the template header was rewritten to say so,
+with the condition attached (drop the include and you must drop the classes with it).
+
+Landing-only JS (the hero "what's inside" popup, the quote rotator) deliberately stayed inline in
+`landing.html`; no other page has those elements.
+
+### Flagged, not acted on
+The FAQ text now appears on two indexable pages. `/en/report` carries the `FAQPage` JSON-LD and
+`/` does not, so there is no competing structured-data claim, but it is duplicate body copy on the
+two most important pages. Worth a look once Search Console is verified and there is data to judge
+it by — the alternative (a shortened FAQ on the home page) trades away exactly the reassurance the
+section is there to provide.

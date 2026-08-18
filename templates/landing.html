@@ -111,43 +111,7 @@
 </section>
 
 <!-- 4. Examples -->
-<section class="section" id="examples" data-track-section="examples">
-  <div class="wrap">
-    <h2 class="reveal">{{ _('See the kind of observations you’ll get') }}</h2>
-    <div class="sub reveal reveal--d1">{{ _('Open a real example — you’ll see the drawing, the context, strengths, observations, and activities to try at home.') }}</div>
-    {% if samples %}
-    <div class="carousel-wrap reveal reveal--d1">
-    <button class="car-btn car-btn--prev" type="button" aria-label="{{ _('Previous') }}" data-car="-1" data-goal="landing_samples_prev">‹</button>
-    <button class="car-btn car-btn--next" type="button" aria-label="{{ _('Next') }}" data-car="1" data-goal="landing_samples_next">›</button>
-    <div class="carousel">
-      {% for s in samples %}
-      <article class="report-card">
-        <span class="badge badge--flat report-card__badge">{% if s.n_drawings > 1 %}{{ _('example · %(n)s drawings', n=s.n_drawings) }}{% else %}{{ _('sample report') }}{% endif %}</span>
-        <div class="report-card__top">
-          <div class="report-card__draw"><img src="{{ s.thumb_url }}" alt="{{ _('Drawing') }} — {{ s.caption }}" loading="lazy" width="84" height="84"></div>
-          <div class="report-card__name">{{ s.name }}</div>
-          <div class="report-card__age">{{ s.age_display }}</div>
-        </div>
-        <div class="report-card__body">
-          {% for t in s.top_scores %}
-          <div class="score-bar">
-            <span>{{ t.title }}</span>
-            <div class="score-bar__track"><i class="score-bar__fill" style="width:{{ t.score * 10 }}%"></i></div>
-            <b>{{ t.score }}</b>
-          </div>
-          {% endfor %}
-        </div>
-        <div class="report-card__quote">“{{ s.quote }}”</div>
-        <a class="report-card__link" href="{{ url_for('main.sample', token=s.token) }}" data-goal="landing_sample_open_{{ s.token }}">{{ _('See the sample report') }} &rarr;</a>
-      </article>
-      {% endfor %}
-    </div>
-    <div class="car-dots" role="tablist" aria-label="{{ _('Scroll examples') }}"></div>
-    </div>
-    {% endif %}
-    <p class="scores-note reveal">{{ _('Scores describe a particular drawing, not the child as a whole. An average score doesn’t mean something is wrong; sometimes an area just doesn’t show up much in the subject your child picked.') }}</p>
-  </div>
-</section>
+{% include "_samples.html" %}
 
 <!-- 5. No myths -->
 <section class="section section--soft" id="no-myths" data-track-section="no_myths">
@@ -283,16 +247,7 @@
 </section>
 
 <!-- 10. FAQ -->
-<section class="section" id="faq" data-track-section="faq">
-  <div class="wrap">
-    <h2 class="reveal">{{ _('Frequently asked questions') }}</h2>
-    <div class="reveal reveal--d1">
-    {% for q, a in faq %}
-    <details class="faq"><summary data-goal="landing_faq_open">{{ q }}</summary><p>{{ a }}</p></details>
-    {% endfor %}
-    </div>
-  </div>
-</section>
+{% include "_faq.html" %}
 
 {% if blog_posts %}
 <!-- 11. Blog -->
@@ -323,18 +278,16 @@
 
 <footer class="foot">
   <div class="wrap">
-    <span class="foot__brand">{{ site_name }}</span>
-    {{ _('Educational observation, not a medical or psychological diagnosis') }}<br>
-    <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a> ·
-    <a href="{{ url_for('main.legal', page='terms') }}">{{ _('Terms') }}</a> ·
-    <a href="{{ url_for('main.legal', page='refund') }}">{{ _('Refunds') }}</a> ·
-    <a href="{{ url_for('main.blog_index') }}">{{ _('Blog') }}</a><br>
-    {{ site_domain }}
+    {% include "_footer.html" %}
     {% if show_version %}<span class="foot-ver">V{{ version }}</span>{% endif %}
   </div>
 </footer>
 
+{% include "_page_js.html" %}
+
 <script>
+// Landing-only behaviour. The carousel and reveal observer are in _page_js.html,
+// because the home page uses them too.
 // "What's inside" popup in the hero: click toggles; click outside closes (mobile - no hover)
 document.querySelectorAll(".cta-info").forEach(function (t) {
   function toggle(e) { e.preventDefault(); e.stopPropagation(); t.closest(".cta-zone").classList.toggle("is-open"); }
@@ -346,54 +299,6 @@ document.querySelectorAll(".cta-pop").forEach(function (p) {
 });
 document.addEventListener("click", function () {
   document.querySelectorAll(".cta-zone.is-open").forEach(function (z) { z.classList.remove("is-open"); });
-});
-
-// Finite carousels (examples, blog): one dot per real card, no cloning — so the
-// dot count always matches the number of samples / blog posts (Golos behaviour).
-document.querySelectorAll(".carousel-wrap").forEach(function (wrap) {
-  var c = wrap.querySelector(".carousel");
-  if (!c || !c.children.length) return;
-  var cards = Array.prototype.slice.call(c.children);
-  var n = cards.length;
-  var dotsBox = wrap.querySelector(".car-dots");
-  var arrows = wrap.querySelectorAll(".car-btn[data-car]");
-
-  function gapPx() {
-    var s = getComputedStyle(c);
-    return parseFloat(s.columnGap || s.gap) || 16;
-  }
-  var step = cards[0].offsetWidth + gapPx();
-
-  arrows.forEach(function (b) {
-    b.addEventListener("click", function () {
-      c.scrollBy({ left: step * (+b.dataset.car), behavior: "smooth" });
-    });
-  });
-
-  // one dot per card (only when there's more than one)
-  var dots = [];
-  if (dotsBox && n > 1) {
-    for (var i = 0; i < n; i++) {
-      var d = document.createElement("button");
-      d.className = "car-dot" + (i === 0 ? " is-active" : "");
-      d.type = "button"; d.setAttribute("aria-label", "Card " + (i + 1));
-      (function (idx) { d.addEventListener("click", function () {
-        c.scrollTo({ left: idx * step, behavior: "smooth" });
-      }); })(i);
-      dotsBox.appendChild(d); dots.push(d);
-    }
-  }
-  function updateDots() {
-    if (!dots.length) return;
-    var active = Math.max(0, Math.min(n - 1, Math.round(c.scrollLeft / step)));
-    dots.forEach(function (dd, k) { dd.classList.toggle("is-active", k === active); });
-  }
-  c.addEventListener("scroll", function () { requestAnimationFrame(updateDots); }, { passive: true });
-
-  // nothing to scroll -> hide the arrows (and any lone dot)
-  if (c.scrollWidth <= c.clientWidth + 2) {
-    arrows.forEach(function (b) { b.style.display = "none"; });
-  }
 });
 
 // Review rotator: one quote, autoplay + arrows + dots, pause on hover
@@ -421,21 +326,6 @@ document.querySelectorAll(".quote-rotator").forEach(function (r) {
   play();
 });
 
-// Reveal on scroll (IntersectionObserver; respects reduce-motion)
-(function () {
-  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var els = document.querySelectorAll(".reveal");
-  if (reduce || !("IntersectionObserver" in window)) {
-    els.forEach(function (el) { el.classList.add("is-in"); });
-    return;
-  }
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
-    });
-  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
-  els.forEach(function (el) { io.observe(el); });
-})();
 </script>
 </body>
 </html>
