@@ -806,3 +806,60 @@ iframe**, which gets its own viewport and therefore evaluates the real media que
 and why they exist, the three real samples, the mobile-nav rule, `PROMPT_VERSION en-4.2` with the
 prompt↔linter warning, the website-vs-report English split (UseCase #30), and two new resume items
 (the `insufficient_input` gap, the materials cap).
+
+---
+
+## V0.043 — Analytics and search consoles connected; the SEO surface fixed (2026-08-18)
+
+Before this session nothing measured anything: no GA4 tag, no verified search console, a sitemap
+that omitted the articles and lied about `lastmod`. All of that is now closed except two free
+accounts the owner has to open personally.
+
+### Code (deployed as V0.043)
+- **`templates/_verification.html`** — env-driven `google-site-verification` / `msvalidate.01` tags,
+  included by **both** `_base.html` and `landing.html`. That duplication is the whole point:
+  landing has its own `<head>`, so a head change made in one file is invisible on half the site.
+  Empty value renders nothing, so the partial was safe to ship before any token existed.
+- **`sitemap.xml` rewritten.** It now lists the three blog POSTS (previously only `/blog`, the
+  index — the articles are the only long-tail surface the site has), and `lastmod` carries
+  information: posts date themselves from their frontmatter, the blog index is as fresh as its
+  newest post, everything else uses the tracked `settings.SITEMAP_LASTMOD`. The old code emitted
+  `date.today()` on every URL on every request, which told crawlers the whole site changed today,
+  every day — a signal that stops being read at all, taking the honest dates with it.
+- **`/llms.txt`** — generated, not static: price from `products.json`, samples from `app/samples.py`,
+  articles from the blog frontmatter, so it cannot drift from the site. The "what this is not"
+  section is the load-bearing part, not the link list.
+- **IndexNow** — `INDEXNOW_KEY` + a key file served at `/<key>.txt` only when the key is set (bound
+  at its literal path, so it can never shadow `robots.txt` or `llms.txt`), plus
+  `scripts/indexnow_submit.py`. The script reads OUR OWN sitemap route rather than re-deriving the
+  URL list, so the two cannot disagree about what is indexable, and it refuses to run when
+  `PUBLIC_BASE_URL` is localhost.
+- `/admin/settings` now reports which of GA4 / Google / Bing are configured.
+
+### Connected in the consoles (values live in the server `.env` ONLY, not in git)
+- **GA4** `G-FBQFBZNBRC` — property `DrawReport` under account `Pasha_webAnalytics`. The property
+  and stream already existed and had simply never received a hit, because `GA_MEASUREMENT_ID` was
+  empty on the server. Set it, restarted, confirmed the tag on `/en/` AND `/en/report` (two heads),
+  confirmed it is absent on `/admin`, then confirmed a live realtime hit.
+- **Google Search Console** — already verified as a **DNS domain property**, which is why
+  `GOOGLE_SITE_VERIFICATION` is empty and should STAY empty: the domain property covers www/non-www,
+  http/https and every subdomain, where the meta tag would verify one URL prefix. Sitemap submitted:
+  Success, 12 URLs. **GA4 ↔ GSC link created**, so organic query data reaches GA4.
+- **Bing Webmaster Tools** — added and verified by META TAG. The offered "import from Search
+  Console" route was REJECTED on purpose: it needs a Google OAuth grant that hands Microsoft read
+  access to every GSC property on the account (cosmyday, belgradebest, fidgetgo, shepotzvezd),
+  where the tag is scoped to this site alone. Sitemap submitted. Bing re-checks the tag, so removing
+  it un-verifies the site.
+- **IndexNow** — 12 URLs submitted, HTTP 202 (accepted, key pending verification — normal on a
+  first submission).
+
+### Left for the owner (both free, both need an account only they can create)
+- **Ahrefs Webmaster Tools** — the best free tool after GSC: crawl-based site audit plus our own
+  backlink profile. Verifies through the Search Console link that now exists.
+- **UptimeRobot** — `release.bat` health-checks at deploy time and nothing watches the site in
+  between.
+
+### Gotcha worth remembering
+The Bash tool's heredoc mangles backslashes, so a Python patch script written that way turns a
+source-literal `\n` into a real newline and the match silently fails (this is UseCase #31 wearing a
+different hat). Build such sequences with `chr(92)` instead of typing them.

@@ -63,10 +63,11 @@ You copied the **dev** `.env`. Change these for production:
 | `MAIL_BACKEND` | `outbox` | `resend` once `RESEND_API_KEY` + `MAIL_FROM_EMAIL` are set (outbox is fine to start) |
 | `PAYMENT_BACKEND` | `stub` | `paypal` once `PAYPAL_CLIENT_ID/SECRET/WEBHOOK_ID` are set (stub is fine to start) |
 | `PAYPAL_ENV` | `sandbox` | `sandbox` first, then `live` |
-| `GA_MEASUREMENT_ID` | (empty) | your `G-XXXXXXXXXX` when ready |
-| `GOOGLE_SITE_VERIFICATION` | (empty) | Search Console token, only if verifying by meta tag rather than DNS |
-| `BING_SITE_VERIFICATION` | (empty) | Bing Webmaster token, only if not importing from Search Console |
+| `GA_MEASUREMENT_ID` | (empty) | **`G-FBQFBZNBRC`** — live since 2026-08-18 (property `DrawReport`) |
+| `GOOGLE_SITE_VERIFICATION` | (empty) | **leave empty** — GSC is verified as a DNS *domain* property, which is stronger. Only fill this if that DNS record is ever lost |
+| `BING_SITE_VERIFICATION` | (empty) | **`CDDA90767439BEC62E04291DE51BA231`** — live since 2026-08-18. Bing RE-CHECKS the tag: removing it un-verifies the site |
 | `SITEMAP_LASTMOD` | `2026-08-18` | bump when public copy really changes |
+| `INDEXNOW_KEY` | (empty) | **`f11f35352b3f9c354e08d969e6894bd8`** — served back at `/<key>.txt` as proof of ownership, so it is public by design |
 
 There is no `PORT` in prod — gunicorn binds `127.0.0.1:8002` (set in the web unit).
 After editing `.env`, run `bash restart.sh`.

@@ -89,23 +89,28 @@ release.bat --deploy-only           deploy what is already on GitHub
 log). Details in `DEPLOY.md` + `drawreportDeploy/README.md`.
 
 ### 🔴 WHAT IS MISSING (verified 2026-08-18 — this is the resume list)
-**Analytics & search — the PLUMBING is now built (V0.043); the CONSOLE ACCOUNTS are the open half.**
-The code no longer blocks any of this: every id below is an `.env` value on the server plus a
-`bash restart.sh`, never a code change. `templates/_verification.html` renders the Google and Bing
-meta tags from `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` and is included by BOTH
-`_base.html` and `landing.html` — landing has its own `<head>`, so a head change made in one file
-only is invisible on half the site. `/admin/settings` shows which of the three are set.
-1. **GA4 — property not created.** `GA_MEASUREMENT_ID` is EMPTY on the server, so
-   `templates/_analytics.html` renders no snippet and **zero pages emit gtag**. Note this does NOT
-   stop our own first-party analytics: `static/js/track.js` loads unconditionally and the admin
-   funnel keeps working with or without GA (that separation is deliberate — see the partial).
-2. **Google Search Console — not verified, sitemap never submitted.** Prefer DNS TXT on the DOMAIN
-   property if the registrar is reachable: it covers www/non-www, http/https and every subdomain,
-   where the meta tag verifies `https://drawreport.com/` alone.
-3. **Bing Webmaster Tools — not verified.** Fastest path is IMPORT from Search Console, which needs
-   no `msvalidate.01` at all. Bing matters beyond Bing: it feeds Copilot and ChatGPT search, and
-   this product is found by someone typing a question rather than a keyword.
-4. ✅ **DONE (V0.043) — the verification-tag mechanism.** See the paragraph above.
+**Analytics & search — CONNECTED on 2026-08-18 (V0.043). Values live in the server `.env` only.**
+The three ids below are NOT in git. They are public values (all three are readable in the page
+source or in a DNS record), but if the server is ever rebuilt they must be put back or measurement
+silently stops — `templates/_analytics.html` and `_verification.html` both render nothing when their
+value is empty, and nothing anywhere warns you. `/admin/settings` shows which of the three are set;
+that line is the fastest check. See `drawreportDeploy/README.md` for the values.
+1. ✅ **GA4 — LIVE.** Property `DrawReport` (account `Pasha_webAnalytics`), stream
+   `https://drawreport.com`, `GA_MEASUREMENT_ID=G-FBQFBZNBRC`. Verified receiving realtime hits.
+   Our own first-party analytics is INDEPENDENT of this: `static/js/track.js` loads unconditionally
+   and the admin funnel works with or without GA (deliberate — see `_analytics.html`).
+2. ✅ **Google Search Console — verified, sitemap submitted.** DOMAIN property `drawreport.com`
+   (DNS TXT, so it covers www/non-www, http/https and every subdomain — better than the meta tag,
+   and it is why `GOOGLE_SITE_VERIFICATION` is still empty and should stay that way). Sitemap
+   accepted: Success, 12 URLs. GA4 ↔ Search Console link created, so organic query data reaches GA4.
+3. ✅ **Bing Webmaster Tools — verified, sitemap submitted.** Verified by META TAG, not by importing
+   from Search Console: the import needs a Google OAuth grant that hands Microsoft read access to
+   EVERY GSC property on the account (cosmyday, belgradebest, fidgetgo, shepotzvezd), where the tag
+   is scoped to this site alone. `BING_SITE_VERIFICATION=CDDA90767439BEC62E04291DE51BA231`.
+   ⚠️ Bing re-checks the tag: removing it un-verifies the site.
+4. ✅ **DONE (V0.043) — the verification-tag mechanism.** `templates/_verification.html`, included by
+   BOTH `_base.html` and `landing.html` — landing has its own `<head>`, so a head change made in one
+   file only is invisible on half the site.
 
 **SEO gaps found while auditing.**
 5. ✅ **DONE (V0.043) — the sitemap lists the blog POSTS**, not just `/blog`.
@@ -117,11 +122,18 @@ only is invisible on half the site. `/admin/settings` shows which of the three a
    samples from `app/samples.py`, articles from the blog frontmatter, so it cannot drift. Its most
    load-bearing lines are the "what this is not" ones — an assistant that repeats the boundary
    accurately does not send us a parent who wants a screening tool.
-7b. ✅ **DONE (V0.043) — IndexNow.** `INDEXNOW_KEY` in `.env`; the key file is served at
-   `/<key>.txt` **only when the key is set**. Submit with
-   `venv\Scripts\python.exe scripts\indexnow_submit.py /en/blog/<slug>`. Deliberately MANUAL, not a
-   deploy hook: IndexNow is for pages that CHANGED, and re-announcing the whole site on every deploy
-   is what gets a host throttled. `--sitemap` is for the first run only.
+7b. ✅ **DONE (V0.043) — IndexNow, key verified and 12 URLs submitted.** `INDEXNOW_KEY` in the server
+   `.env`; the key file is served at `/<key>.txt` **only when the key is set**. Submit with
+   `venv/bin/python scripts/indexnow_submit.py /en/blog/<slug>` **on the server** — the script
+   refuses to run when `PUBLIC_BASE_URL` is localhost, so it cannot be driven from a dev box.
+   Deliberately MANUAL, not a deploy hook: IndexNow is for pages that CHANGED, and re-announcing the
+   whole site on every deploy is what gets a host throttled. `--sitemap` was the one first run.
+7c. 🔴 **STILL OPEN — Ahrefs Webmaster Tools and UptimeRobot.** Both are free and both need an
+   ACCOUNT the owner must create personally. AWT (`ahrefs.com/webmaster-tools`) is the best free
+   thing after GSC: a crawl-based site audit plus our own backlink profile, and it verifies through
+   the SAME Search Console link that already exists. UptimeRobot matters because `release.bat` only
+   health-checks at deploy time — nothing watches the site in between, and downtime during a crawl
+   is read as a site-quality signal, not as bad luck.
 
 **Product / business.**
 8. ✅ **DONE (V0.035 + V0.036) — English pass across every copy surface.** The site (freemium
