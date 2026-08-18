@@ -256,3 +256,46 @@ is real output of `pipeline/prompt.py`, so every tell in it is traceable evidenc
 Four defects, four prompt lines, none of them a matter of taste. **Grep the generated artifact for
 the phrase, then grep the prompt for its source; if the source is there, fix the prompt — the copy
 edit is only cleanup of the samples already shipped.**
+
+## #29 · A prompt rule with nothing enforcing it holds on short output and collapses on long output
+Measured, not theorised. Two reports generated the same day from the same prompt (en-4.1), which
+says "at most two dashes in the whole report": **1 em dash in the 1,538-word report, 58 in the
+3,465-word one.** Same rule, same model, same hour. The dashes themselves do not matter - report
+prose style is accepted by owner decision (see #30) - but the pattern generalises to every rule in
+the prompt, including the ones that carry product and legal weight.
+en-4.2 acted on it: skill drills and normality verdicts moved into `pipeline/lint.py` as mechanical
+checks feeding the existing repair pass, and both immediately caught real defects in already-shipped
+output (`bead-stringing` / `playdough` / `dot-to-dot` / `mazes` in direction 7 of both reports, and
+`"a normal and healthy part of..."` in Alisia's about_child).
+The rules left in prompt text alone behaved exactly as this use case predicts - they held partially:
+activities named 100% on the short report and 75% on the long one; the materials cap held inside a
+direction and inside art_recommendations *separately*, so both reports spent it twice; the
+NO RECYCLING rule did not take at all (`hair` 16 -> 22 occurrences).
+**Rule of thumb: if you would be unhappy to find a rule violated in a shipped report, it needs a
+check in `lint.py`. If you would merely wince, prompt text is enough.**
+
+## #30 · Two different English standards, and they are not in conflict
+The strict native-US-English standard (UseCase #20-#21, V0.032/V0.035) applies to the **website
+front end** - pages that are crawled, scanned, compared with competitors, and read by someone
+deciding whether to trust us with $29.
+It does **not** apply to **generated report prose**. Owner decision, and the reasoning is sound: a
+report is a personal document, nobody audits its style, and eight pages produced in two minutes is
+self-evidently machine-assisted. Em-dash density, "not X, but Y", occasional British spelling and
+sentence-shape repetition are all ACCEPTED inside a report. Professional and readable is the bar.
+Do not spend prompt text, linter rules, or review effort on report prose style - and do not
+"helpfully" re-fix it in a later session. What the report is judged on is WHAT IT TALKS ABOUT: the
+child rather than the drawing. Related: [[#29]], [[#31]].
+
+## #31 · `` written through a non-raw Python string becomes a BACKSPACE, silently
+Hit while adding regex rules to `pipeline/lint.py` from a generator script. In a non-raw Python
+string `"\s"` is an unknown escape - Python keeps it as backslash-s and emits a SyntaxWarning - but
+`""` is a KNOWN escape and becomes ``, with no warning at all. The rule tables therefore
+landed in the file as `r"origami|..."`, which reads correctly in an editor because the
+control character is invisible, compiles fine, imports fine, and matches NOTHING.
+Every new rule silently did nothing; the test suite is the only reason it surfaced.
+**Two habits that catch it:** write generated regexes with a raw string in the generator too, and
+after any programmatic edit run
+`[hex(ord(c)) for c in open(f, encoding="utf-8").read() if ord(c) < 32 and c not in "	
+"]`
+- it should be empty. The repair is a one-liner: replace `` with the two characters ``.
+And never trust "it compiled" as evidence that a regex edit worked - assert on a match.

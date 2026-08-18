@@ -13,6 +13,11 @@
 <link rel="stylesheet" href="{{ static }}/css/tokens.css">
 {% if site_header %}<link rel="stylesheet" href="{{ static }}/css/components.css">{% endif %}
 <link rel="stylesheet" href="{{ static }}/css/report.css">
+{# The PDF running footer is LOCALIZED, so its text comes from REPORT_STRINGS and is
+   emitted here rather than sitting in report.css. The @page rule in the stylesheet keeps
+   the font/size/color; only the content string lives in the template. Overriding it here
+   (after the stylesheet) is what makes the cascade land on the localized value. #}
+<style>@page { @bottom-center { content: "{{ s.page_footer }}" counter(page); } }</style>
 </head>
 <body class="report">
 {% if site_header %}{% include "_header.html" %}{% endif %}

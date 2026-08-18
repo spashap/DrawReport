@@ -525,3 +525,81 @@ phrase the regex did know — which is part of why that phrasing became ubiquito
 distinguishable in the DB. Worth reading one fresh en-4.1 report end to end against the
 `HOW THE ENGLISH MUST SOUND` list — especially whether the seven observations now vary in shape,
 which is the rule with the least prior art behind it.
+
+---
+
+## Session — 2026-08-18 · Paid report **en-4.2**: the north star (V0.037)
+
+Implemented `projectSpec/TASK-paid-report-en-4.2-north-star.md` in full, then regenerated both
+samples as **V2** and measured against the task's own acceptance table.
+**This is about WHAT the report talks about, not how the English sounds** (UseCase #30).
+
+### 🔴 Ship-blocker fixed: every English PDF carried a Russian footer
+`static/css/report.css` hardcoded
+`content: "Голос рисунка · образовательное наблюдение, не диагностика · стр. "` in
+`@page { @bottom-center }` — inherited from the Golos sibling. It printed on **9/9 and 11/11 pages**
+of the two sample PDFs, and on every report any customer has ever received.
+Fixed the i18n-correct way (UseCase #6): the string is now `REPORT_STRINGS["en"]["page_footer"]` in
+`pipeline/render.py`, emitted from `templates/report.html` as an inline `@page` override; the CSS
+keeps only the typography. The file's 15 Russian comment blocks were translated too — `report.css`
+is now Cyrillic-free. Verified: **0 Cyrillic characters in either V2 PDF.**
+
+### Prompt en-4.1 -> en-4.2 (no zone, score band, frame condition or disclaimer touched)
+Activities must now change something BETWEEN parent and child; materials capped at one for the
+whole report; skill drills banned; every activity NAMED like a game; directions 6-7 hard-capped at
+2 sentences / 1 activity; NO RECYCLING (a fact may carry at most two directions) and LENGTH FOLLOWS
+THE MATERIAL. `ALWAYS FORBIDDEN` gained **normality verdicts about this child** — the
+highest-consequence line, because a false all-clear is the failure that could actually harm.
+Per §3.7 the attribution wordings were deliberately left alone.
+
+### `pipeline/lint.py` — enforcement, exactly the two sets the task scoped
+`DRILL_BANNED` (activities only) and `NORMALITY_VERDICT` (every prose field, no allow-list amnesty).
+Both immediately caught real defects in the **already-shipped V1 reports**: bead-stringing /
+playdough / dot-to-dot / mazes in direction 7 of both, and `"a normal and healthy part of…"` in
+Alisia's about_child. No style checks added, per §0.
+⚠️ While writing those tables a generator script turned every `` into a literal backspace — the
+rules compiled, imported, and matched nothing. See **UseCase #31**; the test suite is the only
+reason it surfaced.
+
+### Acceptance — V2 vs V1, measured
+
+| # | Check | Alisia V2 | Dilan V2 |
+|---|---|---|---|
+| 1 | Cyrillic in PDF | **0** PASS | **0** PASS |
+| 3 | Fine-motor drills | **0** PASS (was 1) | **0** PASS (was 1) |
+| 4 | Activities named | **100%** PASS (was 0%) | 75% MISS (was 0%) |
+| 6 | Dir 6/7 caps | **PASS** (2 sent/1 act, 2 sent/0 act) | MISS (dir6 = 3 sentences) |
+| 8 | Normality verdicts | **0** PASS (was 1) | **0** PASS |
+| 9 | Linter violations | **0** PASS | **0** PASS |
+| 11 | Embedded fonts | Caveat/Inter/Rubik only PASS | PASS |
+| 2 | Material suggestions (cap 1) | 2 MISS | 2 MISS |
+| 5 | Fact used in >2 directions | MISS (`hair` 16 -> 22) | MISS |
+| 7 | Alisia total words | 2,146 (target 1,700-2,100; was 2,870) | n/a |
+
+Activities per report dropped 12 -> 7 (Alisia) and 14 -> 12 (Dilan); direction-7 activities are
+now shared games, and Alisia's direction 7 honestly has none.
+
+**The judgment check passes.** Alisia's report is now about Alisia: technique and fine motor are
+two sentences each, and everything else is her — *"she has a picture in her mind of what beautiful
+looks like, and she's patient enough to get there."* Activities read as named family games
+("Who is she today?", "Heavy and light", "Mirror drawing") rather than homework.
+
+### The four residual misses, and why they are all the same miss
+Every failing check is a **prompt-only rule**, and every passing one has a linter behind it or is
+mechanical. That is UseCase #29 restated, and it reproduced exactly:
+- **Materials cap (both reports, off by exactly one).** Systematic, not random: the model spends
+  one allowance inside a direction and one in `art_recommendations`, satisfying each rule locally.
+  §3.2 anticipates this in words ("only if you have not already spent the report's single materials
+  suggestion inside a direction") and the words were not enough.
+- **NO RECYCLING did not take at all** — `hair` went 16 -> 22.
+- Naming and the dir-6 sentence cap held on the short report, slipped on the long one.
+
+**Recommendation (NOT done — §4.2 scoped the linter to two rule sets):** a materials counter in
+`lint.py` that counts across directions *and* recommendations and raises one violation past the
+first. It is the only residual miss with a clean mechanical definition, it is an explicit
+acceptance number, and it would make both reports pass. Owner's call.
+
+### Out of scope, flagged as §7 requires
+Technique sections are now genuinely thin (2 sentences). `/en/report` and `config/products.json`
+still read true — they promise "7 areas, each with a score and a plain-language explanation",
+which remains accurate — so no marketing copy was edited.

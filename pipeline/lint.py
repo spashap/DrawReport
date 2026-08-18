@@ -29,6 +29,47 @@ import re
 from config import settings
 
 # --- A. ALWAYS forbidden (the frame does not help) ------------------------------
+# --- en-4.2 -----------------------------------------------------------------------
+# Two rule sets with PRODUCT and LEGAL weight, enforced mechanically rather than by prompt
+# text alone. The reason is measured: en-4.1's prose rules held on a short report and
+# collapsed on a long one (1 em dash vs 58, same prompt, same day - UseCasesData #29). Style
+# is NOT policed here by owner decision; only these two are, because they carry real weight.
+
+# A. Skill drills. The mother bought an understanding of her child, not an occupational-
+#    therapy handout. Scanned over activities / art_recommendations only.
+DRILL_BANNED = {
+    "en": [
+        (r"\bdrills?\b|\bdot[-\s]?to[-\s]?dot\b|\bbead[-\s]?stringing\b|\bstringing\s+beads\b",
+         "a skill drill is not what this report is for; replace it with something the parent "
+         "and child DO together"),
+        (r"\borigami\b|\bplay[-\s]?dough\b|\bplasticine\b|\btracing\b|\bmazes?\b",
+         "a fine-motor exercise belongs in an occupational-therapy handout, not here; make it "
+         "a shared activity instead"),
+        (r"\bhandwriting\s+practice\b|\bgraphic\s+dictation\b|\bpenmanship\b",
+         "handwriting practice is off the point of this report; replace it"),
+    ],
+}
+
+# B. Normality verdicts ABOUT THIS CHILD. A reassurance verdict is a screening claim, and
+#    this report does not screen - the same sentence shape that is benign about earrings
+#    becomes a false all-clear the moment the subject is a worry. HARD: delete, do not frame.
+#    A general fact about children ("at four, a face with no body is common") is untouched.
+NORMALITY_VERDICT = {
+    "en": [
+        (r"\bnormal\s+and\s+healthy\b",
+         "a normality verdict about THIS child is a screening claim; state the general "
+         "developmental fact instead, or DELETE"),
+        (r"\bdeveloping\s+normally\b|\bdevelopment\s+is\s+normal\b",
+         "a normality verdict about THIS child is a screening claim; DELETE"),
+        (r"\bwithin\s+the\s+normal\s+range\b|\bperfectly\s+normal\b",
+         "a normality verdict about THIS child is a screening claim; DELETE"),
+        (r"\bnothing\s+(?:here\s+)?to\s+worry\s+about\b|\bnothing\s+here\s+is\s+a\s+concern\b",
+         "reassurance about THIS child is a conclusion this report may not draw; DELETE"),
+        (r"\bno\s+cause\s+for\s+concern\b|\bno\s+reason\s+for\s+concern\b",
+         "reassurance about THIS child is a conclusion this report may not draw; DELETE"),
+    ],
+}
+
 HARD_BANNED = {
     "en": [
         # brand-banned verbatim
@@ -163,6 +204,19 @@ def _hard_scan(text: str, where: str, loc: str) -> list[dict]:
     return hits
 
 
+def _scan_rules(text: str, rules: list, where: str, loc: str) -> list[dict]:
+    """Scan one field against an explicit rule list. Unlike _hard_scan there is NO
+    ALLOWED_CONTEXTS amnesty: "not a diagnosis" sitting nearby does not make a drill or a
+    normality verdict acceptable - it is exactly the sentence that would carry one."""
+    hits = []
+    for pattern, why in rules:
+        for m in re.finditer(pattern, text, re.IGNORECASE):
+            s, e = max(0, m.start() - 80), min(len(text), m.end() + 80)
+            hits.append({"where": where, "match": m.group(0), "why": why,
+                         "context": text[s:e]})
+    return hits
+
+
 def _frame_scan(text: str, where: str, loc: str) -> list[dict]:
     """Sensitive terms without a safe frame nearby."""
     hits = []
@@ -225,4 +279,39 @@ def find_violations(report_data: dict, locale: str | None = None) -> list[dict]:
             hits.extend(_hard_scan(str(r), f"{field}[{i}]", loc))
     for i, dd in enumerate(report_data.get("development_directions") or []):
         hits.extend(_hard_scan(str(dd.get("text", "")), f"development_directions[{i}]", loc))
+
+    # --- en-4.2: drills, scanned wherever an ACTIVITY can be proposed ---
+    for i, d in enumerate(report_data.get("dimensions") or []):
+        for j, a in enumerate(d.get("activities") or []):
+            hits.extend(_scan_rules(str(a), DRILL_BANNED[loc],
+                                    f"dimensions[{i}].activities[{j}]", loc))
+    for field in ("art_recommendations", "understanding_recommendations"):
+        for i, r in enumerate(report_data.get(field) or []):
+            hits.extend(_scan_rules(str(r), DRILL_BANNED[loc], f"{field}[{i}]", loc))
+
+    # --- en-4.2: normality verdicts, scanned over EVERY field the parent reads ---
+    for where, text in _all_prose(report_data):
+        hits.extend(_scan_rules(text, NORMALITY_VERDICT[loc], where, loc))
     return hits
+
+
+def _all_prose(report_data: dict):
+    """Every visitor-facing prose field, flat. Normality verdicts are forbidden in all of
+    them - a false all-clear does not become safe by moving to the conclusion."""
+    for f in ("introduction", "about_child", "conclusion", "context_summary"):
+        if report_data.get(f):
+            yield f, str(report_data[f])
+    for i, d in enumerate(report_data.get("dimensions") or []):
+        for f in ("observation", "research_note"):
+            if d.get(f):
+                yield f"dimensions[{i}].{f}", str(d[f])
+        for j, a in enumerate(d.get("activities") or []):
+            yield f"dimensions[{i}].activities[{j}]", str(a)
+    for field in ("understanding_recommendations", "art_recommendations"):
+        for i, r in enumerate(report_data.get(field) or []):
+            yield f"{field}[{i}]", str(r)
+    for i, dd in enumerate(report_data.get("development_directions") or []):
+        yield f"development_directions[{i}]", str(dd.get("text", ""))
+    for i, sp in enumerate(report_data.get("specialists") or []):
+        if sp.get("reason"):
+            yield f"specialists[{i}].reason", str(sp["reason"])

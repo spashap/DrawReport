@@ -85,6 +85,11 @@ REPORT_STRINGS = {
                            "development."),
         "footer": ("{site} ({domain}) · Report generated {date} · Educational "
                    "observation, not a medical or psychological diagnosis"),
+        # The RUNNING FOOTER printed on every PDF page by @page { @bottom-center }.
+        # It lives here, not in report.css, because content differs by locale while the
+        # layout does not (UseCase #6). It was hardcoded in Russian in the CSS - inherited
+        # from the Golos sibling - and shipped on every page of every English report.
+        "page_footer": "DrawReport · educational observation, not a diagnosis · p. ",
     },
 }
 
