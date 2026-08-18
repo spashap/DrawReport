@@ -43,17 +43,25 @@ _SAMPLE_DEFS = {
         dict(token="sample-alisia", report_path="pipeline/samples/alisia_report.json",
              drawings=["pipeline/samples/alisia_drawing.jpg"],
              caption="Alisia, age 4", hero=True),
+        dict(token="sample-maya", report_path="pipeline/samples/maya_report.json",
+             drawings=["pipeline/samples/maya_drawing_1.jpg",
+                       "pipeline/samples/maya_drawing_2.jpg"],
+             caption="Maya, age 7", hero=False),
         dict(token="sample-dilan", report_path="pipeline/samples/dilan_report.json",
              drawings=["pipeline/samples/dilan_drawing_1.jpg",
                        "pipeline/samples/dilan_drawing_2.jpg",
                        "pipeline/samples/dilan_drawing_3.jpg"],
              caption="Dilan, age 6", hero=False),
-        # The original built-in example. Kept so /en/sample/sample-liam does not 404 for
-        # anything that already links to it.
-        dict(token="sample-liam", report_path="pipeline/samples/sample_report.json",
-             drawings=["pipeline/samples/sample_drawing.png"],
-             caption='“My House,” Liam, age 6', hero=False),
     ],
+    # Ordered 1 -> 2 -> 3 drawings on purpose: the carousel then shows the whole range of
+    # what "1-3 drawings from the same period" actually buys.
+    #
+    # The former "sample-liam" was REMOVED (V0.039). Its image was not a child's drawing at
+    # all - flat vector art, 11 unique colors against 47k+ in a photographed crayon drawing -
+    # so every craft claim in its report ("the lines are not perfectly straight", "confident
+    # for a six-year-old's hand") described a graphic no child made. Regenerating it under
+    # en-4.2 only produced a differently-worded fabrication. /en/sample/sample-liam now 301s
+    # (see app/routes.py). Do not reinstate it without a real drawing behind it.
 }
 
 

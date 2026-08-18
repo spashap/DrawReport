@@ -19,13 +19,17 @@ from pipeline.schema import validate_report
 def main() -> None:
     locale = settings.DEFAULT_LOCALE
     samples = BASE_DIR / "pipeline" / "samples"
-    raw = json.loads((samples / "sample_report.json").read_text(encoding="utf-8"))
+    # The QA fixture is a REAL published sample (en-4.2 output from a real drawing). It used
+    # to be sample_report.json + sample_drawing.png, which were removed in V0.039: that image
+    # was flat vector art rather than a child's drawing, so it was a poor thing to check
+    # rendering against and a worse thing to ship.
+    raw = json.loads((samples / "alisia_report.json").read_text(encoding="utf-8"))
     report = validate_report(raw)
     print("schema: valid |", len(report.dimensions), "dimensions")
 
     drawings = [{
-        "src": drawing_to_data_uri(samples / "sample_drawing.png"),
-        "caption": '"My house", Liam, age 6',
+        "src": drawing_to_data_uri(samples / "alisia_drawing.jpg"),
+        "caption": "Alisia, age 4",
     }]
 
     out_dir = settings.REPORTS_DIR / "sample"

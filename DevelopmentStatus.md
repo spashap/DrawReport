@@ -649,3 +649,50 @@ making something feel complete."* Nothing was hand-picked.
 `sample-liam` is now the odd one out: it is en-4.0-era content and is no longer what a buyer
 receives. It was kept only to avoid a dead URL. Retiring it (and 301-ing the URL) is a small
 follow-up once the two real samples have settled.
+
+---
+
+## Session — 2026-08-18 · Third sample added, the placeholder sample retired (V0.039)
+
+The sample set is now **three real reports covering 1, 2 and 3 drawings** — the full range
+`/en/report` sells ("1-3 drawings from the same period"), which the site previously had no
+example of beyond a single drawing.
+
+| token | child | drawings | pages | badge |
+|---|---|---|---|---|
+| `sample-alisia` | Alisia, 4y4m | 1 (crayon portrait) | 9 | sample report |
+| `sample-maya` | Maya, 7y2-3m | 2 (pencil, girl with a braid) | 10 | sample · 2 drawings |
+| `sample-dilan` | Dilan, 6y5m | 3 (harbor / family / dragon) | 12 | sample · 3 drawings |
+
+All three are unedited en-4.2 output from real children's drawings. Carousel order is 1 -> 2 -> 3
+drawings on purpose. **"Maya" is a name I chose** — the owner supplied the drawings without one;
+renaming is a one-line change in `app/samples.py` plus a regenerate.
+
+### `sample-liam` removed, and why regenerating it was not the answer
+The owner asked to regenerate it under en-4.2. Doing so surfaced the real problem: **the image
+was never a child's drawing.** `sample_drawing.png` is flat vector art — measured, **11 unique
+colors covering 99.3% of pixels**, against 47,576 for a photographed crayon drawing and 135,790
+for a felt-tip one. It entered the repo in V0.017 as a stand-in.
+The report that had been live for months therefore said *"the lines are not perfectly straight or
+closed, which is typical and expected at 6"* about mathematically straight vector lines — text
+adapted from the Russian sibling, never written from that image.
+Regenerating under en-4.2 produced a clean report (0 lint hits) that praised the *"confident and
+direct"* stick-figure lines and *"even and controlled"* color fills of a computer-drawn graphic,
+and scored it 6-7/10 on fine motor and technique. **A new prompt only reworded the fabrication**;
+no prompt version fixes an input that was never a child's drawing.
+Removed: the definition, and `sample_report.json` / `sample_drawing.png` themselves.
+`/en/sample/sample-liam` and `/en/r/sample-liam` now **301** to the Alisia sample — the URL was
+public for months and is in older sitemaps, so it must not 404. `scripts/render_sample.py` was
+repointed at `alisia_report.json`, so the QA fixture is now a real report too.
+
+### Noted, not acted on
+en-4.2 has an explicit rule to return `insufficient_input` when the image is not a child's
+drawing, and it **did not fire on obvious vector clip art**. Low impact in production — real
+customers photograph paper — but it is a genuine gap in the rejection path, and the only reason
+it mattered here is that we were feeding it a synthetic asset.
+
+### Acceptance for the new sample (en-4.2 criteria)
+0 Cyrillic · 0 drills · 0 normality verdicts · 0 linter violations · activities named 10/10 ·
+directions 6 and 7 both at exactly 2 sentences / 1 activity (the caps held) · scores 9/8/9/7/8/8/8.
+Prose-style items (23 em dashes, one "not X but Y") are accepted per UseCase #30 and were not
+touched.

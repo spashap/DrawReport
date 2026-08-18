@@ -162,8 +162,17 @@ def _render_report_page(report_data: dict, drawing_specs: list[dict], locale: st
     )
 
 
+# Retired samples -> the nearest live one. sample-liam was published for months and is in
+# older sitemaps, so it must not become a 404 (it was removed in V0.039 because its image
+# was vector art, not a child's drawing).
+_RETIRED_SAMPLES = {"sample-liam": "sample-alisia"}
+
+
 @bp.get("/sample/<token>")
 def sample(token):
+    if token in _RETIRED_SAMPLES:
+        return redirect(url_for("main.sample", lang_code=g.lang_code,
+                                token=_RETIRED_SAMPLES[token]), code=301)
     """Indexable example page (SEO). The full report document lives at /r/<token>."""
     s = get_sample_by_token(token, g.lang_code)
     if s is None:
@@ -174,6 +183,9 @@ def sample(token):
 @bp.get("/r/<token>")
 def hosted_report(token):
     """Full hosted report. Samples now; DB-backed order reports add in Phase 5."""
+    if token in _RETIRED_SAMPLES:
+        return redirect(url_for("main.hosted_report", lang_code=g.lang_code,
+                                token=_RETIRED_SAMPLES[token]), code=301)
     s = get_sample_by_token(token, g.lang_code)
     if s is not None:
         data = json.loads(s.report_path.read_text(encoding="utf-8"))
