@@ -2,13 +2,18 @@
 
 Two things about this file are load-bearing.
 
-**The contracting party is a placeholder until someone fills it in.** The pages name
-[FULL LEGAL NAME] at [BUSINESS ADDRESS] because the business is operated by an individual
-and only the owner can supply those. They come from the environment (see
-`config/settings.py`), so filling them in is an .env change on the server rather than a
-deploy - but until they are filled the pages ship with visible brackets. That is
-deliberate: an empty string would publish terms with no counterparty and nothing anywhere
-would look wrong.
+**The contracting party is PROVISIONAL.** The pages currently name "DrawReport Team",
+which is a trading name, not a legal person - owner decision, taken so the pages could go
+live without brackets showing while the real identity is settled. The business is operated
+by an individual, so the eventual answer is a personal legal name (or an LLC) plus an
+address, and only the owner can supply those. They come from the environment (see
+`config/settings.py`), so filling them in is an .env change on the server, not a deploy.
+
+Anything still unset is OMITTED rather than printed as a bracket: no address means the
+sentence just ends at the country, and no state means the whole Governing law section
+disappears. A missing clause is a known gap; "[STATE]" on a live page is a broken page,
+and a GUESSED state would be worse than either. `unfilled_placeholders()` reports what is
+still missing, because nothing on the rendered page shows it any more.
 
 **These pages have not been reviewed by a lawyer.** They used to say so, out loud, at the
 top of every page, while PayPal was live - which is a written admission to a paying
@@ -36,8 +41,8 @@ _PAGES = {
         "privacy": ("Privacy Policy", """
 _Last updated: [DATE]_
 
-DrawReport is operated by [FULL LEGAL NAME], [BUSINESS ADDRESS], United States
-(“we,” “us”). We give a parent or guardian an educational report about their child’s
+DrawReport is operated by [IDENTITY] (“we,” “us”).
+We give a parent or guardian an educational report about their child’s
 drawing. This policy explains what we collect, who it goes to, and how long we keep it.
 
 Questions about this policy, or about your data: **[CONTACT EMAIL]**.
@@ -125,9 +130,8 @@ affects how we handle your data, we will email people who have an account.
         "terms": ("Terms of Service", """
 _Last updated: [DATE]_
 
-These terms are an agreement between you and [FULL LEGAL NAME], [BUSINESS ADDRESS],
-United States (“we,” “us”), who operates DrawReport. By ordering a report or using the
-free reading, you agree to them.
+These terms are an agreement between you and [IDENTITY] (“we,” “us”), who operates
+DrawReport. By ordering a report or using the free reading, you agree to them.
 
 ### Who can use DrawReport
 You must be **18 or older** and a **resident of the United States**. We offer the service
@@ -194,11 +198,7 @@ fraud or for death or personal injury caused by negligence.
 We may update these terms. The date at the top shows when they last changed, and changes
 apply to orders placed after that date.
 
-### Governing law
-These terms are governed by the laws of [STATE], United States, and you and we agree that
-any dispute will be brought in the state or federal courts located in [COUNTY, STATE].
-
-### Contact
+[GOVERNING LAW]### Contact
 **[CONTACT EMAIL]**
 """),
         "refund": ("Refund Policy", """
@@ -225,21 +225,53 @@ or refund you in full. Your choice.
     },
 }
 
-# Order matters: [COUNTY, STATE] is substituted before [STATE], because the shorter token
-# is a substring of the longer one and would otherwise eat half of it.
-_TOKENS = ("[DATE]", "[FULL LEGAL NAME]", "[BUSINESS ADDRESS]", "[COUNTY, STATE]",
-           "[STATE]", "[CONTACT EMAIL]")
+# A value is "unset" when it is still the bracketed default from config/settings.py.
+# Unset values are never printed - the sentence around them is dropped instead. See the
+# module docstring for why a bracket on a live page is worse than a missing clause.
+_TOKENS = ("[DATE]", "[IDENTITY]", "[GOVERNING LAW]", "[CONTACT EMAIL]")
+
+# The name the pages carry until a real legal person is decided (owner, 2026-08-19).
+# It is a TRADING name, not a legal entity, so unfilled_placeholders() keeps flagging it.
+PROVISIONAL_ENTITY_NAME = "DrawReport Team"
+
+_GOVERNING_LAW = """### Governing law
+These terms are governed by the laws of {state}, United States, and you and we agree that
+any dispute will be brought in the state or federal courts located in {venue}.
+
+"""
+
+
+def _unset(value: str) -> bool:
+    """Still the bracketed default, e.g. "[BUSINESS ADDRESS]"."""
+    v = (value or "").strip()
+    return not v or (v.startswith("[") and v.endswith("]"))
+
+
+def _identity() -> str:
+    """The contracting party as one phrase: name, address if we have one, country.
+
+    Composed rather than three separate tokens because the COMMAS belong to whichever
+    parts survive - "DrawReport Team, , United States" is exactly the kind of thing that
+    reaches production when each piece is substituted on its own."""
+    parts = [settings.LEGAL_ENTITY_NAME]
+    if not _unset(settings.LEGAL_ENTITY_ADDRESS):
+        parts.append(settings.LEGAL_ENTITY_ADDRESS)
+    parts.append("United States")
+    return ", ".join(parts)
 
 
 def _values() -> dict:
-    """Read settings at call time, not at import: the admin/env can change under a
-    long-lived gunicorn worker and a policy page must not serve a stale legal name."""
+    """Read settings at call time, not at import: the env can change under a long-lived
+    gunicorn worker and a policy page must not serve a stale legal name."""
+    have_venue = not _unset(settings.LEGAL_STATE) and not _unset(settings.LEGAL_VENUE)
     return {
         "[DATE]": LEGAL_LAST_UPDATED,
-        "[FULL LEGAL NAME]": settings.LEGAL_ENTITY_NAME,
-        "[BUSINESS ADDRESS]": settings.LEGAL_ENTITY_ADDRESS,
-        "[COUNTY, STATE]": settings.LEGAL_VENUE,
-        "[STATE]": settings.LEGAL_STATE,
+        "[IDENTITY]": _identity(),
+        # No state means no governing-law clause at all. The alternative - naming a state
+        # we guessed - would be a false statement about where a customer has to sue.
+        "[GOVERNING LAW]": (_GOVERNING_LAW.format(state=settings.LEGAL_STATE,
+                                                  venue=settings.LEGAL_VENUE)
+                            if have_venue else ""),
         "[CONTACT EMAIL]": settings.LEGAL_CONTACT_EMAIL,
     }
 
@@ -258,14 +290,20 @@ def _fill(body: str) -> str:
 
 
 def unfilled_placeholders(locale: str = settings.DEFAULT_LOCALE) -> list:
-    """Which identity placeholders are still unset - i.e. still rendered to the public as
-    literal brackets. Nothing else in the app can tell: a placeholder renders as ordinary
-    text, so the pages look finished while naming no contracting party at all."""
-    values = _values()
-    loc = locale if locale in _PAGES else settings.DEFAULT_LOCALE
-    bodies = "".join(body for _title, body in _PAGES[loc].values())
-    return [t for t in _TOKENS
-            if t in bodies and values[t].startswith("[") and values[t].endswith("]")]
+    """Which pieces of the legal identity are still missing, by env var name.
+
+    Reads the settings rather than the rendered page ON PURPOSE: unset values are now
+    omitted, so the pages look complete whether or not anyone has filled them in, and
+    this is the only thing that can still tell the difference. The provisional trading
+    name counts as missing - "DrawReport Team" is not a legal person and cannot be sued
+    or sue."""
+    gaps = []
+    if _unset(settings.LEGAL_ENTITY_NAME) or             settings.LEGAL_ENTITY_NAME.strip() == PROVISIONAL_ENTITY_NAME:
+        gaps.append("LEGAL_ENTITY_NAME")
+    for name in ("LEGAL_ENTITY_ADDRESS", "LEGAL_STATE", "LEGAL_VENUE"):
+        if _unset(getattr(settings, name)):
+            gaps.append(name)
+    return gaps
 
 
 def get_legal(page: str, locale: str = settings.DEFAULT_LOCALE):

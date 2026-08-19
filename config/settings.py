@@ -133,10 +133,13 @@ PAYPAL_WEBHOOK_ID = os.getenv("PAYPAL_WEBHOOK_ID", "")
 # owner's legal name and home address are not something to commit to a public repo, and
 # filling them in must not require a deploy.
 #
-# The defaults are the bracketed placeholders ON PURPOSE. An empty default would publish
-# terms with no counterparty and every page would still look finished; a bracket is
-# visible from the street. app.legal.unfilled_placeholders() reports which are still unset.
-LEGAL_ENTITY_NAME = os.getenv("LEGAL_ENTITY_NAME", "[FULL LEGAL NAME]")
+# LEGAL_ENTITY_NAME defaults to the TRADING name "DrawReport Team" (owner decision,
+# 2026-08-19) so the live pages name someone instead of showing brackets. It is a stopgap:
+# a trading name is not a legal person, so it can neither sue nor be sued, and the pages
+# still need a real name or an LLC. The other three keep BRACKETED defaults, which
+# app/legal.py treats as "unset" and omits from the page entirely rather than printing.
+# app.legal.unfilled_placeholders() is the only thing that can still see the gap.
+LEGAL_ENTITY_NAME = os.getenv("LEGAL_ENTITY_NAME", "DrawReport Team")
 LEGAL_ENTITY_ADDRESS = os.getenv("LEGAL_ENTITY_ADDRESS", "[BUSINESS ADDRESS]")
 LEGAL_STATE = os.getenv("LEGAL_STATE", "[STATE]")            # governing law
 LEGAL_VENUE = os.getenv("LEGAL_VENUE", "[COUNTY, STATE]")    # where a dispute is heard

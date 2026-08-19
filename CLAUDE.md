@@ -151,10 +151,15 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    contracting party, disclose the actual processors (Anthropic, Brevo, PayPal, host), state
    retention, and Terms + Privacy + Refunds are LINKED AT CHECKOUT — before that, `order.html`
    presented no terms at all, which is the weakest possible assent. **Two things are still open:**
-   the identity is env-driven and ships as literal `[FULL LEGAL NAME]` brackets until the owner sets
-   `LEGAL_ENTITY_NAME` / `_ADDRESS` / `LEGAL_STATE` / `LEGAL_VENUE` in the SERVER `.env` (admin task
-   `legal_identity`; `app.legal.unfilled_placeholders()` reports what is missing), and the attorney
-   review (COPPA, refunds, PayPal, FTC "educational, not diagnosis") is still not booked.
+   the pages name **"DrawReport Team"**, a TRADING name that is not a legal person (owner decision,
+   V0.049) - a real name or an LLC still has to go in `LEGAL_ENTITY_NAME` / `_ADDRESS` /
+   `LEGAL_STATE` / `LEGAL_VENUE` in the SERVER `.env` - and the attorney review (COPPA, refunds,
+   PayPal, FTC "educational, not diagnosis") is still not booked.
+   ⚠️ **Unset identity values are OMITTED from the page, never printed.** No address means the
+   sentence ends at the country; no state means the whole Governing law section disappears. So the
+   pages look finished whether or not anyone filled them in, and `app.legal.unfilled_placeholders()`
+   (admin task `legal_identity`) is the ONLY thing that can still see the gap. Never guess a state:
+   a wrong venue tells a customer the wrong place to sue.
    ⚠️ **Never publish a retention promise the code does not keep.** The 90-day free-photo deletion is
    real (`app/free_retention.py`, run daily by `free_worker.py`); the drafted "analytics purged at 24
    months" line was CUT because no such job exists.

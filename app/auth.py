@@ -1,5 +1,5 @@
 """Email-code login (Golos spec §9): 6-digit code, 30-min TTL, one-time;
-30-day session (httpOnly cookie dr_s). Delivery via app.mailer (outbox in dev,
+30-day session (httpOnly cookie dr_auth). Delivery via app.mailer (outbox in dev,
 Resend in prod). Rate limit + max attempts as in Golos.
 """
 from __future__ import annotations
@@ -18,7 +18,14 @@ from config import settings
 
 log = logging.getLogger("auth")
 
-SESSION_COOKIE = "dr_s"
+# dr_auth, NOT dr_s. It WAS dr_s - the same name app/track.py uses for the visit
+# cookie - and track.after_request rewrites that cookie on every non-static request,
+# including the very response that had just set the session token. So signing in did
+# not half-work, it did not work at all: the token was overwritten before the next
+# page load and /cabinet bounced straight back to /login. Reports were reachable only
+# through the emailed link. Renaming this one rather than the visit cookie is
+# deliberate - dr_s is named and described in the published Privacy Policy.
+SESSION_COOKIE = "dr_auth"
 
 
 class AuthError(Exception):

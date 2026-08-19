@@ -104,10 +104,11 @@ _SEEDS = [
      "They were written to be reviewed, not to be relied on. This is not legal advice."),
     ("legal_identity",
      "Put your legal name and address on the legal pages (server .env)",
-     "SHIP BLOCKER. Privacy, Terms and Refunds now name the contracting party, but until\n"
-     "these are set they print literal brackets - '[FULL LEGAL NAME]' - on a live site\n"
-     "that takes real money. Nothing else in the app can notice: a placeholder renders\n"
-     "as ordinary text and the page looks finished.\n"
+     "The pages currently name 'DrawReport Team' - a TRADING name, not a legal\n"
+     "person. It cannot sue or be sued, so the contract names no real counterparty.\n"
+     "Anything still unset (address, state, venue) is OMITTED from the page rather\n"
+     "than printed, so the pages LOOK complete either way and nothing on them shows\n"
+     "the gap. app.legal.unfilled_placeholders() is the only thing that can tell.\n"
      "\n"
      "In the SERVER .env, then restart drawreport-web:\n"
      "  LEGAL_ENTITY_NAME=      your full legal name (or the LLC, if you form one)\n"

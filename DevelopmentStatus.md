@@ -990,3 +990,52 @@ back to `/en/login`. A paying customer cannot reach the cabinet; only the emaile
 Fix is a one-line rename of the auth cookie (it logs everyone out once, and everyone is already
 logged out). Left unfixed here on purpose — it is nothing to do with the legal pages and deserves
 its own commit.
+
+---
+
+## V0.049 — Sign-in was completely broken; legal identity gets a provisional name (2026-08-19)
+
+### The cookie collision — customers could not sign in AT ALL
+`app/auth.py` set the session cookie as **`dr_s`**, which is the same name `app/track.py` uses for
+the analytics VISIT cookie. `track.after_request` rewrites that cookie on **every** non-static
+request, including the very response that had just set the session token - two `Set-Cookie: dr_s=`
+headers on the same response, the visit one last, so the browser kept the visit id and threw the
+session away. `/cabinet` then bounced straight back to `/login`, forever.
+
+This was not a degraded session, it was **no session**. A paying customer could reach their report
+only through the emailed link. It went unnoticed because the emailed link is what everyone actually
+uses, and because nothing errors - the redirect looks like an ordinary logged-out visit.
+
+**Fix:** the auth cookie is now `dr_auth`. Renaming THIS one rather than the visit cookie is
+deliberate: `dr_s` is named and described in the Privacy Policy that went live in V0.048, and the
+Policy's line about the sign-in cookie is generic, so it stays true. Sessions in the database were
+never invalid - only the cookie was being lost - so nothing needed migrating. Verified end to end
+against the dev database: verify -> 302 to /cabinet, /cabinet renders 200 twice running, logout
+redirects, /cabinet after logout 302s to /login.
+
+⚠️ Two cookies, one name, is a class of bug nothing catches: no test failed, no log line appeared,
+both writes "succeeded". If another cookie is ever added, grep the name first.
+
+### Legal identity: a provisional name, and no more brackets anywhere
+Owner decision: ship as **"DrawReport Team"** for now. That is a TRADING name, not a legal person -
+it cannot sue or be sued - so `unfilled_placeholders()` still reports `LEGAL_ENTITY_NAME` as a gap,
+along with the address, state and venue, which nobody has yet.
+
+The bigger change is what happens to values that are still unset. They are now **omitted**, not
+printed:
+- **Identity is composed, not three tokens.** `_identity()` builds "name, address, United States"
+  and drops the address if there is none. The commas belong to whichever parts survive - three
+  independent substitutions produce "DrawReport Team, , United States" the first time one is empty.
+- **No state means no Governing law section at all.** `[GOVERNING LAW]` resolves to the whole
+  section or to an empty string. A missing clause is a known gap that falls back to default law; a
+  guessed state would be a false statement to a customer about where they have to sue, and
+  "[STATE]" on a live page is simply broken.
+
+The consequence is that **the pages now look finished whether or not anyone has filled them in**,
+which is exactly the failure mode the bracketed defaults were designed to prevent. That protection
+moves entirely into `app.legal.unfilled_placeholders()` and the `legal_identity` admin task. Nothing
+on the rendered page shows the gap any more - do not rely on noticing it.
+
+Note the `legal_identity` seed text was corrected in code, but seeding is INSERT-only by key, so the
+row already in the production database keeps the old wording about brackets. Harmless, and not worth
+a migration; the code is the accurate copy.
