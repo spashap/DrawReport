@@ -127,6 +127,24 @@ PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
 PAYPAL_ENV = os.getenv("PAYPAL_ENV", "sandbox")          # 'sandbox' | 'live'
 PAYPAL_WEBHOOK_ID = os.getenv("PAYPAL_WEBHOOK_ID", "")
 
+# --- Legal identity (printed on the legal pages, app/legal.py) ---
+# The business is operated by an individual, so the contracting party is a named person
+# and an address rather than a company. These live in the ENVIRONMENT, not in git: the
+# owner's legal name and home address are not something to commit to a public repo, and
+# filling them in must not require a deploy.
+#
+# The defaults are the bracketed placeholders ON PURPOSE. An empty default would publish
+# terms with no counterparty and every page would still look finished; a bracket is
+# visible from the street. app.legal.unfilled_placeholders() reports which are still unset.
+LEGAL_ENTITY_NAME = os.getenv("LEGAL_ENTITY_NAME", "[FULL LEGAL NAME]")
+LEGAL_ENTITY_ADDRESS = os.getenv("LEGAL_ENTITY_ADDRESS", "[BUSINESS ADDRESS]")
+LEGAL_STATE = os.getenv("LEGAL_STATE", "[STATE]")            # governing law
+LEGAL_VENUE = os.getenv("LEGAL_VENUE", "[COUNTY, STATE]")    # where a dispute is heard
+# Published as the privacy/support contact on all three pages. Kept separate from
+# MAIL_FROM_EMAIL: what we SEND from and what a customer should WRITE to are allowed to
+# differ, and the one on the legal pages has to be a monitored mailbox.
+LEGAL_CONTACT_EMAIL = os.getenv("LEGAL_CONTACT_EMAIL", "team@drawreport.com")
+
 # --- i18n ---
 # Active locales. English ships first; add "es", "de", ... here to enable a locale
 # (every layer reads this list — routing, hreflang, prompt, content, email).
@@ -240,7 +258,11 @@ WORKER_POLL_SECONDS = 5                # poll period for orders.status='paid'
 WORKER_LOG = DATA_DIR / "worker.log"   # UTF-8 worker log (console output stays ASCII!)
 MAIL_BACKEND = os.getenv("MAIL_BACKEND", "outbox")   # 'outbox' (files) | 'smtp' | 'resend'
 OUTBOX_DIR = DATA_DIR / "outbox"       # backend 'outbox': emails as HTML files (dev)
-MAIL_FROM_EMAIL = os.getenv("MAIL_FROM_EMAIL", "hello@drawreport.com")
+# Default is team@, NOT hello@: hello@drawreport.com does not exist. The only
+# mailbox on the domain is team@drawreport.com (a Zoho alias on the admin user,
+# MX -> mx.zoho.com), which is also what production sends as and what the legal
+# pages publish. A default nobody can reply to is a silent bounce for a customer.
+MAIL_FROM_EMAIL = os.getenv("MAIL_FROM_EMAIL", "team@drawreport.com")
 MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", SITE_NAME)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 RESEND_API_URL = os.getenv("RESEND_API_URL", "https://api.resend.com/emails")

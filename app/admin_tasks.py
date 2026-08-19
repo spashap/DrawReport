@@ -102,6 +102,26 @@ _SEEDS = [
      "The drafts cover children's data (COPPA), refunds and PayPal, and keep the\n"
      "'educational observation, not a diagnosis' framing that matters for FTC claims.\n"
      "They were written to be reviewed, not to be relied on. This is not legal advice."),
+    ("legal_identity",
+     "Put your legal name and address on the legal pages (server .env)",
+     "SHIP BLOCKER. Privacy, Terms and Refunds now name the contracting party, but until\n"
+     "these are set they print literal brackets - '[FULL LEGAL NAME]' - on a live site\n"
+     "that takes real money. Nothing else in the app can notice: a placeholder renders\n"
+     "as ordinary text and the page looks finished.\n"
+     "\n"
+     "In the SERVER .env, then restart drawreport-web:\n"
+     "  LEGAL_ENTITY_NAME=      your full legal name (or the LLC, if you form one)\n"
+     "  LEGAL_ENTITY_ADDRESS=   a contactable business address\n"
+     "  LEGAL_STATE=            governing law, e.g. Florida\n"
+     "  LEGAL_VENUE=            where a dispute is heard, e.g. Miami-Dade County, Florida\n"
+     "  LEGAL_CONTACT_EMAIL=    defaults to team@drawreport.com; must be MONITORED\n"
+     "\n"
+     "WORTH A CONVERSATION FIRST. Operating as an individual means your own name and a\n"
+     "contactable address go on a public website, which for most people working from\n"
+     "home means a home address. A single-member LLC, or a registered-agent / virtual\n"
+     "business address, lets a business name appear instead and separates personal\n"
+     "assets from business liability - which matters more than usual for a service that\n"
+     "makes interpretive statements about children. Ask the attorney doing the review."),
     ("logo_art",
      "Drop the real logo artwork into data/Images/ and run build_logos.py",
      "Placeholders ship today. The hero image is already built from your artwork; only\n"

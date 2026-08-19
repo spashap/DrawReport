@@ -420,7 +420,9 @@ MISMATCH_PARAGRAPH = ("One thing up front: what you described isn’t in this pa
                       "page. If you’d like us to look at the drawings you were "
                       "describing, send us one of those and we’ll read that instead.")
 
-# ⚠️ DRAFT: photo retention. The parent needs this next to the upload.
+# Photo retention, said where the parent is about to upload rather than only in the policy.
+# The 90 days is a real promise kept by app/free_retention.py (FREE_PHOTO_RETENTION_DAYS)
+# and repeated in the Privacy Policy - change one of the three and change all three.
 STORAGE_NOTICE = ("We keep the photo for 90 days, then delete it. Your reading stays at "
                   "your link.")
 

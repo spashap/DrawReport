@@ -145,8 +145,19 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    matched by `lint.py` / `free_lint.py`, so it changes in both files in one commit, and you assert
    the coupling both ways. **Not yet verified on live output:** no en-4.1 report has been generated,
    so read one fresh paid report against the voice rules before assuming they took.
-9. **Legal pages are DRAFT** and have not been reviewed by counsel (COPPA / children's data,
-   refunds, PayPal, FTC "educational, not diagnosis" claims).
+9. **Legal pages rewritten (V0.048), STILL not reviewed by counsel.** `projectSpec/TASK-legal-pages-v1.md`
+   is the spec. The public "DRAFT — to be reviewed by counsel" banner is gone from all three pages
+   (announcing unfinished terms to a paying customer is a written admission), the pages now name a
+   contracting party, disclose the actual processors (Anthropic, Brevo, PayPal, host), state
+   retention, and Terms + Privacy + Refunds are LINKED AT CHECKOUT — before that, `order.html`
+   presented no terms at all, which is the weakest possible assent. **Two things are still open:**
+   the identity is env-driven and ships as literal `[FULL LEGAL NAME]` brackets until the owner sets
+   `LEGAL_ENTITY_NAME` / `_ADDRESS` / `LEGAL_STATE` / `LEGAL_VENUE` in the SERVER `.env` (admin task
+   `legal_identity`; `app.legal.unfilled_placeholders()` reports what is missing), and the attorney
+   review (COPPA, refunds, PayPal, FTC "educational, not diagnosis") is still not booked.
+   ⚠️ **Never publish a retention promise the code does not keep.** The 90-day free-photo deletion is
+   real (`app/free_retention.py`, run daily by `free_worker.py`); the drafted "analytics purged at 24
+   months" line was CUT because no such job exists.
 10. **Blog has only 3 posts.**
 12. **`insufficient_input` does not fire on non-drawings.** en-4.2 has an explicit rule to reject an
     image that is not a child's drawing; fed flat vector clip art it produced a full, confident

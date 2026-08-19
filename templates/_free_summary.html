@@ -71,6 +71,12 @@
            autocomplete="email" placeholder="you@example.com">
   </div>
 
+  {# The free flow takes no payment but it does take a photograph of a child's drawing,
+     which is the part the privacy policy is actually about. One line, above the button,
+     because assent after the upload is not assent. #}
+  <p class="hint">{{ _('By uploading you agree to our') }}
+    <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a>.</p>
+
   <button class="btn btn--primary offer__cta" id="f-go"
           data-goal="free_upload_submit">{{ texts.UPLOAD_BUTTON }}</button>
   <p class="offer__note">{{ offer.free_note }}</p>

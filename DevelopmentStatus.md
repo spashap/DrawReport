@@ -896,3 +896,97 @@ rather than as an error, so nobody goes looking.
   **Scroll depth was dropped on purpose**: `scroll_50`/`scroll_75` are engagement, not
   conversions, and marking them as key events makes every conversion report and campaign
   objective count a scroll as a sale. They remain visible in our own Analytics section.
+
+---
+
+## V0.048 — Legal pages out of DRAFT; the terms are finally shown at checkout (2026-08-19)
+
+Spec: `projectSpec/TASK-legal-pages-v1.md`. Owner decisions behind it: **US only** (so no GDPR
+section, no cookie-consent gate, no 14-day withdrawal right), **operating as an individual** (so the
+contracting party is a named person, not a company), contact `team@drawreport.com`.
+
+### The two things that actually mattered
+- **The public DRAFT banner is gone.** All three pages opened with "DRAFT — to be reviewed by
+  counsel before launch" while PayPal was in LIVE mode. That is not modesty, it is a written
+  admission to a paying customer that you knew your terms were unfinished when you contracted with
+  her. Removing it is **not** the same as having had the review — that is still open
+  (admin task `legal_review`).
+- **Checkout now presents the terms.** `templates/order.html` linked to none of Terms, Privacy or
+  Refunds and had no acceptance control at all — verified by grep before the change. The Terms said
+  "by using DrawReport you agree", which is browsewrap: the weakest form of assent, and routinely
+  unenforced where the user had no reasonable notice. There is now a line **above** the pay button
+  confirming 18+, US residency and that the drawings are the customer's own child's, with all three
+  pages linked. `templates/_free_summary.html` gets the one-line privacy version above the upload
+  button: no payment there, but it is where a photograph of a child's drawing is handed over.
+
+### The pages themselves (`app/legal.py`)
+All three bodies replaced. Privacy gained: who the service is for, a strengthened COPPA section with
+a withdraw-consent route, the cookie list by name, **the actual processors** (Anthropic — and that
+API data is not used to train their models — Brevo, PayPal, the host), retention per data type, and
+a data-access/deletion route with a 30-day response. Terms gained: the contracting party, US-only
+and 18+, an explicit "generated with the help of AI, may be incomplete or wrong", an IP clause
+saying the parent keeps every right in the drawing and we take a license for one purpose only, a
+liability cap at the price paid, and governing law + venue.
+
+### The identity is env-driven, and ships visibly unfilled
+`LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ADDRESS`, `LEGAL_STATE`, `LEGAL_VENUE`, `LEGAL_CONTACT_EMAIL` in
+`config/settings.py`, substituted at render time by `_fill()`. They are **not** in git: the owner's
+legal name and home address do not belong in a public repo, and filling them in must not require a
+deploy. Their defaults are the bracketed placeholders **on purpose** — an empty default would
+publish terms with no counterparty and every page would still look finished. `unfilled_placeholders()`
+reports which are still literal brackets; admin task `legal_identity` carries the .env recipe and the
+LLC-vs-home-address conversation. Substitution order matters: `[COUNTY, STATE]` before `[STATE]`,
+because the short token is a substring of the long one.
+
+`LEGAL_LAST_UPDATED` is one constant rather than a date typed into three bodies — a policy whose
+date predates its own text is worse than no date at all. Bump it whenever a body changes.
+
+### What was CUT from the spec, and why
+The drafted Privacy line promising **analytics records deleted at 24 months**. Grep found no purge
+of the analytics tables anywhere: `free_retention.purge_old_images` is the only retention job in the
+project, and it deletes free photos only. **A privacy policy that promises deletion the system does
+not perform converts a technical gap into a misrepresentation** — a worse position than saying
+nothing. The line now describes what the records actually are and says we keep them while the site
+runs. If the owner wants the 24-month promise, the purge job comes first, then the sentence.
+
+Verified the other way too: the **90-day** free-photo claim is real (`FREE_PHOTO_RETENTION_DAYS`,
+purged daily by `free_worker.py`), and it is now stated identically in `free_texts.STORAGE_NOTICE`
+and in the policy.
+
+### Deliberately NOT built
+No IP geo-block. US privacy law does not turn on IP address and EU law turns on whether a business
+**targets** EU data subjects, so a block would buy nothing and would lock out US customers on a VPN
+or traveling. The US-only posture rests on the Terms saying so, the order form confirming
+residency, USD-only pricing, `LOCALES=en`, and no EU-targeted marketing.
+
+### Still open
+1. **The placeholders.** `[FULL LEGAL NAME]` etc. render as literal brackets on the live site until
+   the server `.env` is filled in. Nothing else in the app can notice.
+2. **The attorney review.** COPPA, refunds, PayPal, FTC "educational, not diagnosis".
+3. ~~`team@drawreport.com` must be a monitored mailbox~~ — **checked in Zoho and in DNS, it is
+   real.** It exists as an **email alias** on the single Zoho user (`admin@astrometrica.pro`, org
+   astrometrica, Mail Lite), created 28/08/2025 - which is why it is invisible from the Zoho
+   dashboard's user count. `drawreport.com` MX -> `mx.zoho.com`/`mx2`/`mx3`, SPF
+   `include:zohomail.com`, ownership TXT present, so mail addressed to team@ genuinely arrives and
+   can be replied to as team@. Brevo's side is authenticated too (`brevo-code` TXT,
+   `brevo1`/`brevo2._domainkey` DKIM, DMARC `p=none` reporting to Brevo), so the report emails the
+   site sends as team@ are signed and aligned.
+
+   **`hello@drawreport.com` does not exist** - no alias, no user - and `config/settings.py` was
+   defaulting `MAIL_FROM_EMAIL` to it. The server `.env` does set `team@`, so production was never
+   affected, but a default nobody can reply to is one missing env var away from silently bouncing a
+   customer's reply. Default changed to `team@drawreport.com` (V0.048).
+
+   Still on the owner: team@ lands in the same inbox as the cosmyday admin mail, so it wants a
+   filter or a folder before the Privacy Policy publishes it as the data-request address.
+
+### Found while auditing, NOT fixed here (separate defect)
+`app/auth.py` `SESSION_COOKIE = "dr_s"` **is the same cookie name as** `app/track.py`
+`VISIT_COOKIE = "dr_s"`, and `track.after_request` rewrites `dr_s` with the visit id on **every**
+non-static request — including the very response that just set the session token. **Signing in is
+therefore broken**, not degraded. Reproduced end to end against the dev database: `/en/login/verify`
+returns two `Set-Cookie: dr_s=` headers, the visit one last, and the next `GET /en/cabinet` 302s
+back to `/en/login`. A paying customer cannot reach the cabinet; only the emailed report link works.
+Fix is a one-line rename of the auth cookie (it logs everyone out once, and everyone is already
+logged out). Left unfixed here on purpose — it is nothing to do with the legal pages and deserves
+its own commit.

@@ -80,7 +80,16 @@
       {{ field(email_field, '', values, errors) }}
       {{ field(coupon_field, '', values, errors) }}
 
+      {# Assent, shown ABOVE the button rather than after it. Terms nobody was ever shown
+         are hard to rely on, and this checkout previously linked to none of the three
+         pages at all. The confirmations (18+, US resident, own child) are the same ones
+         the Terms require, so they are made at the moment of payment, not buried. #}
       <div class="order-submit">
+        <p class="hint">{{ _('By placing this order you confirm that you are 18 or older, that you are a US resident, that the drawings are your own child’s or those of a child you are parent or guardian to, and that you agree to our') }}
+          <a href="{{ url_for('main.legal', page='terms') }}">{{ _('Terms') }}</a>,
+          <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a>
+          {{ _('and') }}
+          <a href="{{ url_for('main.legal', page='refund') }}">{{ _('Refund Policy') }}</a>.</p>
         <button type="submit" class="btn btn--primary" data-goal="order_pay">{{ _('Continue to payment — $%(price)s', price=product.price_usd) }}</button>
         <p class="hint">{{ _('Educational observation, not a diagnosis. 7-day money-back guarantee.') }}</p>
       </div>
