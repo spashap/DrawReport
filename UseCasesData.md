@@ -299,3 +299,31 @@ after any programmatic edit run
 "]`
 - it should be empty. The repair is a one-liner: replace `` with the two characters ``.
 And never trust "it compiled" as evidence that a regex edit worked - assert on a match.
+
+## #32 · Search Console "Merchant listings" errors: an Offer needs a return policy, a shipping
+##        block and an image - and its `url` must be a page Google is ALLOWED to index
+Google reclassified the `/en/report` Product markup as a **merchant listing** (a page that sells
+something) and started reporting against the stricter rule set. Three things were missing and one
+was quietly wrong:
+- **`image` - the only CRITICAL one.** No image means the rich result cannot render, so the feature
+  is simply dropped. Fixed with three ratios (1:1, 4:3, 16:9) from `scripts/build_product_images.py`;
+  Google picks the ratio its surface needs rather than cropping ours.
+- **`hasMerchantReturnPolicy` / `shippingDetails`, both "in offers".** They belong on the Offer, not
+  the Product. For a **digital** product they are not inapplicable, they are *zero*: nothing ships
+  (rate 0, 0-day handling and transit) and nothing is posted back, so the 7-day money-back guarantee
+  IS the return policy, expressed as a finite window with `FreeReturn` / `FullRefund`.
+- **`Offer.url` pointed at `/en/order`, which is `noindex, nofollow`** - it collects a child's name,
+  so it must be. An offer whose landing page Google is told not to index is an offer Google cannot
+  verify or show. It now points at `/en/report`, the indexable page that carries the price.
+
+**`review` and `aggregateRating` were reported missing and were deliberately NOT added.** They are
+the only two fields on that list you cannot satisfy by writing markup: they require real customers
+to have left real feedback. Inventing them is a fake testimonial (banned by the brand rules) and a
+fake review (banned by Google - a manual action, not a warning). Non-critical means non-critical:
+leave them absent until there is a real review store to read from.
+
+**The trap this leaves behind:** the schema now states a 7-day refund window, a US-only offer and a
+free return to Google in machine-readable form. `config.settings.REFUND_DAYS` exists so there is one
+number to change, but the customer-facing PROSE is in `app/legal.py` and `app/content.py`. If those
+two ever disagree, it is not a typo - it is a published promise contradicting the structured data,
+which Google treats as a merchant-listing policy violation. Related: [[#20]], [[#29]].

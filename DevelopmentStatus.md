@@ -1039,3 +1039,35 @@ on the rendered page shows the gap any more - do not rely on noticing it.
 Note the `legal_identity` seed text was corrected in code, but seeding is INSERT-only by key, so the
 row already in the production database keeps the old wording about brackets. Harmless, and not worth
 a migration; the code is the accurate copy.
+
+## V0.050 — Search Console structured-data errors on /en/report
+
+Two Search Console emails, five reported issues, on the only page that carries Product markup.
+Google now reads `/en/report` as a **merchant listing** and judges it by the stricter rule set.
+
+**Fixed (app/routes.py `_schema_jsonld`):**
+- `image` — the one CRITICAL error. Three ratios (`product-1x1/4x3/16x9.jpg`), built from the hero
+  source by the new `scripts/build_product_images.py`. Right-anchored crops: the drawings are on the
+  right of the hero, so a centre crop cuts them in half.
+- `hasMerchantReturnPolicy` and `shippingDetails`, both **per-Offer** — that is where Search Console
+  reports them. A digital product does not make them inapplicable, it makes them zero: nothing ships,
+  and the 7-day money-back guarantee is the return policy.
+- `Offer.url` moved from `/en/order` to `/en/report`. The order form is `noindex, nofollow` (it
+  collects a child's name), and Google cannot show an offer that lands on a page it may not index.
+  Nothing reported this — it was found while checking the URLs the markup emits.
+- Added `sku`, `seller`, `itemCondition`, `Product.url`.
+- `config.settings.REFUND_DAYS = 7` so the markup and the Refund Policy have one number between them.
+
+**Deliberately NOT fixed: `review` and `aggregateRating`.** Both non-critical, both unfillable
+without real customers. Writing them would be a fake testimonial (brand rules) and a fake review
+(Google policy — manual action). They stay missing until there is real feedback to publish.
+
+`SITEMAP_LASTMOD` bumped to 2026-08-20 so the page is re-fetched. After deploy: re-run the failing
+URL through the Rich Results Test, then hit **Validate fix** in Search Console — the report does not
+clear itself.
+
+Checked while in there: the `/order`, `/cabinet` and `/r/` lines in `SEO_DISALLOW` never matched
+anything, because all three routes are locale-prefixed (`/en/order`, …) and robots.txt matches from
+the root. Left alone on purpose — every one of those pages carries `noindex, nofollow` in its
+template, which is the stronger control, and a robots.txt Disallow would actually PREVENT Google
+from reading the noindex.

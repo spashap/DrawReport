@@ -87,6 +87,35 @@ def _schema_jsonld(locale: str, min_price) -> str:
     }
     website = {"@context": "https://schema.org", "@type": "WebSite",
                "name": settings.SITE_NAME, "url": base + "/", "inLanguage": locale}
+    # A digital product delivered by email, so the two "merchant listing" fields Google
+    # asks for describe a download, not a parcel: NOTHING ships (rate 0, no transit) and
+    # nothing is posted back - the 7-day money-back guarantee in app/legal.py IS the
+    # return policy, expressed as a finite window with no return fee. Both are attached
+    # per-Offer because that is where Search Console reports them missing.
+    # Keep every claim here equal to the published pages: this markup is a promise to a
+    # buyer, and Google treats a mismatch as a policy violation rather than a bug.
+    return_policy = {
+        "@type": "MerchantReturnPolicy",
+        "applicableCountry": "US",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": settings.REFUND_DAYS,
+        "returnFees": "https://schema.org/FreeReturn",
+        "refundType": "https://schema.org/FullRefund",
+        "merchantReturnLink": f"{base}/{locale}/legal/refund",
+    }
+    no_shipping = {
+        "@type": "OfferShippingDetails",
+        "shippingRate": {"@type": "MonetaryAmount", "value": 0,
+                         "currency": settings.CURRENCY},
+        "shippingDestination": {"@type": "DefinedRegion", "addressCountry": "US"},
+        "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {"@type": "QuantitativeValue", "minValue": 0, "maxValue": 0,
+                             "unitCode": "DAY"},
+            "transitTime": {"@type": "QuantitativeValue", "minValue": 0, "maxValue": 0,
+                            "unitCode": "DAY"},
+        },
+    }
     product = {
         "@context": "https://schema.org", "@type": "Product",
         "name": "A personal report on your child's drawings",
@@ -94,12 +123,31 @@ def _schema_jsonld(locale: str, min_price) -> str:
                         "work with color, form and detail, and what you can support at home. "
                         "7 areas of development with scores and plain-language explanations. "
                         "Educational observation, not a diagnosis."),
+        # image is the one CRITICAL merchant-listing field. Three ratios because Google
+        # picks the one its surface needs instead of cropping ours; built from the hero
+        # source by scripts/build_product_images.py.
+        "image": [f"{base}/static/img/product-1x1.jpg",
+                  f"{base}/static/img/product-4x3.jpg",
+                  f"{base}/static/img/product-16x9.jpg"],
         "brand": {"@type": "Brand", "name": settings.SITE_NAME},
+        "url": f"{base}/{locale}/report",
+        # No review / aggregateRating on purpose. Search Console lists both as missing and
+        # they are the two fields we must NOT satisfy until real customers have left real
+        # feedback: invented ratings are fake testimonials (banned by the brand rules) and
+        # self-serving fake reviews (banned by Google, penalty not warning). Revisit only
+        # when there is a real review store to read from.
         "offers": [
-            {"@type": "Offer", "name": p["title"],
+            # url is the PRODUCT page, not /order: the order form is noindex, nofollow
+            # (it has to be - it collects a child's name), and an offer whose landing page
+            # Google is told not to index is an offer Google cannot show.
+            {"@type": "Offer", "name": p["title"], "sku": code,
              "price": p["price_usd"], "priceCurrency": settings.CURRENCY,
-             "url": f"{base}/{locale}/order?product={code}",
-             "availability": "https://schema.org/InStock"}
+             "url": f"{base}/{locale}/report",
+             "availability": "https://schema.org/InStock",
+             "itemCondition": "https://schema.org/NewCondition",
+             "seller": {"@type": "Organization", "name": settings.SITE_NAME},
+             "hasMerchantReturnPolicy": return_policy,
+             "shippingDetails": no_shipping}
             for code, p in settings.get_products().items() if p["enabled"]
         ],
     }
