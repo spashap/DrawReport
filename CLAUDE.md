@@ -7,7 +7,7 @@
 > below; it overrides anything that contradicts it.
 
 ---
-## ✅ AS-BUILT STATUS — updated 2026-08-18, VERSION 0.042. **The site is LIVE and taking real payments.**
+## ✅ AS-BUILT STATUS — updated 2026-08-24, VERSION 0.055. **The site is LIVE and taking real payments.**
 
 Repo **https://github.com/spashap/DrawReport** (`main`). Live at **https://drawreport.com** (TLS via
 Let's Encrypt). All phases M0–M9 done, plus the Golos port (phases 1–6), the freemium funnel, the
@@ -236,9 +236,11 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
 Admin `/admin/login` (pass = `ADMIN_PASS`). The footer version badge shows on localhost and is
 hidden in production — `settings.SHOW_VERSION`, derived from `PUBLIC_BASE_URL`.
 
-**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#31 —
+**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#35 —
 **#24/#27 prompt↔linter coupling, #29 unenforced rules collapse on long output, #30 the two English
-standards, #31 `` becomes a backspace when writing regexes programmatically**) · copy tasks
+standards, #31 an escape written through a non-raw Python string, #33 a 404 that was our own
+dead URL, #34 a 302 hands Google your canonical, #35 an uptime monitor sees only the unit that
+answers HTTP**) · copy tasks
 `projectSpec/drawreportcopyfixtask.md`, `projectSpec/DrawReport-English-Copy-Repair-Report.md`,
 `projectSpec/TASK-paid-report-en-4.2-north-star.md` · plan `development-plan.md`.
 
