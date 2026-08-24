@@ -30,9 +30,26 @@ def create_app() -> Flask:
     app.after_request(track.after_request)
 
     # Bare "/" -> redirect to the visitor's resolved locale home.
+    #
+    # 301 while there is exactly ONE locale, 302 as soon as there are more.
+    #
+    # Why it matters: a 302 tells Google the move is TEMPORARY, so it keeps "/"
+    # as the canonical URL and files the target as a duplicate. That is exactly
+    # what happened - Search Console reported "Duplicate, Google chose different
+    # canonical than user" against https://drawreport.com/en/, whose own
+    # <link rel=canonical> says /en/. Redirect and canonical tag contradicted
+    # each other and Google believed the redirect.
+    #
+    # Why it is conditional: a browser caches a 301 indefinitely. With a second
+    # locale live, a returning visitor's browser would keep jumping straight to
+    # /en/ without ever asking the server, so locale negotiation would silently
+    # stop working for exactly the people who already visited. Keying off
+    # len(LOCALES) means that footgun disarms itself the day a locale is added,
+    # instead of depending on someone remembering this comment.
     @app.route("/")
     def root():
-        return redirect(f"/{i18n.resolve_locale()}/", code=302)
+        code = 301 if len(settings.LOCALES) == 1 else 302
+        return redirect(f"/{i18n.resolve_locale()}/", code=code)
 
     from app.routes import bp, bp_root
     app.register_blueprint(bp, url_prefix="/<lang_code>")

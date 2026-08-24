@@ -355,3 +355,34 @@ against the published `my-child-only-draws-in-black`): merge, do not publish bot
 that is **already indexed**, redirecting the other onto it. Publishing both would have manufactured
 exactly the "Duplicate, Google chose different canonical" problem that started the session.
 Related: [[#20]], [[#21]].
+
+## #34 · A 302 on `/` hands Google your canonical, and `www` in the same `server_name` hands it a duplicate
+Two separate causes, one symptom: Search Console reporting the site's own pages as duplicates.
+
+**302 vs 301.** `/` redirected to `/en/` with a **302**. A 302 means *temporary*, which tells Google
+the ORIGINAL url is still the right one — so it kept `/` as canonical and filed `/en/` as the
+duplicate, even though `/en/` self-canonicalises. A redirect outranks a canonical tag when the two
+disagree. Use 301 for a redirect that is really permanent.
+**But do not reach for 301 reflexively.** A browser caches it indefinitely, so a 301 on a
+locale-negotiating root silently breaks negotiation for every returning visitor the day a second
+locale ships — and it breaks it in the one place you cannot observe, because those browsers stop
+asking the server at all. The fix that does not rot:
+`code = 301 if len(settings.LOCALES) == 1 else 302`. Let the condition carry the knowledge instead
+of a comment.
+
+**www in the same `server_name`.** One server block answering `drawreport.com www.drawreport.com`
+means www serves a real 200 copy of every page. Content pages survive it — their
+`<link rel=canonical>` points home — but the **root cannot**, because the root answers with a
+redirect and a redirect has no HTML to put a canonical tag in. That is precisely the URL that
+turned up under "Duplicate without user-selected canonical". Give www its own block that only
+`return 301`s.
+Three details that are easy to get wrong: the www block **must terminate TLS** (a browser validates
+the certificate before it sees any redirect, so a plain-HTTP-only www block produces a cert warning,
+not a redirect); redirect port 80 to the **literal canonical host**, not `$host`, or http://www
+costs two hops; and the cert already covers both names if certbot was run with both `-d` flags, so
+the redirect block just reuses it.
+
+**The install-time trap.** The pre-TLS bootstrap vhost has to serve both names on port 80 so
+certbot's HTTP-01 challenge can complete. It is the *bootstrap*, not the final config — leaving it
+in place after certbot is exactly how www became a copy here. Keep the two files separate and say
+which one is live. Related: [[#33]].

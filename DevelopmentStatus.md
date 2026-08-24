@@ -1140,3 +1140,49 @@ release; the bodies were left alone.
 
 **After deploy:** submit the four new URLs via `scripts/indexnow_submit.py` **on the server**, and
 hit **Validate fix** on the "Not found (404)" row in Search Console — it does not clear itself.
+
+---
+
+## V0.052 — the canonical fix the Search Console email was actually about (2026-08-24)
+
+V0.051 restored the blog and left the email's real cause open pending an owner decision. That
+decision came: fix it.
+
+**1. `/` answers 301 instead of 302 (`app/__init__.py`).** A 302 says *temporary*, so Google kept
+`https://drawreport.com/` as the canonical and filed `https://drawreport.com/en/` — whose own
+`<link rel=canonical>` says `/en/` — as "Duplicate, Google chose different canonical than user".
+The redirect and the canonical tag contradicted each other and Google believed the redirect.
+
+**It is a CONDITIONAL 301: `301 if len(settings.LOCALES) == 1 else 302`.** The objection to a plain
+301 was real — browsers cache one indefinitely, so once a second locale ships, every returning
+visitor's browser would keep jumping straight to `/en/` without ever asking the server, and locale
+negotiation would silently stop working for exactly the people who had already been. Keying the
+status code off the number of locales means that trap disarms itself when a locale is added rather
+than depending on someone reading a comment. Both branches asserted before deploy.
+
+**2. nginx: one canonical host.** `www.drawreport.com` was in the SAME `server_name` line as the
+apex, so it served a full 200 copy of every page. The pages self-canonicalised through their
+`<link rel=canonical>`, but the www ROOT could not — it answers with a redirect, and a redirect
+carries no HTML and therefore no canonical tag. That is the whole reason
+`https://www.drawreport.com/` sat in "Duplicate without user-selected canonical". Now:
+- apex `server_name drawreport.com` only,
+- a dedicated 443 block for `www.drawreport.com` that does nothing but `return 301`
+  (it MUST terminate TLS: a browser validates the certificate before it ever sees the redirect,
+  so a non-TLS www block would throw a cert warning instead of redirecting),
+- port 80 sends BOTH names to `https://drawreport.com` in one hop, using the literal host rather
+  than `$host` so http://www does not cost two redirects.
+
+Verified live, all single-hop: `https://www/...`, `http://www/...` and `http://apex/...` all land on
+`https://drawreport.com/...` with the path preserved. **cosmyday-api checked after the reload** and
+is untouched (still answering with its own FastAPI JSON 404, i.e. proxied, not nginx's page).
+
+**Deploy-kit split, because this is how the bug got in.** `nginx-drawreport.conf` is the pre-TLS
+BOOTSTRAP and has to serve both names on port 80 so certbot's HTTP-01 challenge can complete.
+`nginx-drawreport-tls.conf` is the real live config. The original install left the bootstrap in
+place after certbot, which is what made www a copy. README updated; live config backed up to
+`/root/drawreport.com.nginx.bak.<timestamp>` before the change.
+
+**What this does NOT do:** it does not move the home page's index entry from `/` to `/en/` by
+itself. Google has to re-crawl and re-evaluate, which takes days to weeks. `/` stays indexed
+throughout, so nothing is lost in the meantime — the point of the change is that the signals now
+agree instead of contradicting.

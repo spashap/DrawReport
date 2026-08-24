@@ -135,15 +135,16 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    health-checks at deploy time — nothing watches the site in between, and downtime during a crawl
    is read as a site-quality signal, not as bad luck.
 
-7d. 🔴 **STILL OPEN — `/` answers with a 302, so Google canonicalises the home page to `/`.**
-   `app/__init__.py:35` redirects `/` → `/en/` with **302**, which tells Google the move is
-   temporary and the ORIGINAL url is canonical. Result: `https://drawreport.com/en/` is filed as
-   "Duplicate, Google chose different canonical than user" and is not indexed. `/` itself IS
-   indexed, so no traffic is lost — this is contradictory signalling, not an outage. The fix is
-   302→301 plus a www→non-www 301 in `nginx-drawreport.conf` (one server block currently answers
-   both hosts, so `www` serves a full 200 copy of every page). **Not done: awaiting owner decision**,
-   because a 301 is cached by browsers indefinitely and would bypass locale negotiation the day a
-   second locale ships.
+7d. ✅ **DONE (V0.052) — `/` now answers 301, and www is a redirect rather than a copy.**
+   `app/__init__.py` sends **301 while `len(LOCALES) == 1`, 302 as soon as there are more** —
+   the browser-cache footgun (a cached 301 bypasses locale negotiation for returning visitors)
+   disarms itself the day a second locale ships, instead of relying on someone remembering.
+   nginx: one canonical host. `www.drawreport.com` has its own 443 block that only
+   `return 301`s, and port 80 goes straight to `https://drawreport.com` in ONE hop for both
+   names. ⚠️ The live vhost is `drawreportDeploy/nginx-drawreport-tls.conf`;
+   `nginx-drawreport.conf` is the pre-TLS bootstrap ONLY (it must serve both names on port 80
+   for certbot's challenge) and must be replaced after certbot runs — leaving the bootstrap
+   in place is what made www serve a 200 copy of every page.
 
 **Product / business.**
 8. ✅ **DONE (V0.035 + V0.036) — English pass across every copy surface.** The site (freemium

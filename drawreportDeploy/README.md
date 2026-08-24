@@ -19,7 +19,13 @@ never touch cosmyday-api (which stays on port 8001).
 - `deploy.sh` — routine update (git pull + deps + restart).
 - `restart.sh` — restart the two services.
 - `drawreport-web.service`, `drawreport-worker.service` — systemd units.
-- `nginx-drawreport.conf` — the vhost.
+- `nginx-drawreport.conf` — the vhost, **bootstrap/pre-TLS only** (serves the app on
+  port 80 on both names so certbot's HTTP-01 challenge can complete).
+- `nginx-drawreport-tls.conf` — **what is actually live.** Copy this over the vhost
+  once certbot has issued the cert. One canonical host (`drawreport.com`); www gets
+  its own 443 block that only `return 301`s. Do not merge the two names back into
+  one server block: that makes www serve a full 200 copy of every page, and the www
+  root then has no canonical tag to fix it with (a redirect carries no HTML).
 
 ## First-time install
 ```bash
