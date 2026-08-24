@@ -128,12 +128,28 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    refuses to run when `PUBLIC_BASE_URL` is localhost, so it cannot be driven from a dev box.
    Deliberately MANUAL, not a deploy hook: IndexNow is for pages that CHANGED, and re-announcing the
    whole site on every deploy is what gets a host throttled. `--sitemap` was the one first run.
-7c. 🔴 **STILL OPEN — Ahrefs Webmaster Tools and UptimeRobot.** Both are free and both need an
-   ACCOUNT the owner must create personally. AWT (`ahrefs.com/webmaster-tools`) is the best free
-   thing after GSC: a crawl-based site audit plus our own backlink profile, and it verifies through
-   the SAME Search Console link that already exists. UptimeRobot matters because `release.bat` only
-   health-checks at deploy time — nothing watches the site in between, and downtime during a crawl
-   is read as a site-quality signal, not as bad luck.
+7c. ✅ **DONE (2026-08-24) — Ahrefs Webmaster Tools + UptimeRobot, both on `spashap@gmail.com`.**
+   **Ahrefs** (now branded "Ahrefs Free"): signed in with Google and imported 4 GSC properties —
+   belgradebest, cosmyday, drawreport, shepotzvezd. **fidgetgo deliberately excluded** (it appeared
+   TWICE in the import list, apex + www; both were unchecked). First audit + weekly audits on,
+   "crawl external links" left OFF — it burns free-tier crawl credits. ⚠️ The Google sign-in route
+   grants Ahrefs read access to EVERY GSC property on the account, which is the same breadth that
+   was rejected for Bing in V0.043 — accepted here by owner decision, noted so the inconsistency is
+   deliberate rather than forgotten.
+   **UptimeRobot**: 2 HTTP monitors at 5-minute intervals, e-mail alerts to the same address —
+   `drawreport.com` and `drawreport.com/free/`. The second one matters because `/free/` is the
+   funnel's front door and runs on its own `drawreport-free` unit, so it can die without the web
+   unit noticing. Free tier allows 50 monitors, so there is room.
+
+   🟡 **What AWT immediately turned up: ~460 referring domains to drawreport.com, essentially all
+   flagged SPAM by Ahrefs** (`rankyour.website`, `buybacklinks.agency`, `backlinker.shop`,
+   `fiverr-cost-effective-seo.site`, …). **Do not panic and do not disavow.** Only **21** of the 460
+   are dofollow — the other ~439 pass no ranking signal at all — GSC **Manual actions: "No issues
+   detected"**, and cosmyday.com shows the SAME domains, several first seen before drawreport was
+   even live. That combination says indiscriminate scraper/link-spam noise that hits every
+   registered domain, not a targeted attack. Google devalues this rather than penalising it, and
+   its own guidance is that most sites never need a disavow file. Action: none. Watch for a manual
+   action (Google emails); AWT now tracks the profile automatically.
 
 7d. ✅ **DONE (V0.052) — `/` now answers 301, and www is a redirect rather than a copy.**
    `app/__init__.py` sends **301 while `len(LOCALES) == 1`, 302 as soon as there are more** —
