@@ -658,6 +658,27 @@ def legal(page):
     return render_template("legal.html", title=title, body=body)
 
 
+# --- /healthz -------------------------------------------------------------
+# The one thing an HTTP uptime monitor could not see. gunicorn serves every page,
+# including /free/, so a 200 anywhere on the site proves only that the WEB unit is
+# up. drawreport-worker and drawreport-free are separate units that answer no HTTP
+# at all: when one dies the site stays green while paid orders stop being delivered
+# and every free reading queues forever.
+#
+# 200 when every background unit has a fresh heartbeat, 503 when one does not, so a
+# plain HTTP monitor is enough - no keyword matching required. Deliberately public
+# and unauthenticated: a monitor cannot log in. It leaks only unit names and how
+# many seconds ago each was alive, which is not worth protecting.
+#
+# no-store because a cached 200 is precisely the wrong answer to this question.
+@bp_root.get("/healthz")
+def healthz():
+    from app import health
+    ok, body = health.report(get_db())
+    return Response(body, status=200 if ok else 503, mimetype="text/plain",
+                    headers={"Cache-Control": "no-store"})
+
+
 # --- Legacy blog URLs -----------------------------------------------------
 #
 # The blog used to live at /blog/<slug>, with no locale segment, and those URLs

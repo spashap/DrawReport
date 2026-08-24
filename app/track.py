@@ -33,7 +33,15 @@ VISIT_MAX_AGE = 30 * 60          # visit window; extended on every request
 # active reading. Matched after the /<lang>/ prefix is stripped (see _bare_path).
 NON_PAGE_PREFIXES = ("/static/", "/t/e", "/track/", "/free/status/", "/free/img/",
                      "/pay/", "/cabinet/drawing/", "/admin",
-                     "/favicon.ico", "/robots.txt", "/sitemap.xml")
+                     "/favicon.ico", "/robots.txt", "/sitemap.xml", "/healthz")
+
+# Paths that must not create a VISIT ROW at all - stronger than NON_PAGE_PREFIXES
+# above, which only stops a request counting as a page WITHIN a visit.
+# /healthz is the reason this became a named constant: an uptime monitor sends no
+# cookies, so every single check looks like a brand-new visitor. At one check every
+# five minutes that is ~288 invented visits a day, per monitor, forever - which would
+# swamp the real traffic on the admin funnel and grow web_visits without limit.
+NO_VISIT_PREFIXES = ("/admin", "/static/", "/favicon", "/healthz")
 
 # Search engines and social networks, for classifying the channel by referer.
 _SEARCH_HOSTS = ("google.", "bing.com", "duckduckgo.com", "search.", "yahoo.",
@@ -138,8 +146,7 @@ def after_request(response):
     # visit. Static is skipped entirely: one page pulls a dozen files, and each of them
     # would write a timestamp to the database without making the visit any more alive.
     bare = _bare_path()
-    if (getattr(g, "visit_id", None) and not bare.startswith("/admin")
-            and not bare.startswith(("/static/", "/favicon"))):
+    if getattr(g, "visit_id", None) and not bare.startswith(NO_VISIT_PREFIXES):
         response.set_cookie(VISIT_COOKIE, g.visit_id, max_age=VISIT_MAX_AGE,
                             httponly=True, samesite="Lax")
         try:

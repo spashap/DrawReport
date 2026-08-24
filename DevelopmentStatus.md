@@ -1186,3 +1186,53 @@ place after certbot, which is what made www a copy. README updated; live config 
 itself. Google has to re-crawl and re-evaluate, which takes days to weeks. `/` stays indexed
 throughout, so nothing is lost in the meantime — the point of the change is that the signals now
 agree instead of contradicting.
+
+---
+
+## V0.055 — `/healthz`: the failure an uptime monitor could not see (2026-08-24)
+
+Setting up UptimeRobot exposed that HTTP monitoring watched only one of the three units, and
+that the plumbing meant to cover the other two was half-built.
+
+**The gap.** gunicorn (`drawreport-web`) serves EVERY route, `/free/` included — `bp_free` is
+registered in the same Flask app. `drawreport-worker` and `drawreport-free` answer no HTTP at all.
+So a 200 anywhere on the site proves only that gunicorn is up. When a worker dies the site stays
+perfectly green while **paid orders stop being delivered and every free reading queues forever**.
+An earlier note in this journal claimed a `/free/` monitor covered the free worker; it does not,
+and that claim was corrected in V0.054.
+
+**`app/health.py` — one source of truth.** `WATCHED` holds (name, label, limit): free_worker 120s
+(it ticks about once a second, someone is watching a spinner), worker 600s (silent for the whole
+minutes-long report generation). Both `admin._heartbeats()` and `/healthz` read it, because a
+threshold that says alive on one screen and dead on the other is worse than having neither.
+
+**`/healthz`** (root blueprint, not locale-prefixed): 200 with a per-unit plain-text body, **503**
+when any heartbeat is stale or missing, `Cache-Control: no-store` — a cached 200 is exactly the
+wrong answer to this question. Public and unauthenticated on purpose: a monitor cannot log in, and
+the only thing it discloses is unit names and how many seconds ago each was alive. Missing counts
+as stale, which is the after-a-reboot case the `service_heartbeat` table was created for.
+
+**Two bugs found while building it:**
+1. **`worker.py` had never written a heartbeat at all.** `_heartbeats()` had watched a row nothing
+   wrote since the table was added, so the paid worker could never show green and `/healthz` would
+   have had nothing to check. It now marks itself at the top of each poll pass, before the SELECT,
+   so it ticks whether or not there is work.
+2. **An uptime monitor sends no cookies, so every check created a NEW visit row.** ~288 invented
+   visits a day per monitor, forever, swamping real traffic in the admin funnel and growing
+   `web_visits` without limit. Adding `/healthz` to `NON_PAGE_PREFIXES` was not enough — that list
+   only stops a request counting as a page WITHIN a visit. Added `track.NO_VISIT_PREFIXES`
+   (`/admin`, `/static/`, `/favicon`, `/healthz`), which is what actually gates visit creation.
+   Verified: five `/healthz` hits leave the visit count unchanged, one real page increments it.
+
+`free_worker.heartbeat()` is now a thin wrapper over `health.heartbeat()` so writer and both
+readers share one implementation.
+
+**Third monitor added** on `https://drawreport.com/healthz`, 5 minutes, same alert address.
+
+**Note on the admin task text:** the `seo_uptime_monitor` seed in `app/admin_tasks.py` was updated
+to describe both monitors, but `_seed()` creates a task once per database — the row on the LIVE
+admin still carries the old "there is no monitoring" wording.
+
+⚠️ Editing that seed hit **UseCase #31** again: writing `\n` into Python SOURCE through a non-raw
+generator string turned it into a real newline and broke the file. Redone with raw strings, then
+asserted no stray control characters. The lesson is already logged; it caught me anyway.

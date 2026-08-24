@@ -22,6 +22,7 @@ from app import admin_free_analytics as fa
 from app import admin_funnels as fn
 from app import admin_tasks as tasks
 from app import geoip, jobs
+from app import health
 from app.db import get_db, now
 from config import settings
 
@@ -546,29 +547,10 @@ def coupons_toggle(code):
 
 
 def _heartbeats(db):
-    """Are the background units alive? deploy.sh does not start a new unit and there is no
-    monitoring - without this row, after a reboot of the box free readings would silently
-    stop being generated and nothing on any screen would say so.
-
-    Each unit gets its own threshold: free_worker marks itself once a second, while the
-    paid worker is silent for the whole time it generates a report (minutes). A shared
-    120s limit would paint normal operation as an alarm."""
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
-    seen = {r["name"]: r["last_seen_at"] for r in
-            db.execute("SELECT name, last_seen_at FROM service_heartbeat")}
-    out = []
-    for name, label, limit in (("free_worker", "free_worker (free readings)", 120),
-                               ("worker", "worker (paid reports)", 600)):
-        ts = seen.get(name)
-        ago = None
-        if ts:
-            try:
-                ago = int((now_utc - datetime.datetime.fromisoformat(ts)).total_seconds())
-            except ValueError:
-                ago = None
-        out.append({"name": name, "label": label, "ago": ago,
-                    "ok": ago is not None and ago < limit})
-    return out
+    """Are the background units alive? Delegates to app.health, which is also what
+    /healthz reads - the admin screen and the uptime monitor must never disagree
+    about whether a unit is dead (see app/health.py for the thresholds)."""
+    return health.statuses(db)
 
 
 @bp_admin.get("/free-analytics")

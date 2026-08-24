@@ -149,12 +149,21 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    `free_worker.py`, a background queue processor that never answers HTTP. The monitor is still
    worth having (it exercises a second route), but the free worker can die with `/free/` still
    returning 200 while every visitor's reading silently queues forever.
-   🟡 **That blind spot is real and is NOT covered.** There is no public health endpoint anywhere
-   in the app. The project's existing answer is the `service_heartbeat` table read by
-   `admin._heartbeats()` (thresholds: free_worker 120s, worker 600s) surfaced on the admin Tasks
-   page — which nobody is looking at during an outage. Closing it properly means a small public
-   endpoint that returns non-200 when a heartbeat is stale, so UptimeRobot can watch it. NOT built:
-   it would override a decision already recorded in `admin_tasks.py`, so it is an owner call.
+   ✅ **CLOSED (V0.055) — `/healthz` + a third monitor.** `app/health.py` is the single source of
+   truth (`WATCHED`: free_worker 120s, worker 600s) and is read by BOTH `admin._heartbeats()` and
+   the new public `/healthz`, so the admin screen and the uptime monitor can never disagree. 200
+   when every unit has a fresh heartbeat, **503** when one is stale, so a plain HTTP monitor is
+   enough — no keyword matching. Public and unauthenticated on purpose: a monitor cannot log in,
+   and it leaks only unit names and staleness.
+   ⚠️ **Two bugs this uncovered.** (1) **`worker.py` had NEVER written a heartbeat** — the paid
+   worker could not go green on any screen and `/healthz` would have had nothing to check, so a
+   dead paid worker meant paid orders silently stopped being delivered while every page returned
+   200. Fixed. (2) An uptime monitor sends no cookies, so **every check created a brand-new visit
+   row** (~288/day/monitor, forever, swamping the admin funnel). `/healthz` is now in
+   `track.NO_VISIT_PREFIXES` — note that is a STRONGER list than `NON_PAGE_PREFIXES`, which only
+   stops a request counting as a page *within* a visit.
+   ⚠️ The seed text for admin task `seo_uptime_monitor` was updated, but `_seed()` creates a task
+   ONCE per database, so the row on the LIVE admin still carries the old wording.
 
    🟡 **What AWT immediately turned up: ~460 referring domains to drawreport.com, essentially all
    flagged SPAM by Ahrefs** (`rankyour.website`, `buybacklinks.agency`, `backlinker.shop`,

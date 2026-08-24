@@ -179,9 +179,15 @@ _SEEDS = [
      "Monitor /en/ rather than / : / only proves nginx answered and redirected, while\n"
      "/en/ is rendered by the app, so a 200 there proves gunicorn is actually alive.\n"
      "\n"
-     "NOTE. This watches the WEB unit only. drawreport-worker and drawreport-free can\n"
-     "die without the site going down - that is what the service_heartbeat table and\n"
-     "the Tasks/Analytics pages are for."),
+     "SECOND MONITOR (V0.055): https://drawreport.com/healthz, same 5 minutes.\n"
+     "An HTTP monitor on any PAGE watches the web unit only - gunicorn serves"
+     " every route including /free/, so a 200 anywhere proves only that\n"
+     "gunicorn is up. drawreport-worker and drawreport-free answer no HTTP at\n"
+     "all, so when one dies the site stays green while paid orders stop being\n"
+     "delivered and free readings queue forever. /healthz returns 503 when a\n"
+     "heartbeat in service_heartbeat is stale, turning that invisible failure\n"
+     "into a normal uptime alert. Thresholds live in app/health.py and are\n"
+     "shared with this page, so the screen and the monitor cannot disagree."),
 ]
 
 

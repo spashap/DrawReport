@@ -386,3 +386,33 @@ the redirect block just reuses it.
 certbot's HTTP-01 challenge can complete. It is the *bootstrap*, not the final config — leaving it
 in place after certbot is exactly how www became a copy here. Keep the two files separate and say
 which one is live. Related: [[#33]].
+
+## #35 · An uptime monitor watches the unit that answers HTTP, and nothing else
+Three systemd units, one of them serves HTTP. `drawreport-web` (gunicorn) serves EVERY route,
+including `/free/` — the free blueprint is registered in the same Flask app. `drawreport-worker`
+and `drawreport-free` are queue processors that never answer a request. So **a 200 anywhere on the
+site proves exactly one thing: gunicorn is up.** Pick any page you like; it cannot tell you a
+worker died. And that failure is the quiet one — the site looks perfect while paid orders stop
+being delivered and free readings queue forever.
+
+Do not reason about this from URL shape. `/free/` *looks* like it belongs to `drawreport-free`;
+it does not. Check which process actually serves the route (`grep register_blueprint`) before
+claiming a monitor covers a unit.
+
+**The fix is a health endpoint the monitor can read**: workers write a heartbeat row, one shared
+module owns the staleness thresholds, and the endpoint returns **503** when any is stale so a plain
+HTTP monitor suffices — no keyword matching, no auth (a monitor cannot log in). Missing counts as
+stale: that is the after-a-reboot case, the exact thing the heartbeat exists for.
+Thresholds must be **shared with whatever screen a human reads**, not copied. One saying alive
+while the other says dead is worse than having neither.
+
+**Two traps found doing it:**
+- **A watched heartbeat nobody writes.** The admin screen had listed the paid worker for as long as
+  the table existed, and `worker.py` had never written a row. It silently read as permanently dead,
+  and nobody noticed because nobody watches that screen. If you add a liveness row, assert the
+  WRITER exists, not just the reader.
+- **The monitor sends no cookies, so every check is a brand-new visitor.** ~288 invented visits a
+  day, per monitor, forever. Excluding the path from the "is this a page view" list is NOT enough —
+  that only stops it counting as a page *within* a visit; the visit row is created earlier and
+  separately. Gate visit CREATION too, and verify by counting rows before and after.
+Related: [[#31]] (hit again writing the seed text), [[#34]].

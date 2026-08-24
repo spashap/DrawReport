@@ -20,7 +20,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
-from app import free_jobs, free_retention
+from app import free_jobs, free_retention, health
 from app.db import connect, init_db, now
 from config import settings
 
@@ -45,14 +45,9 @@ def setup_logging() -> None:
 
 
 def heartbeat(conn) -> None:
-    """One row saying this unit is alive. deploy.sh does not start a new unit and there is
-    no monitoring - without this, after a reboot of the box free analyses would silently
-    stop being generated and nothing would say so."""
-    conn.execute(
-        "INSERT INTO service_heartbeat (name, last_seen_at) VALUES (?, ?)"
-        " ON CONFLICT(name) DO UPDATE SET last_seen_at = excluded.last_seen_at",
-        (HEARTBEAT_NAME, now()))
-    conn.commit()
+    """One row saying this unit is alive. Thin wrapper over app.health so the WRITER
+    and the two READERS (admin Tasks page, /healthz) share one implementation."""
+    health.heartbeat(conn, HEARTBEAT_NAME)
 
 
 def main() -> int:

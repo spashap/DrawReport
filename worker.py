@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
-from app import jobs
+from app import health, jobs
 from app.db import connect, init_db
 from config import settings
 
@@ -55,6 +55,12 @@ def main() -> int:
              settings.WORKER_POLL_SECONDS, args.once)
 
     while True:
+        # Before the SELECT, so the unit is marked alive on every pass whether or
+        # not there is work. Until V0.055 this worker wrote NO heartbeat at all,
+        # so the admin liveness row for it could never turn green and /healthz had
+        # nothing to check - a dead paid worker meant paid orders silently stopped
+        # being delivered with every page still returning 200.
+        health.heartbeat(conn, "worker")
         row = conn.execute(
             "SELECT id FROM orders WHERE status = 'paid' ORDER BY paid_at, id LIMIT 1"
         ).fetchone()
