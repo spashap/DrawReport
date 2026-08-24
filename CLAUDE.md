@@ -137,9 +137,24 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    was rejected for Bing in V0.043 — accepted here by owner decision, noted so the inconsistency is
    deliberate rather than forgotten.
    **UptimeRobot**: 2 HTTP monitors at 5-minute intervals, e-mail alerts to the same address —
-   `drawreport.com` and `drawreport.com/free/`. The second one matters because `/free/` is the
-   funnel's front door and runs on its own `drawreport-free` unit, so it can die without the web
-   unit noticing. Free tier allows 50 monitors, so there is room.
+   **`https://drawreport.com/en/`** and `https://drawreport.com/free/`. Alert delivery verified with
+   a test notification, not assumed. Free tier allows 50 monitors, so there is room.
+   ⚠️ **`/en/`, not `/`** — and this is the seed task `uptime_monitor` in `app/admin_tasks.py`
+   saying so: `/` only proves nginx answered and redirected, while `/en/` is rendered by the app,
+   so a 200 there proves gunicorn is actually alive. The monitor was first created on `/` and
+   corrected.
+   ⚠️ **CORRECTION to what a `/free/` monitor proves.** It does NOT watch the `drawreport-free`
+   unit. `bp_free` is registered in the same Flask app (`app/__init__.py`), so `/free/` is served
+   by **gunicorn / `drawreport-web`** like every other page; `drawreport-free` runs
+   `free_worker.py`, a background queue processor that never answers HTTP. The monitor is still
+   worth having (it exercises a second route), but the free worker can die with `/free/` still
+   returning 200 while every visitor's reading silently queues forever.
+   🟡 **That blind spot is real and is NOT covered.** There is no public health endpoint anywhere
+   in the app. The project's existing answer is the `service_heartbeat` table read by
+   `admin._heartbeats()` (thresholds: free_worker 120s, worker 600s) surfaced on the admin Tasks
+   page — which nobody is looking at during an outage. Closing it properly means a small public
+   endpoint that returns non-200 when a heartbeat is stale, so UptimeRobot can watch it. NOT built:
+   it would override a decision already recorded in `admin_tasks.py`, so it is an owner call.
 
    🟡 **What AWT immediately turned up: ~460 referring domains to drawreport.com, essentially all
    flagged SPAM by Ahrefs** (`rankyour.website`, `buybacklinks.agency`, `backlinker.shop`,
