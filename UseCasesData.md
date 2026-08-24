@@ -327,3 +327,31 @@ free return to Google in machine-readable form. `config.settings.REFUND_DAYS` ex
 number to change, but the customer-facing PROSE is in `app/legal.py` and `app/content.py`. If those
 two ever disagree, it is not a typo - it is a published promise contradicting the structured data,
 which Google treats as a merchant-listing policy violation. Related: [[#20]], [[#29]].
+
+## #33 · A 404 that "was never a real URL" — check the archive before you dismiss it
+Search Console reported five `Not found (404)` URLs shaped `/blog/<slug>`, with no locale segment.
+None of the slugs matched a file in `content/en/blog/`, nothing in the repo linked to them, and one
+even ended in `.html`, which this site has never served. They were reported to the owner as
+fabricated URLs — probably guessed by a crawler or an AI — and safe to ignore. **Wrong.** The site
+really did serve them, before the i18n rebuild moved every public page behind `/<locale>/`. The
+owner still had the exported HTML, and the `<link rel="canonical">` inside each file named the exact
+URL Google was asking for.
+
+**The tell that was available and not used:** the repo is not the history. `git log` only goes back
+to the current build, the old blog predates it, and "nothing links to it now" is evidence about
+today, not about what was published. A 404 for a URL Google *chose to crawl* means Google saw a link
+to it once, from somewhere. That is worth one question to the owner before it is written off.
+
+**The fix has three parts, and the middle one is the one that gets skipped:**
+1. Restore the content.
+2. **301 the old URL to the new one**, absolute, built from `PUBLIC_BASE_URL` so a `www` hit lands on
+   the canonical host in the same hop. Publishing the article at a new path does NOT clear the 404 —
+   the reported URL is still a 404 until something answers it.
+3. Redirect **only** to an article that exists. A blanket `/blog/<anything>` → home turns every typo
+   and probe into a soft 404, which Google treats worse than the honest 404 it replaced.
+
+**And when the restored article duplicates a live one** (it did — the archived black-drawings piece
+against the published `my-child-only-draws-in-black`): merge, do not publish both, and keep the slug
+that is **already indexed**, redirecting the other onto it. Publishing both would have manufactured
+exactly the "Duplicate, Google chose different canonical" problem that started the session.
+Related: [[#20]], [[#21]].

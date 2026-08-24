@@ -2,9 +2,17 @@
 title: Is a child’s drawing a diagnosis? (No. Here’s what it does show.)
 description: A child’s drawing isn’t a psychological test. Here’s the honest way to read one: by what’s visible on the page.
 date: 2026-06-10
+updated: 2026-08-24
+faq:
+  - q: Can a drawing diagnose anything?
+    a: No. A drawing is not a psychological or medical assessment, and no one can responsibly turn one into a label for a child. What a drawing shows reliably is what is on the page: how it was made, and how that compares with what is typical for the age.
+  - q: What about the tests where a child draws a person?
+    a: Formal figure-drawing measures exist and are used by trained clinicians as one small input among many, alongside interviews, history and observation over time. That is a long way from reading a picture off the fridge, and the clinicians using them are the first to say so.
+  - q: So is any of it meaningful?
+    a: Plenty of it. Children’s drawing develops through well-documented stages, and where a child sits in that progression is genuinely informative. It just tells you about drawing, not about a diagnosis.
+  - q: Who should I talk to if I am actually worried about my child?
+    a: Your pediatrician first. They know your child’s history and can refer on if it is warranted. A teacher who sees your child every day is the other person worth asking.
 ---
-
-> DRAFT — for owner review.
 
 You’ve probably seen articles claiming a drawing reveals a child’s hidden fears, or that
 a particular color “means” something is wrong. It’s a tempting idea. It’s also not how

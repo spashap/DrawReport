@@ -135,6 +135,16 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    health-checks at deploy time — nothing watches the site in between, and downtime during a crawl
    is read as a site-quality signal, not as bad luck.
 
+7d. 🔴 **STILL OPEN — `/` answers with a 302, so Google canonicalises the home page to `/`.**
+   `app/__init__.py:35` redirects `/` → `/en/` with **302**, which tells Google the move is
+   temporary and the ORIGINAL url is canonical. Result: `https://drawreport.com/en/` is filed as
+   "Duplicate, Google chose different canonical than user" and is not indexed. `/` itself IS
+   indexed, so no traffic is lost — this is contradictory signalling, not an outage. The fix is
+   302→301 plus a www→non-www 301 in `nginx-drawreport.conf` (one server block currently answers
+   both hosts, so `www` serves a full 200 copy of every page). **Not done: awaiting owner decision**,
+   because a 301 is cached by browsers indefinitely and would bypass locale negotiation the day a
+   second locale ships.
+
 **Product / business.**
 8. ✅ **DONE (V0.035 + V0.036) — English pass across every copy surface.** The site (freemium
    wizard, emails, PDF strings, sample report, blog, legal) was repaired in V0.035 against
@@ -163,7 +173,14 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
    ⚠️ **Never publish a retention promise the code does not keep.** The 90-day free-photo deletion is
    real (`app/free_retention.py`, run daily by `free_worker.py`); the drafted "analytics purged at 24
    months" line was CUT because no such job exists.
-10. **Blog has only 3 posts.**
+10. ✅ **DONE (V0.051) — blog is 7 posts.** Five articles the site served before the i18n rebuild
+    were restored from the owner's archive, rewritten to the copy standard, and the duplicate pair
+    merged; old `/blog/<slug>` URLs now 301 to `/en/blog/<slug>` (`LEGACY_BLOG_SLUGS` in
+    `app/routes.py`). Blog frontmatter gained `faq:` and `updated:`; `faq` feeds BOTH the visible
+    block and the FAQPage JSON-LD from one source. **Every blog post inherits its disclaimer and its
+    free-reading CTA from `blog_post.html`** — put them there, never in an article body.
+    ⚠️ Two posts are still thin (~250 words): `is-a-childs-drawing-a-diagnosis`,
+    `what-you-can-learn-from-a-drawing`.
 12. **`insufficient_input` does not fire on non-drawings.** en-4.2 has an explicit rule to reject an
     image that is not a child's drawing; fed flat vector clip art it produced a full, confident
     report praising the "confident and direct" lines of a computer-drawn graphic. Low impact (real

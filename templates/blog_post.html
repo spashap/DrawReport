@@ -12,39 +12,102 @@
 <meta property="og:url" content="{{ public_base_url }}{{ request.path }}">
 <meta property="og:site_name" content="{{ site_name }}">
 <meta property="og:image" content="{{ public_base_url }}/static/img/og-default.jpg">
+<meta property="article:published_time" content="{{ post.date.isoformat() }}">
+<meta property="article:modified_time" content="{{ post.modified.isoformat() }}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ post.title }}">
 <meta name="twitter:description" content="{{ post.description }}">
 <meta name="twitter:image" content="{{ public_base_url }}/static/img/og-default.jpg">
 {% endblock %}
 {% block head %}
+{# Article + BreadcrumbList always; FAQPage only when the article really shows the
+   questions on the page. Both the visible block below and this schema read the same
+   post.faq, so they cannot drift apart - schema that is not visible on the page is a
+   structured-data violation, not a shortcut. #}
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "Article",
  "headline": {{ post.title | tojson }},
  "description": {{ post.description | tojson }},
  "datePublished": "{{ post.date.isoformat() }}",
- "dateModified": "{{ post.date.isoformat() }}",
+ "dateModified": "{{ post.modified.isoformat() }}",
  "inLanguage": "{{ locale }}",
+ "image": ["{{ public_base_url }}/static/img/og-default.jpg"],
+ "isAccessibleForFree": true,
  "mainEntityOfPage": {"@type": "WebPage", "@id": "{{ public_base_url }}{{ request.path }}"},
- "author": {"@type": "Organization", "name": "{{ site_name }}"},
- "publisher": {"@type": "Organization", "name": "{{ site_name }}"}}
+ "author": {"@type": "Organization", "name": "{{ site_name }}", "url": "{{ public_base_url }}"},
+ "publisher": {"@type": "Organization", "name": "{{ site_name }}", "url": "{{ public_base_url }}"}}
 </script>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+ {"@type": "ListItem", "position": 1, "name": {{ _('Home') | tojson }},
+  "item": "{{ public_base_url }}{{ url_for('main.index') }}"},
+ {"@type": "ListItem", "position": 2, "name": {{ _('Blog') | tojson }},
+  "item": "{{ public_base_url }}{{ url_for('main.blog_index') }}"},
+ {"@type": "ListItem", "position": 3, "name": {{ post.title | tojson }},
+  "item": "{{ public_base_url }}{{ request.path }}"}]}
+</script>
+{% if post.faq %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+{% for f in post.faq %}{"@type": "Question", "name": {{ f.q | tojson }},
+  "acceptedAnswer": {"@type": "Answer", "text": {{ f.a | tojson }}}}{{ "," if not loop.last }}
+{% endfor %}]}
+</script>
+{% endif %}
 {% endblock %}
 {% block body %}
 <div class="section">
   <article class="wrap prose" style="max-width: 760px">
-    <p class="hint" style="margin-bottom: 6px"><a href="{{ url_for('main.blog_index') }}" data-goal="blogpost_back_blog">{{ _('Blog') }}</a></p>
+
+    <p class="hint" style="margin-bottom: 6px">
+      <a href="{{ url_for('main.index') }}" data-goal="blogpost_back_home">{{ _('Home') }}</a>
+      <span aria-hidden="true">›</span>
+      <a href="{{ url_for('main.blog_index') }}" data-goal="blogpost_back_blog">{{ _('Blog') }}</a>
+    </p>
+
     <h1 class="h2">{{ post.title }}</h1>
+    <p class="hint" style="margin-top: -4px">
+      <time datetime="{{ post.date.isoformat() }}">{{ post.date.strftime('%B') }} {{ post.date.day }}, {{ post.date.year }}</time>
+      {%- if post.modified != post.date %} · {{ _('updated') }}
+      <time datetime="{{ post.modified.isoformat() }}">{{ post.modified.strftime('%B') }} {{ post.modified.day }}, {{ post.modified.year }}</time>
+      {%- endif %}
+    </p>
+
     {{ post.html | safe }}
-    <div class="form-card" style="margin-top: 36px; text-align: center">
-      <p style="margin-top: 0">{{ _('Want a calm, educational look at your child’s drawings — based on what’s on the page, not a diagnosis?') }}
-        <a href="{{ url_for('main.report_page') }}#examples" data-goal="blogpost_sample">{{ _('See a sample analysis') }}</a>
-        {{ _('or order a report from a photo.') }}</p>
-      <p style="margin-bottom: 0; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
-        <a class="btn btn--primary" href="{{ url_for('main.order') }}" data-goal="blogpost_order">{{ _('Get a report on your child’s drawing') }}</a>
-        <a class="btn btn--ghost" href="{{ url_for('main.report_page') }}#examples" data-goal="blogpost_sample_btn">{{ _('See a sample analysis') }}</a>
+
+    {% if post.faq %}
+    <h2>{{ _('Questions parents ask') }}</h2>
+    {% for f in post.faq %}
+    <details class="faq"><summary data-goal="blogpost_faq_open">{{ f.q }}</summary><p>{{ f.a }}</p></details>
+    {% endfor %}
+    {% endif %}
+
+    {# The boundary comes BEFORE the offer on purpose: a reader should know what this
+       is and is not before they are invited to upload anything. #}
+    <p class="hint" style="margin-top: 28px; border-left: 3px solid var(--alt); padding-left: 12px">
+      {{ _('This article is general information about how children draw, not advice about your child. It is not a diagnosis, a screening tool, or a substitute for a professional who knows your child. If something worries you, your pediatrician, a child psychologist, or a teacher who sees your child every day is the person who can give you a recommendation.') }}
+    </p>
+
+    <div class="form-card" style="margin-top: 28px">
+      <h2 style="margin-top: 0">{{ _('Curious what one of your child’s drawings shows?') }}</h2>
+      <p>{{ _('Upload a photo of one drawing and we’ll read it for you: what’s actually visible on the page, what it may say about the stage your child is at, and what to ask them about it. Educational observation, never a diagnosis.') }}</p>
+      <p style="margin-bottom: 14px"><strong>{{ _('Free, and it takes about a minute.') }}</strong>
+        {{ _('No credit card, no account.') }}</p>
+      <p style="margin-bottom: 0; display:flex; gap:12px; justify-content:flex-start; flex-wrap:wrap">
+        <a class="btn btn--primary" href="{{ url_for('free.page') }}" data-goal="blogpost_free_cta">{{ _('Get a free reading') }}</a>
+        <a class="btn btn--ghost" href="{{ url_for('main.report_page') }}" data-goal="blogpost_report">{{ _('See the full report') }}</a>
       </p>
     </div>
+
+    {% if related %}
+    <h2>{{ _('More on children’s drawings') }}</h2>
+    <ul>
+      {% for r in related %}
+      <li><a href="{{ url_for('main.blog_post', slug=r.slug) }}" data-goal="blogpost_related">{{ r.title }}</a></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
   </article>
 </div>
 {% endblock %}

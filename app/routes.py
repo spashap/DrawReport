@@ -640,11 +640,12 @@ def blog_index():
 
 @bp.get("/blog/<slug>")
 def blog_post(slug):
-    from app.blog import get_post
+    from app.blog import get_post, related
     post = get_post(slug, g.lang_code)
     if post is None:
         abort(404)
-    return render_template("blog_post.html", post=post)
+    return render_template("blog_post.html", post=post,
+                           related=related(slug, g.lang_code))
 
 
 @bp.get("/legal/<page>")
@@ -655,6 +656,55 @@ def legal(page):
         abort(404)
     title, body = entry
     return render_template("legal.html", title=title, body=body)
+
+
+# --- Legacy blog URLs -----------------------------------------------------
+#
+# The blog used to live at /blog/<slug>, with no locale segment, and those URLs
+# are what Google has. After the i18n rebuild moved every public page behind
+# /<locale>/ they became 404s: five of them were sitting in Search Console's
+# "Not found (404)" report, which is where this came from.
+#
+# 301 and not 302, because the move is permanent and a 301 is the only redirect
+# that hands the old URL's history to the new one. The target is ABSOLUTE, built
+# from PUBLIC_BASE_URL, so a hit on www.drawreport.com lands on the canonical
+# host in the same hop instead of staying on www.
+#
+# We only redirect to an article that exists. Sending every /blog/<anything> to
+# a real page would turn typos and probe traffic into soft 404s, which is worse
+# than the honest 404 they get now.
+LEGACY_BLOG_SLUGS = {
+    # Old export filenames, still linked from outside.
+    "drawreport-blog-angry-drawings-red-flag": "child-angry-drawings-red-flag",
+    "drawreport-blog-child-draws-alone": "child-draws-alone-figures-meaning",
+    "drawreport-blog-child-draws-only-in-black": "my-child-only-draws-in-black",
+    "drawreport-blog-dark-colors-meaning": "child-uses-dark-colors-meaning",
+    "drawreport-blog-missing-body-parts": "kids-drawings-missing-body-parts-meaning",
+    # The old black-drawings article was merged into the post that already ranked,
+    # so its slug points at the survivor rather than at a page of its own.
+    "child-draws-only-in-black-meaning": "my-child-only-draws-in-black",
+}
+
+
+@bp_root.get("/blog")
+@bp_root.get("/blog/")
+def legacy_blog_index():
+    base = settings.PUBLIC_BASE_URL.rstrip("/")
+    return redirect(f"{base}/{settings.DEFAULT_LOCALE}/blog", code=301)
+
+
+@bp_root.get("/blog/<path:slug>")
+def legacy_blog_post(slug: str):
+    from app.blog import get_post
+    slug = slug.rstrip("/")
+    if slug.endswith(".html"):
+        slug = slug[:-5]
+    slug = LEGACY_BLOG_SLUGS.get(slug, slug)
+    loc = settings.DEFAULT_LOCALE
+    if get_post(slug, loc) is None:
+        abort(404)
+    base = settings.PUBLIC_BASE_URL.rstrip("/")
+    return redirect(f"{base}/{loc}/blog/{slug}", code=301)
 
 
 # --- Root (non-locale) routes: robots + sitemap ---------------------------
@@ -695,7 +745,7 @@ def sitemap():
     for loc in settings.LOCALES:
         posts = get_posts(loc)
         # The index is only as fresh as its newest article, never fresher.
-        blog_lastmod = max((p.date for p in posts), default=None)
+        blog_lastmod = max((p.modified for p in posts), default=None)
         blog_lastmod = blog_lastmod.isoformat() if blog_lastmod else static_lastmod
         # (path, priority, lastmod)
         urls = [(f"/{loc}/", "1.0", static_lastmod),
@@ -706,8 +756,10 @@ def sitemap():
                 (f"/{loc}/legal/refund", "0.2", static_lastmod)]
         urls += [(f"/{loc}/sample/{s.token}", "0.8", static_lastmod)
                  for s in get_samples(loc)]
-        # Articles rank on their own; the index page only links to them.
-        urls += [(f"/{loc}/blog/{p.slug}", "0.6", p.date.isoformat()) for p in posts]
+        # Articles rank on their own; the index page only links to them. lastmod is
+        # `modified`, not `date`: a rewritten article IS a changed page, and telling a
+        # crawler otherwise is exactly the stale-lastmod failure V0.043 set out to fix.
+        urls += [(f"/{loc}/blog/{p.slug}", "0.6", p.modified.isoformat()) for p in posts]
         for path, prio, lastmod in urls:
             items.append(f"<url><loc>{base}{path}</loc>"
                          f"<lastmod>{lastmod}</lastmod><priority>{prio}</priority></url>")

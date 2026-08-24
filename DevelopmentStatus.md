@@ -1071,3 +1071,72 @@ anything, because all three routes are locale-prefixed (`/en/order`, …) and ro
 the root. Left alone on purpose — every one of those pages carries `noindex, nofollow` in its
 template, which is the stronger control, and a robots.txt Disallow would actually PREVENT Google
 from reading the noindex.
+
+---
+
+## V0.051 — the blog triples: five archived articles restored, merged, de-DRAFTed and put behind the free funnel (2026-08-24)
+
+Started as a Search Console email ("Duplicate, Google chose different canonical than user") and
+turned into the blog build-out. Two separate findings, both from the same Pages report.
+
+**The email itself: `/en/report`… no, `/en/`.** Google picked `https://drawreport.com/` as the
+canonical for the home page instead of the declared `https://drawreport.com/en/`, because
+`app/__init__.py:35` answers `/` with a **302**. A 302 says *temporary*, so Google keeps the
+original URL as the canonical and files the target as the duplicate. `/` IS indexed, so nothing is
+lost from the index today. **NOT fixed in this release** — the 302→301 change and the missing
+www→non-www redirect in nginx are still open, awaiting an owner decision (a 301 is cached by
+browsers forever, which matters the day a second locale lands).
+
+**The real find: the 404s were our own dead articles.** Five URLs in "Not found (404)" were
+`/blog/<slug>` with no locale segment. They were dismissed as fabricated URLs on the first pass,
+and that was wrong: the site really did serve them before the i18n rebuild moved every public page
+behind `/<locale>/`, and the owner still had the HTML in Dropbox. The `<link rel="canonical">`
+inside each archived file proves the old URL. See **UseCase #33**.
+
+**What shipped:**
+- **Blog goes 3 → 7 articles.** Five archived pieces (2025-08) rewritten to the V0.035 English copy
+  standard. The black-drawings pair was **merged into one post** rather than published alongside the
+  live one: two articles on the same query is the self-competing duplicate this whole session was
+  about. The survivor keeps the indexed slug `my-child-only-draws-in-black`; the archived slug 301s
+  onto it. Blog body text now 3,871 words, up from ~750.
+- **Claims pass.** The archived copy repeatedly steered a worried parent to "a gentle professional
+  analysis at DrawReport.com", which is a screening claim and is not what we sell. Every one of
+  those now points at a pediatrician, child psychologist or teacher. The 5-point self-scoring
+  checklist in the angry-drawings piece was rewritten as prose — a scored checklist IS a screening
+  instrument. The dark-colours colour table was kept for its SEO surface but re-pointed from
+  "possible intentions" (colour fortune-telling, a HARD ban) to "why it usually turns up".
+- **`> DRAFT — for owner review.` removed from all three live posts.** It had been rendering to the
+  public on the site's only organic-search surface. Same class as the legal-page DRAFT banner cut in
+  V0.048; nobody had checked the rendered blog page since.
+- **`app/blog.py`: frontmatter now supports `faq:` and `updated:`.** Hand-rolled parser, no PyYAML —
+  it is the only YAML in the project and a new runtime dep has to be installed on the server before
+  the next deploy can boot. `faq` drives **both** the visible `<details>` block and the FAQPage
+  JSON-LD from one source, so schema can never describe questions that are not on the page.
+- **`blog_post.html`:** Article (with `dateModified` + `image`), BreadcrumbList, FAQPage; visible
+  breadcrumb and date; **the disclaimer, in the template so every future article inherits it**; the
+  free-reading CTA; related-article links. The CTA was "order a report" and is now **the free
+  reading first** ("Free, and it takes about a minute. No credit card, no account." — wording lifted
+  from `config/free_texts.py` so the promise matches the funnel), paid report demoted to secondary.
+- **The disclaimer sits BEFORE the CTA on purpose.** A reader should know what this is and is not
+  before being invited to upload a photo of their child's drawing.
+- **Legacy `/blog/<slug>` → 301 → `/en/blog/<slug>`** (`app/routes.py`, `LEGACY_BLOG_SLUGS`).
+  Absolute target built from `PUBLIC_BASE_URL`, so a www hit lands on the canonical host in the same
+  hop. Only redirects to an article that **exists** — blanket-redirecting `/blog/<anything>` turns
+  probe traffic into soft 404s, which is worse than the honest 404.
+- **Sitemap `lastmod` now uses `post.modified`, not `post.date`.** A rewritten article is a changed
+  page; saying otherwise is the stale-lastmod failure V0.043 set out to fix, in the other direction.
+- `blog_index.html`: Blog/BlogPosting schema, dates on the cards (`.blog-card__date` existed in
+  components.css and had never been used). Four new thumbnails in `_blog_thumb.html`.
+- Sitemap 12 → **16 URLs**. `SITEMAP_LASTMOD` → 2026-08-24.
+
+**Why these five and not five new ones:** GSC already shows impressions for *drawing without eyes*,
+*2 year old drawing faces* and *what does it mean when a child colors in black* (735 impressions in
+the property's first 4 days, avg position 6.7) with **no page to serve any of them**. The archive
+matched the demand that already exists.
+
+**Still thin:** `is-a-childs-drawing-a-diagnosis` (254 words) and `what-you-can-learn-from-a-drawing`
+(242 words) are half the length of the others. Both gained an FAQ, schema and related links this
+release; the bodies were left alone.
+
+**After deploy:** submit the four new URLs via `scripts/indexnow_submit.py` **on the server**, and
+hit **Validate fix** on the "Not found (404)" row in Search Console — it does not clear itself.

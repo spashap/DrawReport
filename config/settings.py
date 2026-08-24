@@ -107,7 +107,7 @@ BING_SITE_VERIFICATION = os.getenv("BING_SITE_VERIFICATION", "")
 # It used to be date.today() on every URL on every request, which told crawlers the
 # whole site changed today, every day - a signal that is false often enough that it
 # stops being read at all, and takes the honest dates down with it.
-SITEMAP_LASTMOD = os.getenv("SITEMAP_LASTMOD", "2026-08-20")
+SITEMAP_LASTMOD = os.getenv("SITEMAP_LASTMOD", "2026-08-24")
 # --- IndexNow (Bing, Yandex, Seznam - NOT Google) ---
 # Push a changed URL to the index instead of waiting to be crawled. Ownership is
 # proved by serving the key back as plain text at /<key>.txt, so the key is public

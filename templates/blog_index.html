@@ -2,6 +2,22 @@
 {% from "_blog_thumb.html" import thumb %}
 {% block title %}{{ _('Blog') }} — {{ site_name }}{% endblock %}
 {% block description %}{{ _('Articles on children’s drawing and development: stages, observations, and activities to try at home.') }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Blog",
+ "name": {{ _('Blog') | tojson }},
+ "description": {{ _('Articles on children’s drawing and development: stages, observations, and activities to try at home.') | tojson }},
+ "inLanguage": "{{ locale }}",
+ "url": "{{ public_base_url }}{{ request.path }}",
+ "publisher": {"@type": "Organization", "name": "{{ site_name }}", "url": "{{ public_base_url }}"},
+ "blogPost": [
+{% for p in posts %}  {"@type": "BlogPosting", "headline": {{ p.title | tojson }},
+   "description": {{ p.description | tojson }},
+   "datePublished": "{{ p.date.isoformat() }}", "dateModified": "{{ p.modified.isoformat() }}",
+   "url": "{{ public_base_url }}{{ url_for('main.blog_post', slug=p.slug) }}"}{{ "," if not loop.last }}
+{% endfor %}]}
+</script>
+{% endblock %}
 {% block body %}
 <div class="section">
   <div class="wrap" style="max-width: 980px">
@@ -15,6 +31,7 @@
         <div class="blog-card__body">
           <h3 class="blog-card__title">{{ p.title }}</h3>
           <p class="blog-card__descr">{{ p.description }}</p>
+          <p class="blog-card__date"><time datetime="{{ p.modified.isoformat() }}">{{ p.modified.strftime('%B') }} {{ p.modified.day }}, {{ p.modified.year }}</time></p>
         </div>
       </a>
       {% endfor %}
