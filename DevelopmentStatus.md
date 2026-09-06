@@ -1262,3 +1262,31 @@ cosmyday side; re-run when that file changes. Attribution (GeoLite2 by MaxMind) 
 admin shows geo.
 
 **Owner instruction recorded:** when presenting options, always state a recommendation.
+
+## 2026-09-06 — Five new blog posts, written to the queries GSC already shows impressions for (V0.059)
+
+Search Console had impressions with no matching article for "2 year old drawing faces",
+"warning signs in children's drawings", "child psychology drawing test", plus the two evergreen
+parent questions the existing set skipped (family drawings, drawing the same thing repeatedly).
+Blog is now **12 posts**. New slugs, all `date: 2026-09-06`, 5 FAQs each, ~1,000–1,300 words:
+`childrens-drawing-stages-by-age` · `warning-signs-in-childrens-drawings` ·
+`child-psychology-drawing-tests-explained` · `child-family-drawing-meaning` ·
+`child-draws-the-same-thing-over-and-over`.
+
+Voice matched to the two posts that carry the site's traffic (only-in-black, missing body
+parts): plain US consumer English, age table, "How to ask", "When to talk to someone", the
+boundary and the free-reading CTA inherited from `blog_post.html`. Checked on the RENDERED
+page through the app (UseCase #20): all five 200, Article + BreadcrumbList + FAQPage JSON-LD
+present and the FAQPage count equals the visible FAQ, no straight quotes, no em dashes, no
+Britishisms, descriptions ≤160 chars; sitemap, blog index and `/llms.txt` list all five.
+Table layout eyeballed in Chrome on the dev server.
+
+Two content decisions worth recording. The **warning-signs** post names the two situations
+that ARE not judgment calls (self-harm content; sexual knowledge beyond age or a disclosure)
+and says what to do, because leaving them off a page with that title would be negligent. The
+**same-thing-over-and-over** post addresses the autism question directly rather than letting it
+hang, and says the drawing is not evidence either way.
+
+⚠️ Heredocs over ~8 KB fail on this Windows Bash tool ("unexpected EOF while looking for
+matching quote") — the command is truncated at the Windows command-line limit. Long files go
+through the Write tool.
