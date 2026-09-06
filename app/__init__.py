@@ -92,6 +92,7 @@ def create_app() -> Flask:
             "palette": settings.PALETTE,
             "site_name": settings.SITE_NAME,
             "site_domain": settings.SITE_DOMAIN,
+            "facebook_url": settings.FACEBOOK_URL,
             "ga_id": settings.GA_MEASUREMENT_ID,
             "google_verification": settings.GOOGLE_SITE_VERIFICATION,
             "bing_verification": settings.BING_SITE_VERIFICATION,

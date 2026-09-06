@@ -5,7 +5,8 @@
   "name":"{{ site_name }}","url":"{{ public_base_url }}/",
   "logo":"{{ public_base_url }}/static/img/og-default.jpg",
   "description":"Educational analysis of a child's drawing from a photo: a personal PDF report on what the drawing shows about the child - strengths, interests and skills - grounded in the developmental stages of children's art. Not a diagnosis.",
-  "knowsLanguage":"{{ locale }}"},
+  "knowsLanguage":"{{ locale }}"{% if facebook_url %},
+  "sameAs":["{{ facebook_url }}"]{% endif %}},
  {"@context":"https://schema.org","@type":"WebSite",
   "name":"{{ site_name }}","url":"{{ public_base_url }}/","inLanguage":"{{ locale }}"}]
 </script>

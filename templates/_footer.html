@@ -13,5 +13,6 @@
 <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a> &middot;
 <a href="{{ url_for('main.legal', page='terms') }}">{{ _('Terms') }}</a> &middot;
 <a href="{{ url_for('main.legal', page='refund') }}">{{ _('Refunds') }}</a> &middot;
-<a href="{{ url_for('main.blog_index') }}">{{ _('Blog') }}</a><br>
+<a href="{{ url_for('main.blog_index') }}">{{ _('Blog') }}</a>{% if facebook_url %} &middot;
+<a href="{{ facebook_url }}" target="_blank" rel="noopener">{{ _('Facebook') }}</a>{% endif %}<br>
 {{ site_domain }}

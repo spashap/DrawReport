@@ -1290,3 +1290,23 @@ hang, and says the drawing is not evidence either way.
 ⚠️ Heredocs over ~8 KB fail on this Windows Bash tool ("unexpected EOF while looking for
 matching quote") — the command is truncated at the Windows command-line limit. Long files go
 through the Write tool.
+
+## 2026-09-06 — Facebook page linked from the site (V0.060)
+
+The owner opened the project's Facebook page,
+https://www.facebook.com/profile.php?id=61594178430012. It is now `FACEBOOK_URL` in
+`config/settings.py` — a tracked default with an env override, not a server-only `.env`
+value, because it is public and the lesson of the analytics ids is that server-only values
+vanish silently on a rebuild. Rendered in three places: the shared footer (`_footer.html`,
+so every page including the landing gets it in one edit), `Organization.sameAs` in the
+JSON-LD, and a "Facebook page" line in `/llms.txt`. An empty value hides all three.
+
+⚠️ The Organization JSON-LD exists TWICE: `templates/_seo_jsonld.html` for every `_base`
+page and `_schema_jsonld()` in `app/routes.py` for `/en/report`, which has its own head.
+The first pass only touched the Python one and `/en/` shipped no `sameAs` — caught by
+checking the rendered page, not the source. Both carry it now; an entity change must go in
+both.
+
+Verified through the Flask test client: footer link on `/en/`, `/en/report`, `/en/blog`,
+`/free/`, legal pages and the 404 page; `sameAs` parses on every page; `/llms.txt` lists it.
+

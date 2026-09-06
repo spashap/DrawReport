@@ -85,6 +85,9 @@ def _schema_jsonld(locale: str, min_price) -> str:
                         "Not a diagnosis."),
         "knowsLanguage": locale,
     }
+    # Social profiles, so search engines tie the page to the same entity.
+    if settings.FACEBOOK_URL:
+        org["sameAs"] = [settings.FACEBOOK_URL]
     website = {"@context": "https://schema.org", "@type": "WebSite",
                "name": settings.SITE_NAME, "url": base + "/", "inLanguage": locale}
     # A digital product delivered by email, so the two "merchant listing" fields Google
@@ -834,6 +837,10 @@ def llms_txt():
         "and how to order",
         f"- [Blog]({base}/{loc}/blog): articles for parents about what children's "
         "drawings do and do not show",
+    ]
+    if settings.FACEBOOK_URL:
+        lines.append(f"- [Facebook page]({settings.FACEBOOK_URL})")
+    lines += [
         "",
         "## Sample reports",
         "",

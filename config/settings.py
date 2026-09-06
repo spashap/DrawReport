@@ -232,6 +232,12 @@ def get_report_texts() -> dict:
 # --- Site ---
 SITE_NAME = "DrawReport"
 SITE_DOMAIN = os.getenv("SITE_DOMAIN", "drawreport.com")
+# The project's Facebook page (opened 2026-09-06). A public value, so it is a tracked
+# default rather than a server-only .env secret - the three analytics ids live only in
+# the server .env and would vanish on a rebuild; this one must not. Rendered in the
+# footer (_footer.html), as Organization.sameAs in the JSON-LD and in /llms.txt.
+# Empty string hides all three, so the footer never ships a dead link.
+FACEBOOK_URL = os.getenv("FACEBOOK_URL", "https://www.facebook.com/profile.php?id=61594178430012")
 CURRENCY = "USD"
 CURRENCY_SYMBOL = "$"
 # Money-back window, in days. The PROSE that a customer reads is in app/legal.py (Refund
