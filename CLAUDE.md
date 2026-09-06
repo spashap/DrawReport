@@ -22,7 +22,7 @@ full-deploy `release.bat`, and a native-US-English copy pass.
 | **LLM** | Anthropic. Paid report `claude-sonnet-4-6` (fallback `claude-haiku-4-5-20251001`); **free reading `claude-haiku-4-5-20251001`** (`FREE_LLM_MODEL` — its own knob because it is a per-*visitor* cost, not a per-*sale* one) |
 | **Payments** | **PayPal LIVE** (`PAYMENT_BACKEND=paypal`, `PAYPAL_ENV=live`, webhook id set). Verified read-only; **never make a test charge** |
 | **Email** | **Brevo over SMTP** (`MAIL_BACKEND=smtp`, `smtp-relay.brevo.com:587`, from `team@drawreport.com`). NOT Resend — its free tier allows one domain and refused ours. A stale `RESEND_API_KEY` is still in `.env`; harmless, unused |
-| **Price** | **$29**, from the git-tracked `config/products.json`. The server has **no** `data/products.json`, so `config/` is what is live (see UseCase #23) |
+| **Price** | **NOT SETTLED and changes often — never quote a number from this file.** The owner edits it in `/admin` → Prices, which writes the server's `data/products.json` (overrides the git-tracked default `config/products.json`, UseCase #23). On 2026-09-06 it read $19 with a $39 strike-through; by the time you read this it may not. Every page, `/llms.txt` and the meta descriptions render whatever that file says, so **the only truth is the live site or the server file** — check there, and do not "correct" copy or docs to match a remembered price |
 | **Locales** | `LOCALES=en` only. The i18n plumbing is real but the `en` catalog is empty and uncompiled, so `_('...')` returns the msgid — **English source text lives inline in the templates** |
 
 ### Shared template partials — use them, do not re-inline (added V0.040)
@@ -229,18 +229,20 @@ that line is the fastest check. See `drawreportDeploy/README.md` for the values.
 13. **The materials cap is the one en-4.2 acceptance check still failing**, off by exactly one on
     both samples: the model spends one allowance inside a direction and one in `art_recommendations`,
     satisfying each rule locally. A counter in `lint.py` spanning both would close it (UseCase #29).
-11. **Launch price framing undecided.** Live is a flat $29. A `$59 → $39` strike-through variant
-    exists only in the local dev `data/products.json` and is NOT on the server.
+11. **Price framing is an ongoing owner experiment, not a decision to make in code.** The price
+    and the strike-through "old price" are set live from `/admin` → Prices and will keep moving
+    (as of 2026-09-06: $19, was $39). The local dev `data/products.json` is unrelated to what is
+    live. Do not add a task, a test, or a doc line that pins a price.
 
 **Run locally:** `venv\Scripts\python.exe run.py` (web :3000) + `worker.py` + `free_worker.py`.
 Admin `/admin/login` (pass = `ADMIN_PASS`). The footer version badge shows on localhost and is
 hidden in production — `settings.SHOW_VERSION`, derived from `PUBLIC_BASE_URL`.
 
-**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#35 —
+**Resume pointers:** journal `DevelopmentStatus.md` · solved problems `UseCasesData.md` (#1–#36 —
 **#24/#27 prompt↔linter coupling, #29 unenforced rules collapse on long output, #30 the two English
 standards, #31 an escape written through a non-raw Python string, #33 a 404 that was our own
 dead URL, #34 a 302 hands Google your canonical, #35 an uptime monitor sees only the unit that
-answers HTTP**) · copy tasks
+answers HTTP, #36 graceful degradation hid a never-built GeoIP db**) · copy tasks
 `projectSpec/drawreportcopyfixtask.md`, `projectSpec/DrawReport-English-Copy-Repair-Report.md`,
 `projectSpec/TASK-paid-report-en-4.2-north-star.md` · plan `development-plan.md`.
 
@@ -280,8 +282,10 @@ golosrisunka.ru). It is mounted READ-ONLY for you.
 ## The product model (same as Golos)
 1. **snapshot** — up to 3 drawings → ONE consolidated report; price independent of drawing count.
 2. **development** — compare two sets ≥6 months apart (may be "coming soon" at launch).
-- **All prices/numbers come from `config/products.json`** (future admin). Never hardcode prices.
-- Prices in **USD ($)**. Owner sets launch price.
+- **All prices/numbers come from `products.json`** — the git default `config/products.json`,
+  overridden live by the admin-written `data/products.json`. Never hardcode prices, in code OR
+  in docs: the owner changes them from the admin whenever they like.
+- Prices in **USD ($)**.
 
 ## US adaptations vs the Russian original
 - **Language/UI:** English, via i18n (see `i18n-architecture.md`). **No hardcoded UI strings** anywhere —
