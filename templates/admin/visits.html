@@ -45,10 +45,11 @@
       {% for gview in geo %}
       <tr><td>{{ gview.country }}</td><td><b>{{ gview.n }}</b></td></tr>
       {% else %}
-      <tr><td colspan="2">The geo database has not been built yet</td></tr>
+      <tr><td colspan="2">The geo database has not been built yet — see drawreportDeploy/README.md, "Admin geo labels"</td></tr>
       {% endfor %}
       </tbody>
     </table>
+    <p class="hint">IP geolocation: GeoLite2 data by MaxMind, IPv4 only. The IP itself is never stored.</p>
   </div>
 </div>
 

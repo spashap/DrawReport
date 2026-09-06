@@ -416,3 +416,30 @@ while the other says dead is worse than having neither.
   that only stops it counting as a page *within* a visit; the visit row is created earlier and
   separately. Gate visit CREATION too, and verify by counting rows before and after.
 Related: [[#31]] (hit again writing the seed text), [[#34]].
+
+## #36 · A README that names a script which does not exist is a feature that silently never ran
+`app/geoip.py` was built to read `data/geoip.db`, degrading gracefully to "no geo" when the file
+is missing. The deploy README said to build that file with `scripts/build_geoip.py`. **That script
+was never copied from Golos** — and even the Golos one writes a different table shape. So from
+launch (2026-08-17) to 2026-09-06 every visit was recorded with `geo_country = NULL`, the admin
+showed `-` for every country, and nothing complained, because "missing DB" was a designed, quiet
+state. Found only by reading the analytics numbers and asking why the country column was empty.
+
+**Graceful degradation hides missing setup.** Every optional artifact that a feature degrades
+without needs a place where its ABSENCE is visible — a line in `/admin/settings` next to the
+analytics ids, a seed task, a startup log line. "Works without it" and "nobody will notice it is
+not there" are the same sentence.
+
+**Before documenting a command, run it.** A README line pointing at a file is an assertion that
+the file exists; assert it (`test -f`) in the same session you write the line.
+
+**The fix reused a neighbour's data instead of a new pipeline.** The same server holds cosmyday's
+`GeoLite2-City.mmdb` and a venv with `maxminddb`. `scripts/build_geoip_from_mmdb.py` converts
+that file — read-only, nothing in cosmyday touched, no new dependency in our venv — into the
+`ranges` table `geoip.py` already expects: IPv4 only (SQLite INTEGER is 64-bit), country + first
+region, city dropped, adjacent equal ranges merged (1.37M rows, 30 MB, 81 s). Verified with fixed
+probes; one probe (a Wikimedia anycast address) "failed" and was the probe's fault, not the data's
+— pick verification addresses with one unambiguous answer.
+⚠️ **Restart after building**: `geoip.py` checks for the file ONCE per process and caches the miss,
+so a gunicorn that started without it keeps returning None however good the file is.
+Related: [[#35]] (a watched row nobody writes — same family: a reader with no writer).

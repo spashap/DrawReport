@@ -90,7 +90,16 @@ curl -I http://127.0.0.1:8002/            # 302 -> /en/
 - WeasyPrint system libs are installed by `provision.sh` (Pango/Cairo/GDK-Pixbuf).
 - Logo/hero already built and committed in `static/img/`. To change later: drop new art
   in `data/Images/` and run `venv/bin/python scripts/build_hero_image.py` / `build_logos.py`.
-- Optional admin geo labels: run `venv/bin/python scripts/build_geoip.py` on the server to
-  build `data/geoip.db` (without it, analytics simply records no geo).
+- Admin geo labels need `data/geoip.db` (without it, analytics simply records no geo - and it
+  did exactly that from launch until 2026-09-06, because the `build_geoip.py` this line used to
+  name was never copied into the repo). Build it from the GeoLite2 file the cosmyday project
+  already keeps on the same box, using cosmyday's venv because it has `maxminddb` (read-only
+  use of their file; nothing of theirs is modified), then restart - `app/geoip.py` opens the
+  file once and caches a miss:
+  ```
+  /var/www/cosmyday-api/venv/bin/python /var/www/DrawReport/scripts/build_geoip_from_mmdb.py       /var/www/cosmyday-api/data/GeoLite2-City.mmdb && cd /var/www/DrawReport && ./restart.sh
+  ```
+  IPv4 only, country + region, ~30 MB. Re-run when cosmyday refreshes its .mmdb (check its
+  mtime; the script prints the source build date). Data: GeoLite2 by MaxMind.
 - Add a second language later: set `LOCALES=en,es` in `.env` + add the `es` catalog/content;
   no code change.

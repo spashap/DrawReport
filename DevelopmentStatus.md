@@ -1236,3 +1236,29 @@ admin still carries the old "there is no monitoring" wording.
 ⚠️ Editing that seed hit **UseCase #31** again: writing `\n` into Python SOURCE through a non-raw
 generator string turned it into a real newline and broke the file. Redone with raw strings, then
 asserted no stray control characters. The lesson is already logged; it caught me anyway.
+
+## 2026-09-06 — Traffic/SEO review, and the country column that was never filled (V0.057)
+
+**Review (3 weeks live, Aug 17 – Sep 6).** 24.3K visits recorded, 19.6K flagged bot, and most
+of the remaining "human" rows are scanners too (entries on `/wp-admin`, `/.env`,
+`/.git/config`); **69 engaged visits** total. Organic is the only channel with real engagement
+(277 visits, 36 engaged). GSC 28 days: **33 clicks, 2.52K impressions, CTR 1.3%, avg position
+6.9, 16/16 sitemap URLs indexed.** 24 of the 33 clicks still land on the OLD `www…/blog/*.html`
+URLs, which 301 (two hops via www) to the new slugs — transfer in progress, not broken. Two posts
+(missing body parts, only draws in black) carry everything; home and `/en/report` earn nothing
+from search. **Zero paid orders ever; 5 free readings, 3 completed.** Queries with impressions
+and no matching post: "drawing without eyes", "why is my child drawing violent pictures",
+"2 year old drawing faces", "warning signs in children's drawings", "child psychology drawing
+test" — that is the next blog list. Also noted: live price is **$19 with $39 strike-through**
+via the admin Prices screen (server `data/products.json` now exists), CLAUDE.md still says $29.
+
+**GeoIP fixed — UseCase #36.** `geo_country` was NULL on every visit since launch: the README's
+`scripts/build_geoip.py` never existed in this repo. New `scripts/build_geoip_from_mmdb.py`
+converts cosmyday's `GeoLite2-City.mmdb` (same server, read-only, run with cosmyday's venv
+because it has `maxminddb`) into the `ranges` table `app/geoip.py` reads. Built on the server:
+1,371,882 IPv4 ranges, 30 MB, probes US/CN/RU/GB/OR all correct. Units restarted by the deploy
+so the cached "no file" miss is gone. Source is dated 2026-04-24 and has no refresh job on the
+cosmyday side; re-run when that file changes. Attribution (GeoLite2 by MaxMind) added where the
+admin shows geo.
+
+**Owner instruction recorded:** when presenting options, always state a recommendation.
