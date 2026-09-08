@@ -34,11 +34,29 @@
   }
   window.drBeacon = beacon;
 
+  // Meta Pixel bridge, the same shape as the gtag one: present only when the pixel is
+  // on the page (_analytics.html). Two goals map to Meta STANDARD events, because those
+  // are what Ads Manager can optimise a campaign towards; every other click goal goes
+  // through as a custom event so it can be turned into a custom conversion later without
+  // a deploy. Scroll depth and section visibility are NOT mirrored: they would be ten
+  // pixel events per page view, and Meta learns nothing from them that PageView lacks.
+  var PIXEL_STANDARD = { free_upload_submit: "Lead", purchase: "Purchase" };
+  var PIXEL_SKIP = /^(scroll_|sec_)/;
+  function pixel(goal, params) {
+    if (!window.fbq || PIXEL_SKIP.test(goal)) { return; }
+    try {
+      var std = PIXEL_STANDARD[goal];
+      if (std) { fbq("track", std, params || {}); }
+      else { fbq("trackCustom", goal, params || {}); }
+    } catch (e) {}
+  }
+
   window.drGoal = function (goal, params) {
     if (!goal) { return; }
     if (window.gtag) {
       try { gtag("event", goal, params || {}); } catch (e) {}
     }
+    pixel(goal, params);
     beacon({ g: goal });
   };
 

@@ -1310,3 +1310,39 @@ both.
 Verified through the Flask test client: footer link on `/en/`, `/en/report`, `/en/blog`,
 `/free/`, legal pages and the 404 page; `sameAs` parses on every page; `/llms.txt` lists it.
 
+
+## 2026-09-08 — Meta Pixel installed for the first paid test (V0.061)
+
+The owner's first Facebook boost failed twice for reasons that had nothing to do with the
+ad: the ad account's only card had expired in 2018 (fixed from Billing), and then the
+personal account turned out to carry a "not allowed to advertise" restriction dating from
+Nov 2021 because two-factor authentication was off (Business Support Home names it; turning
+2FA on lifts it). Ads Manager then asked for a pixel, so the site got one.
+
+`META_PIXEL_ID` in `config/settings.py` — a tracked default like `FACEBOOK_URL` (public
+value, must survive a rebuild), env-overridable, empty removes it. Rendered by
+`_analytics.html`, so it reaches `_base` pages and the landing's own head in one place.
+
+Three decisions worth keeping:
+- **Not on private pages.** The pixel reports the page URL to Meta, and `/free/r/<token>`,
+  `/<lang>/r/<token>` and the cabinet are unguessable links to a child's drawing and name.
+  The partial skips them (and `/admin`, as GA already did). Nothing is lost: the `Lead`
+  event fires on `/free/` when the upload is submitted, not on the result page.
+- **track.js mirrors goals into `fbq` the way it mirrors them into `gtag`.** Two goals map
+  to Meta STANDARD events — `free_upload_submit` -> `Lead`, `purchase` -> `Purchase` (with
+  value/currency from `order_success.html`) — because those are what a campaign can be
+  optimised towards. Every other click goal goes through as a custom event, so a custom
+  conversion can be defined in Events Manager later without a deploy. Scroll depth and
+  section visibility are deliberately NOT mirrored.
+- **The Privacy Policy changed in the same commit.** It said "we do not use advertising
+  cookies and we do not allow third parties to track you across other websites", which the
+  pixel makes false. The Cookies section now discloses the pixel, the `_fbp` cookie, what
+  Meta receives and does not receive, and the opt-out; Meta is listed with the other
+  processors; `LEGAL_LAST_UPDATED` and `SITEMAP_LASTMOD` bumped. The children's-data
+  promise ("not used for advertising") stays true — the pixel never sees a drawing.
+
+Verified through the Flask test client: pixel init + noscript on `/en/`, `/en/report`,
+`/free/`, `/en/blog`, all three legal pages; absent on `/free/r/*`, `/en/r/*`, `/admin/*`
+(the cabinet redirects to login when signed out); the bridge is in the served `track.js`;
+`/admin/settings` shows the pixel id next to GA4. Site is US-only, so no consent gate
+(owner scope decision of 2026-08-19 in `app/legal.py`) — revisit if an EU locale ships.

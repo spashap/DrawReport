@@ -33,7 +33,7 @@ from config import settings
 
 # Bump this whenever a page body below changes - it is what every page prints as its
 # "Last updated" line, and a policy whose date predates its own text is worse than no date.
-LEGAL_LAST_UPDATED = "August 19, 2026"
+LEGAL_LAST_UPDATED = "September 8, 2026"
 
 # {locale: {page_key: (title, markdown_body)}}
 _PAGES = {
@@ -72,15 +72,24 @@ have the child’s drawings and information deleted at any time by emailing
   reached the site. To get a rough location we look up an approximate region from your IP
   address and store **only that region name — the IP address itself is never stored**.
 
-### Cookies
-We use a small number of first-party cookies. We do not use advertising cookies and we
-do not allow third parties to track you across other websites.
+### Cookies and advertising measurement
+We use a small number of first-party cookies, and one advertising measurement tool,
+described below.
 
 - `dr_s` — identifies a single visit, expires after 30 minutes of inactivity.
 - `dr_v` — an anonymous visitor identifier so repeat visits are not double-counted.
 - `dr_utm` — remembers how you first found the site (for example, a search or a link).
 - `locale` — remembers which language version of the site you are reading.
 - A sign-in cookie, set only after you sign in, which keeps you signed in.
+
+We also use the **Meta Pixel** to learn whether our advertising on Facebook and Instagram
+brings people to the site, and to show our ads to people who have visited it. It sets a
+Meta cookie (`_fbp`) and tells Meta which public pages you viewed, whether you requested a
+free reading, and whether you bought a report. It is **not loaded on the pages that show a
+drawing or a reading**, and it never receives a drawing, a child’s name, or your email
+address. You can review and disconnect this in your Facebook or Instagram settings under
+“Your activity off Meta technologies,” and blocking third-party cookies in your browser
+switches it off.
 
 You can clear or block cookies in your browser. Blocking them does not stop you ordering
 or reading a report.
@@ -97,6 +106,9 @@ service providers, each of which receives only what it needs to do its job:
   your email address.
 - **PayPal** — processes payment. Receives what it needs to take the payment; we do not
   pass it your child’s drawing or the report.
+- **Meta (Facebook)** — advertising measurement, as described under Cookies. Receives
+  page views on public pages and a signal that a reading was requested or a report was
+  bought; never a drawing, a name, or an email address.
 - **Our hosting provider**, which stores the site’s data on our behalf.
 
 We may also disclose information if the law requires it.

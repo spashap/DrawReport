@@ -107,7 +107,7 @@ BING_SITE_VERIFICATION = os.getenv("BING_SITE_VERIFICATION", "")
 # It used to be date.today() on every URL on every request, which told crawlers the
 # whole site changed today, every day - a signal that is false often enough that it
 # stops being read at all, and takes the honest dates down with it.
-SITEMAP_LASTMOD = os.getenv("SITEMAP_LASTMOD", "2026-08-24")
+SITEMAP_LASTMOD = os.getenv("SITEMAP_LASTMOD", "2026-09-08")
 # --- IndexNow (Bing, Yandex, Seznam - NOT Google) ---
 # Push a changed URL to the index instead of waiting to be crawled. Ownership is
 # proved by serving the key back as plain text at /<key>.txt, so the key is public
@@ -238,6 +238,13 @@ SITE_DOMAIN = os.getenv("SITE_DOMAIN", "drawreport.com")
 # footer (_footer.html), as Organization.sameAs in the JSON-LD and in /llms.txt.
 # Empty string hides all three, so the footer never ships a dead link.
 FACEBOOK_URL = os.getenv("FACEBOOK_URL", "https://www.facebook.com/profile.php?id=61594178430012")
+# Meta (Facebook) Pixel id, created 2026-09-08 in the owner's Ads Manager for the first paid
+# test. Public like FACEBOOK_URL (it is in the page source of every page), so a tracked
+# default for the same reason. Rendered by templates/_analytics.html on PUBLIC pages only:
+# never on /admin, and never on a page that shows a child's drawing or name (/free/r/<t>,
+# /<lang>/r/<t>, the cabinet) - the pixel reports the page URL to Meta, and those URLs are
+# the unguessable links that protect the pages. Empty string removes the pixel entirely.
+META_PIXEL_ID = os.getenv("META_PIXEL_ID", "2164699964115291")
 CURRENCY = "USD"
 CURRENCY_SYMBOL = "$"
 # Money-back window, in days. The PROSE that a customer reads is in app/legal.py (Refund

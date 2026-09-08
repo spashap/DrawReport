@@ -94,6 +94,7 @@ def create_app() -> Flask:
             "site_domain": settings.SITE_DOMAIN,
             "facebook_url": settings.FACEBOOK_URL,
             "ga_id": settings.GA_MEASUREMENT_ID,
+            "meta_pixel_id": settings.META_PIXEL_ID,
             "google_verification": settings.GOOGLE_SITE_VERIFICATION,
             "bing_verification": settings.BING_SITE_VERIFICATION,
             "version": settings.APP_VERSION,
