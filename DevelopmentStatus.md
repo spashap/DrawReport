@@ -1346,3 +1346,44 @@ Verified through the Flask test client: pixel init + noscript on `/en/`, `/en/re
 (the cabinet redirects to login when signed out); the bridge is in the served `track.js`;
 `/admin/settings` shows the pixel id next to GA4. Site is US-only, so no consent gate
 (owner scope decision of 2026-08-19 in `app/legal.py`) — revisit if an EU locale ships.
+
+## 2026-09-08 — FIRST PAID AD LIVE. Monitoring starts here (V0.062, docs only)
+
+Owner: "my ad is active". Boosted post https://www.facebook.com/share/p/1JRdpwBbah/ from the
+DrawReport page, ad account 323409646, **$5/day for 3 days (~$15)**, link to
+`/en/?utm_source=facebook...`. Objective and audience were set by the owner in the boost flow;
+recommended (not verified): Advantage+ creative OFF, manual US parents 25-45 with children
+3-12, Feed placements only, Traffic/link clicks (Leads once the pixel has data).
+
+**Baseline BEFORE the ad, read from the production DB (read-only) on 2026-09-08:**
+| | |
+|---|---|
+| Engaged human visits per day, last 9 days | 2-6 on a normal day; 13 today so far; 35 on 09-06 (the day the FB page opened and the post was first shared) |
+| Visits carrying `utm_source=facebook` | 2216 on 09-06 (32 engaged), 274 on 09-08 (1 engaged) - the raw count is Facebook's link-preview fetchers and scrapers, **only the engaged number is people** |
+| Free readings, all time | 3 done, 2 drafts (answered the questions, never uploaded) |
+| Paid orders, all time | **0** |
+| Channel mix, last 7 days (humans) | internal 1276, direct 1098, organic 133, ads 44, utm 3, social 1 |
+
+So the test is measured against ~zero: any free reading or order from a Facebook-tagged visit
+in 09-08..09-11 is attributable to the ad with no ambiguity.
+
+**How to read it (from ~2026-09-11), three sources side by side:**
+1. Ads Manager - spend, link clicks, CPC, and whether Meta actually delivered (a $5/day
+   boost sometimes under-spends the first day).
+2. Events Manager pixel Overview - PageView vs `Lead` (free upload submitted) vs
+   `Purchase`. The Test Events page showed nothing during the browser test, but the
+   network log proved 200s from `facebook.com/tr` for PageView and custom events; the
+   Overview lags hours.
+3. `/admin` Analytics + Visits, utm_source=facebook, ENGAGED only - then
+   `free_upload_submit` goals, `free_analyses` rows with a Facebook visit_id, orders.
+   Report **cost per started free reading**, not clicks. If clicks arrive and nobody
+   starts the wizard, the home page is the problem, not the ad.
+
+⚠️ The dropped-dash typo in the post ("Ages ~312") may still be live; once an ad runs on a
+post the text cannot be edited without ending the ad, so it stays for this test.
+
+Getting here took the whole day for non-site reasons, recorded so they are not rediscovered:
+the ad account's only card had expired in 07/2018 with $0.83 outstanding; after that was
+fixed the personal account still showed "not allowed to advertise" - a restriction from
+Nov 27, 2021 for having no two-factor authentication, visible only in Business Support
+Home, lifted by turning 2FA on. Neither was a policy issue.
