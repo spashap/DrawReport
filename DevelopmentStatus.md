@@ -1387,3 +1387,24 @@ the ad account's only card had expired in 07/2018 with $0.83 outstanding; after 
 fixed the personal account still showed "not allowed to advertise" - a restriction from
 Nov 27, 2021 for having no two-factor authentication, visible only in Business Support
 Home, lifted by turning 2FA on. Neither was a policy issue.
+
+### 2026-09-08 addendum — the ONE tag set that counts (owner decision)
+
+The ad link is `/en/?utm_source=facebook&utm_medium=social&utm_campaign=freemium&utm_content=curious-drawing`
+plus an `fbclid` (stored in `web_visits.gclid`, channel `ads`). **The ad is judged only by
+visits carrying the full pair `utm_campaign=freemium` + `utm_content=curious-drawing`**, in
+SQL `utm_json LIKE '%freemium%' AND utm_json LIKE '%curious-drawing%'`, and only the
+engaged, non-bot ones. Reasons, from the production DB on the first evening:
+
+- Plain `utm_source=facebook` has 1290 visits - the organic share of 09-06 plus scrapers;
+  it is not the ad.
+- Facebook's link fetchers hit the URL with TRUNCATED `utm_medium` values: `social` 174,
+  `so` 92, `s` 89, `soci` 86, `soc` 84 - a signature of a bot walking the query string,
+  not of people. Anything without the full campaign/content pair is noise.
+- The exact tag set first appears on 09-08: 23 visits, 2 non-bot, **1 engaged** (US,
+  desktop, entered `/en/`, 1 page). That is the ad's day-one so far.
+
+Known limit: `utm_medium=social` is identical for a paid click and an organic click on the
+same boosted post, so this set cannot split the two. Fine for this test (organic reach of
+the page is near zero). For the next one, put `utm_medium=paid` in the ad's URL-parameters
+field in Ads Manager - it is appended per ad, so the post stays untouched.
