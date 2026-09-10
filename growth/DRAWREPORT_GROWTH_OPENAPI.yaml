@@ -43,8 +43,11 @@ servers:
   - url: https://drawreport.com
     description: production
 
+# Either scheme authenticates a request. Prefer the header; the query parameter is the
+# compatibility path for a client that cannot set one.
 security:
   - bearerAuth: []
+  - queryToken: []
 
 paths:
   /internal/growth/summary:
@@ -155,7 +158,15 @@ components:
       scheme: bearer
       description: >-
         The dedicated growth token. Not the site admin password. If the server has no token
-        configured every route answers 503.
+        configured every route answers 503. Prefer this over queryToken.
+    queryToken:
+      type: apiKey
+      in: query
+      name: token
+      description: >-
+        The same token passed as ?token=... Use this only when the client cannot set an
+        Authorization header. A token in a URL is more exposed than one in a header, so
+        rotate it more readily.
 
   parameters:
     From:

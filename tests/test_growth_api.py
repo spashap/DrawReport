@@ -229,6 +229,51 @@ class TestAuth(GrowthApiBase):
         self.assertEqual(before, after)
 
 
+class TestUrlTokenFallback(GrowthApiBase):
+    """?token= exists for clients that cannot set an Authorization header."""
+
+    URL = "/internal/growth/summary?from=2026-09-05&to=2026-09-06"
+
+    def test_correct_url_token_200(self):
+        r = self.get(f"{self.URL}&token={TOKEN}", headers={})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.get_json()["data"]["traffic"]["visits_engaged_human"], 3)
+
+    def test_url_token_works_on_every_endpoint(self):
+        for path in (f"/internal/growth/content?from=2026-09-05&to=2026-09-06&token={TOKEN}",
+                     f"/internal/growth/changes?since=2026-09-01T00:00:00Z&token={TOKEN}"):
+            self.assertEqual(self.get(path, headers={}).status_code, 200, path)
+
+    def test_wrong_url_token_401(self):
+        self.assertEqual(self.get(f"{self.URL}&token=nope", headers={}).status_code, 401)
+        self.assertEqual(self.get(f"{self.URL}&token=", headers={}).status_code, 401)
+
+    def test_url_token_does_not_bypass_the_503(self):
+        saved = settings.GROWTH_AGENT_TOKEN
+        settings.GROWTH_AGENT_TOKEN = ""
+        try:
+            r = self.get(f"{self.URL}&token={TOKEN}", headers={})
+            self.assertEqual(r.status_code, 503)
+        finally:
+            settings.GROWTH_AGENT_TOKEN = saved
+
+    def test_header_still_works_and_wins(self):
+        # A valid header with a junk query token must still succeed.
+        r = self.get(f"{self.URL}&token=nope")
+        self.assertEqual(r.status_code, 200)
+
+    def test_token_is_never_echoed_back(self):
+        r = self.get(f"{self.URL}&token={TOKEN}", headers={})
+        self.assertNotIn(TOKEN, r.get_data(as_text=True))
+        r = self.get(f"{self.URL}&token=nope", headers={})
+        self.assertNotIn("nope", r.get_data(as_text=True))
+
+    def test_token_arg_does_not_disturb_validation(self):
+        r = self.get(f"/internal/growth/summary?from=bad&to=2026-09-06&token={TOKEN}",
+                     headers={})
+        self.assertEqual(r.status_code, 400)
+
+
 class TestValidation(GrowthApiBase):
     def test_invalid_dates_400(self):
         for q in ("from=2026-09-05", "to=2026-09-05", "from=bad&to=2026-09-05",

@@ -6,9 +6,11 @@ Three questions an outside strategist (a ChatGPT connector, in practice) is allo
   3. What did WE change meanwhile?         GET /internal/growth/changes?since=
 
 Rules that shape everything below:
-  * ITS OWN TOKEN. `Authorization: Bearer <GROWTH_AGENT_TOKEN>`, compared in constant time.
-    Never the admin password: that cookie belongs to a person at a screen, this belongs to a
-    machine that must be revocable on its own. Empty token -> 503 on every route.
+  * ITS OWN TOKEN. `Authorization: Bearer <GROWTH_AGENT_TOKEN>`, compared in constant time,
+    or `?token=<GROWTH_AGENT_TOKEN>` for clients that cannot set a header (see _authorize
+    for why that exists and what it costs). Never the admin password: that cookie belongs to
+    a person at a screen, this belongs to a machine that must be revocable on its own.
+    Empty token -> 503 on every route.
   * NO PII, EVER. Counts and money only. Nothing here reads emails, child names, tokens,
     file paths, model text or user agents, so nothing can leak them. Identifiers (visit /
     visitor / order ids) are used as join keys in Python and never emitted.
@@ -114,15 +116,38 @@ def _handle_crash(e: Exception):
 
 # --- auth -----------------------------------------------------------------------------
 
+def _bearer() -> str:
+    """The token from `Authorization: Bearer <token>`, or "" if not presented that way."""
+    scheme, _, value = request.headers.get("Authorization", "").partition(" ")
+    return value.strip() if scheme.lower() == "bearer" else ""
+
+
 def _authorize() -> None:
+    """Header first, `?token=` second.
+
+    The header is the real mechanism. The query parameter exists because some callers
+    cannot set an arbitrary request header at all - ChatGPT's web fetcher is the one that
+    forced it - and an API a client physically cannot authenticate to is not an API.
+
+    THE TRADE-OFF, so nobody has to rediscover it. A token in a URL is a token in the
+    nginx access log, in any proxy in between, and in the caller's own history. The nginx
+    vhost therefore logs `$uri` rather than `$request` for /internal/, so the query string
+    is dropped before it is ever written to disk (see drawreportDeploy/nginx-drawreport-tls.conf).
+    That covers OUR logs and nothing else, so a URL token should be treated as more
+    exposed than a header token and rotated more readily. Prefer the header wherever the
+    client can send one.
+
+    Both paths compare in constant time and both answer with the same message, so a
+    wrong token learns nothing about which mechanism it got wrong."""
     token = settings.GROWTH_AGENT_TOKEN
     if not token:
         raise ApiError(503, "not_configured",
                        "the growth API is disabled: GROWTH_AGENT_TOKEN is not set")
-    scheme, _, value = request.headers.get("Authorization", "").partition(" ")
-    value = value.strip()
-    if scheme.lower() != "bearer" or not value or not hmac.compare_digest(value, token):
-        raise ApiError(401, "unauthorized", "missing or invalid bearer token")
+    presented = _bearer() or (request.args.get("token") or "").strip()
+    if not presented or not hmac.compare_digest(presented, token):
+        raise ApiError(401, "unauthorized",
+                       "missing or invalid token: send Authorization: Bearer <token>, "
+                       "or ?token=<token> if your client cannot set headers")
 
 
 @bp_growth.before_request

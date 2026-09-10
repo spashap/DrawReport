@@ -20,6 +20,17 @@ The API answers three questions and nothing else:
 Authorization: Bearer <TOKEN>
 ```
 
+**Fallback for clients that cannot set a header.** Append `?token=<TOKEN>` to any endpoint
+instead. This exists because some callers, ChatGPT's web fetcher among them, can fetch a URL
+but cannot attach an arbitrary request header, and an API a client physically cannot
+authenticate to is not an API.
+
+Treat a URL token as more exposed than a header token. It lands in the caller's history and in
+any proxy between you and the server. Our own nginx logs `$uri` rather than `$request` for
+`/internal/`, so the query string is stripped before anything is written to disk, but that
+covers this server only. Use the header wherever the client can send one, and rotate a URL
+token more readily.
+
 - The token is the server environment variable `GROWTH_AGENT_TOKEN` (server `.env`, never in
   git). It is a dedicated token: the admin password is **not** accepted.
 - Token not configured on the server → every route answers **503** `not_configured`.
