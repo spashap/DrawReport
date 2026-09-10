@@ -4,7 +4,7 @@ Exactly what to take from `C:\projects\GolosRisunka` (READ-ONLY) and how. Three 
 **COPY verbatim**, **ADAPT**, **REPLACE**. Plus what the **owner provides**.
 
 > **⚠️ The report pipeline now follows PHILOSOPHY 2.3 (prompt v4.0) — see
-> `projectSpec/HANDOFF-english-philosophy-2.3.md`.** The RU reference already implements it
+> `projectSpec/DrawReport-HANDOFF-english-philosophy-2.3.md`.** The RU reference already implements it
 > (`pipeline/prompt.py` PROMPT_VERSION 4.0, `schema.py` with `about_child` + the 7 new directions +
 > `understanding_/art_recommendations` + `specialists` + `development_directions`, `lint.py` frame-check,
 > `config/report_texts.json`). **Mirror the CURRENT Golos structure**, then apply the **English
@@ -39,9 +39,9 @@ Exactly what to take from `C:\projects\GolosRisunka` (READ-ONLY) and how. Three 
 | **Schema** | `pipeline/schema.py` v4.0 | Mirror v4.0 fields: `about_child`, the 7 directions, `understanding_/art_recommendations`, `specialists`, `development_directions`, refusal branch. Language-neutral keys. |
 | **Linter** | `pipeline/lint.py` (frame-check) | English HARD-ban patterns (wider for US), hedge list, attribution names (Piaget/Lowenfeld/Vygotsky/Machover…), artifact-noun list; frame-check only on interpretation fields; repair = "add frame, don't delete meaning". |
 | **End-of-report texts** | `config/report_texts.json` | Mirror: admin-editable upsell (per 1/2/3 drawings) + disclaimer + free block, pass-through. |
-| **All UI templates** | hardcoded Russian | English via Flask-Babel catalog; no hardcoded strings (see `i18n-architecture.md`). |
+| **All UI templates** | hardcoded Russian | English via Flask-Babel catalog; no hardcoded strings (see `DRAWREPORT_i18n-architecture.md`). |
 | **Products** | `config/products.json` | USD prices; English `title/subtitle/features`; per-locale text. |
-| **Landing copy** | `templates/landing.html` RU copy | English DRAFT per `positioning-en.md` (adapt, mark for owner review). |
+| **Landing copy** | `templates/landing.html` RU copy | English DRAFT per `DRAWREPORT_positioning-en.md` (adapt, mark for owner review). |
 | **FAQ / testimonials / legal** | `app/routes.py` consts / templates | English, per-locale; US legal (COPPA). |
 | **Blog** | `content/blog/*` | A few articles adapted to English under `content/en/blog/`. |
 | **Sample reports** | `data/` sample JSON + images | Reuse drawings; **American child names**; English report text. |
@@ -69,8 +69,8 @@ Exactly what to take from `C:\projects\GolosRisunka` (READ-ONLY) and how. Three 
 
 ## Golos reference docs worth reading first
 - `C:\projects\GolosRisunka\CLAUDE.md` — full architecture + hard rules.
-- `C:\projects\GolosRisunka\DevelopmentStatus.md` — the build journal (how each phase was done).
-- `C:\projects\GolosRisunka\UseCasesData.md` — solved problems (e.g. inline-CSS must be `| safe` #24;
+- `C:\projects\GolosRisunka\DRAWREPORT_DevelopmentStatus.md` — the build journal (how each phase was done).
+- `C:\projects\GolosRisunka\DRAWREPORT_UseCasesData.md` — solved problems (e.g. inline-CSS must be `| safe` #24;
   binary assets built by host script #25; WeasyPrint var() gotchas; Cyrillic console — the `$`/Latin
-  equivalents are simpler). Seed DrawReport's own `UseCasesData.md` from the relevant ones.
+  equivalents are simpler). Seed DrawReport's own `DRAWREPORT_UseCasesData.md` from the relevant ones.
 - `C:\projects\GolosRisunka\projectSpec\brand-book.md` — design system spec.

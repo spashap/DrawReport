@@ -3,7 +3,7 @@
 For the growth strategist. Written 2026-09-10, application version **V0.065**, deployed and
 verified live at `https://drawreport.com`.
 
-Companion documents: `growth/GROWTH_API.md` (the API contract and every metric definition)
+Companion documents: `growth/DRAWREPORT_GROWTH_API.md` (the API contract and every metric definition)
 and `DRAWREPORT_GROWTH_TECHNICAL_REPORT.md` (the V0.064 audit this was built from).
 
 ---
@@ -61,7 +61,7 @@ New:
 |---|---|
 | `app/growth.py` | The whole API: auth, validation, envelope, aggregation, attribution folding, change-log reader. |
 | `growth/growth_changes.jsonl` | The append-only change log, tracked in git. |
-| `growth/GROWTH_API.md` | The API contract, metric definitions, limitations, curl examples. |
+| `growth/DRAWREPORT_GROWTH_API.md` | The API contract, metric definitions, limitations, curl examples. |
 | `tests/test_growth_api.py`, `tests/__init__.py` | 17 tests against a temporary database. |
 | `DRAWREPORT_GROWTH_TECHNICAL_REPORT.md` | The prior audit, added to the repository. |
 | `DRAWREPORT_GROWTH_API_IMPLEMENTATION_REPORT.md` | This document. |
@@ -76,7 +76,7 @@ Modified:
 | `app/admin_funnels.py` | `build()`, `_visit_types()` and `_orders_by_visit()` take an optional exclusive `until`. Default behaviour is unchanged. |
 | `app/admin.py`, `templates/admin/settings.html` | The Site settings line now shows whether the growth token is set. |
 | `CLAUDE.md` | The permanent growth-change-logging rule and an as-built row. |
-| `DevelopmentStatus.md` | Journal entry for V0.065. |
+| `DRAWREPORT_DevelopmentStatus.md` | Journal entry for V0.065. |
 
 No public page, no copy, no price, no template outside the admin, and no existing tracking
 behaviour was touched. Visitor-facing behaviour is identical to V0.064.
@@ -570,7 +570,7 @@ different questions, and neither is hidden.
 ## 12. How to start using it
 
 Ask the owner for the token; it is in the server environment file and nowhere else. Then read
-`growth/GROWTH_API.md` for the metric definitions before interpreting any number, particularly
+`growth/DRAWREPORT_GROWTH_API.md` for the metric definitions before interpreting any number, particularly
 the difference between the two attribution models and the definition of an engaged human
 visit.
 

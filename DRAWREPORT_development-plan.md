@@ -2,7 +2,7 @@
 
 Build by cloning `C:\projects\GolosRisunka` (read-only) and adapting for US/English with an i18n layer.
 Commit at the end of each phase (bump version), and **pause for owner review at each 🧪 milestone**.
-See `CLAUDE.md`, `i18n-architecture.md`, `build-from-golos.md`, `positioning-en.md`.
+See `CLAUDE.md`, `DRAWREPORT_i18n-architecture.md`, `DRAWREPORT_build-from-golos.md`, `DRAWREPORT_positioning-en.md`.
 
 ---
 
@@ -14,7 +14,7 @@ See `CLAUDE.md`, `i18n-architecture.md`, `build-from-golos.md`, `positioning-en.
 - `config/settings.py` reads `.env`; holds product codes, ADMIN, locale config (`LOCALES=["en"]`,
   `DEFAULT_LOCALE="en"`).
 - **i18n layer:** Flask-Babel init, locale resolver (URL prefix → cookie → Accept-Language → `en`),
-  `url_for` locale injection, `babel.cfg`, empty `en` catalog. (See `i18n-architecture.md`.)
+  `url_for` locale injection, `babel.cfg`, empty `en` catalog. (See `DRAWREPORT_i18n-architecture.md`.)
 - Copy self-hosted fonts from Golos `static/fonts/` (Rubik/Inter/Caveat subsets) + `fonts.css`. Ensure
   `$` glyph present.
 - **🧪 M0:** `python scripts/hello_pdf.py` (port Golos's) renders a one-page PDF with the three fonts and
@@ -33,7 +33,7 @@ See `CLAUDE.md`, `i18n-architecture.md`, `build-from-golos.md`, `positioning-en.
 - Copy `pipeline/` (`prompt.py`, `gemini.py`, `lint.py`, `schema.py`, `images.py`, `render.py`) and
   `templates/report.html` + `static/css/report.css` from Golos.
 - Adapt: **English prompt** (faithful adaptation of §7.4 philosophy + 7-direction taxonomy in English,
-  per-locale structure per `i18n-architecture.md`), **English linter** banned-phrasings + repair text,
+  per-locale structure per `DRAWREPORT_i18n-architecture.md`), **English linter** banned-phrasings + repair text,
   report fixed strings + `$` + Babel dates.
 - `scripts/generate_report.py` CLI end-to-end (images + context → Gemini → validated JSON → HTML → PDF).
 - Sample reports: reuse Golos sample inputs, **American names**, English output.
@@ -44,7 +44,7 @@ See `CLAUDE.md`, `i18n-architecture.md`, `build-from-golos.md`, `positioning-en.
 ## Phase 3 — Landing page
 - Port Golos `templates/landing.html` structure (cinematic hero + frosted card, sections, infinite
   carousels, reveal, CTA popup). All copy via i18n; English **DRAFT** copy adapted from
-  `positioning-en.md` (mark for owner review).
+  `DRAWREPORT_positioning-en.md` (mark for owner review).
 - Hosted sample report routes `/<locale>/sample/<token>` (port Golos `/primer/`).
 - SEO: titles/descriptions/OG/Twitter/canonical + **hreflang**, Schema.org (Org/WebSite/Product/FAQ/
   Article), `robots.txt`, per-locale `sitemap.xml`.
@@ -96,6 +96,6 @@ See `CLAUDE.md`, `i18n-architecture.md`, `build-from-golos.md`, `positioning-en.
 ---
 
 ### Notes
-- Keep `DevelopmentStatus.md` (append-only journal) and `UseCasesData.md` updated as you go.
+- Keep `DRAWREPORT_DevelopmentStatus.md` (append-only journal) and `DRAWREPORT_UseCasesData.md` updated as you go.
 - Don't reinvent: when unsure, open the Golos equivalent and mirror it.
 - Secrets only in `.env` (never committed); build with stubs so phases run before real creds arrive.

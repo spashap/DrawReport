@@ -149,7 +149,7 @@ _SEEDS = [
      "WARNING. All four values live in the SERVER .env only, never in git. Rebuild the\n"
      "box without them and measurement stops SILENTLY - every template renders nothing\n"
      "when its value is empty and nothing warns you. The values are written down in\n"
-     "drawreportDeploy/README.md, and Site settings shows which are currently set.\n"
+     "drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md, and Site settings shows which are currently set.\n"
      "\n"
      "NOT done by this: marking key events in GA4 - that is its own task, and it only\n"
      "became possible now that the tag is finally on the page.",

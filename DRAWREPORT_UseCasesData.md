@@ -1,7 +1,7 @@
 # Use Cases — problems met & solved (DrawReport)
 
 Knowledge base: problem → cause → solution. One entry per case. Chronological build log lives in
-`DevelopmentStatus.md`. Seeded from Golos (`C:\projects\GolosRisunka\UseCasesData.md`) — only the
+`DRAWREPORT_DevelopmentStatus.md`. Seeded from Golos (`C:\projects\GolosRisunka\DRAWREPORT_UseCasesData.md`) — only the
 cases that carry over to a Latin-script, US fork are kept, adapted for `$`/GA4/PayPal/Resend.
 
 ---
@@ -296,7 +296,8 @@ Every new rule silently did nothing; the test suite is the only reason it surfac
 **Two habits that catch it:** write generated regexes with a raw string in the generator too, and
 after any programmatic edit run
 `[hex(ord(c)) for c in open(f, encoding="utf-8").read() if ord(c) < 32 and c not in "	
-"]`
+
+"]`
 - it should be empty. The repair is a one-liner: replace `` with the two characters ``.
 And never trust "it compiled" as evidence that a regex edit worked - assert on a match.
 

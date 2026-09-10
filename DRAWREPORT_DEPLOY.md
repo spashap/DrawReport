@@ -1,6 +1,6 @@
 # DrawReport — deployment
 
-The full, ready-to-run deployment kit lives in **[`drawreportDeploy/`](drawreportDeploy/README.md)**.
+The full, ready-to-run deployment kit lives in **[`drawreportDeploy/`](drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md)**.
 
 On the server:
 - Project code: **`/var/www/DrawReport`** (this repo; `.env` placed there by the owner)
@@ -19,7 +19,7 @@ certbot --nginx -d drawreport.com -d www.drawreport.com   # TLS once DNS resolve
 ```
 Routine updates: `cd /var/www/drawreportDeploy && bash deploy.sh`.
 
-See `drawreportDeploy/README.md` for the full runbook, the production `.env` checklist
+See `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` for the full runbook, the production `.env` checklist
 (change `PUBLIC_BASE_URL` and `ADMIN_PASS`; switch `MAIL_BACKEND`/`PAYMENT_BACKEND` when ready),
 and health-check commands.
 

@@ -8,7 +8,7 @@ the airtight safe frame PLUS prominent disclaimers that all interpretation is a
 SUGGESTION / HYPOTHESIS grounded in the developmental & art literature, never a
 recommendation or a diagnosis — not from suppressing zone-3. "Educational observation,
 not a diagnosis" stays ironclad; the report never states a child's state as fact.
-See projectSpec/HANDOFF-english-philosophy-2.3.md. Bump PROMPT_VERSION on any change
+See projectSpec/DrawReport-HANDOFF-english-philosophy-2.3.md. Bump PROMPT_VERSION on any change
 (and keep pipeline/lint.py in sync — the linter checks the safe frame).
 
 Adding a locale = add its entries to PROMPTS / USER_PROMPTS / REPAIR_INSTRUCTIONS

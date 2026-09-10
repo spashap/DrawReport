@@ -1,4 +1,4 @@
-# DevelopmentStatus.md — DrawReport build journal
+# DRAWREPORT_DevelopmentStatus.md — DrawReport build journal
 
 Append-only. How the next session resumes work. DrawReport = US/English hard fork of
 Golos Risunka (`C:\projects\GolosRisunka`, read-only reference).
@@ -80,7 +80,7 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
 ## Phase 3 — Landing + samples + SEO — DONE (V0.004)
 
 - `templates/landing.html` — full cinematic landing adapted to English DRAFT copy from
-  positioning-en.md (hero hook "say in drawings what they can't put into words", trio
+  DRAWREPORT_positioning-en.md (hero hook "say in drawings what they can't put into words", trio
   strengths/nurture/support, "grounded in developmental stages", no-myths framed positively,
   how-it-works, reviews rotator, trust, pricing USD, FAQ, blog carousel). url_for routing,
   `data-goal` analytics attrs, inline critical CSS, GA4 include, hreflang. JS (carousels/rotator/
@@ -181,7 +181,7 @@ prefix). **Zero fallback fonts** (no Segoe/Verdana/Arial/Times). `$` renders.
   commit + push; no Vercel export).
 - `scripts/deploy/`: `drawreport-web.service` (gunicorn 127.0.0.1:8002), `drawreport-worker.service`,
   `nginx-drawreport.conf` (drawreport.com vhost, 50M uploads, X-Real-IP), `provision.sh` (apt
-  WeasyPrint deps + venv + units + nginx + certbot guidance). `DEPLOY.md` runbook (cosmyday-safe,
+  WeasyPrint deps + venv + units + nginx + certbot guidance). `DRAWREPORT_DEPLOY.md` runbook (cosmyday-safe,
   port 8002, DNS, certbot, PayPal webhook, GeoIP/logo notes, adding a locale).
 - **M9 (artifacts) verified:** full route smoke test all OK (`/` redirect, landing, order, login,
   blog, legal, sample, hosted report, cabinet redirect, admin login, robots, sitemap). **i18n
@@ -230,18 +230,18 @@ Post-build work completed this session (after M0–M9):
 - **Carousel made finite** (dots = real card count). UseCase #12.
 - **Local dev on port 3000** (`run.py` reads `PORT`, default 3000); web + worker run locally.
 - **Deployment kit `drawreportDeploy/`** for server `/var/www/DrawReport` (capital) + port 8002,
-  cosmyday-safe; `provision.sh`/`deploy.sh`/`restart.sh` + units + nginx + README. `DEPLOY.md` updated.
+  cosmyday-safe; `provision.sh`/`deploy.sh`/`restart.sh` + units + nginx + README. `DRAWREPORT_DEPLOY.md` updated.
   `.gitattributes` forces LF. UseCase #15.
 - **DNS decision:** owner sets A records at the registrar (no Cloudflare). TLS via certbot.
 - CLAUDE.md given an AS-BUILT STATUS section.
 
-**To resume:** read CLAUDE.md (AS-BUILT section) + this file + UseCasesData.md. Run locally with
-`run.py`/`worker.py`. To deploy, follow `drawreportDeploy/README.md`.
+**To resume:** read CLAUDE.md (AS-BUILT section) + this file + DRAWREPORT_UseCasesData.md. Run locally with
+`run.py`/`worker.py`. To deploy, follow `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md`.
 
 ## Session — 2026-06-24 (V0.017) — Philosophy 2.3 pivot finished (TASK T1–T5)
 
 Engine (prompt `en-4.0` / lint frame-check / schema v4.0 / render sections) was already pivoted by the
-prior session; this session completed everything around it per `projectSpec/TASK-apply-philosophy-2.3.md`.
+prior session; this session completed everything around it per `projectSpec/DrawReport-TASK-apply-philosophy-2.3.md`.
 
 - **T1 — admin-controlled end-of-report texts** (mirror Golos). New `config/report_texts.json`
   (upsell by drawing count + `disclaimer_main` + per-count add-on + `free_text`);
@@ -360,7 +360,7 @@ Verified against the running server and the live site on this date, not recalled
 ### Docs updated in this session
 `CLAUDE.md` AS-BUILT rewritten to the above (the old "build it from scratch" framing is now
 explicitly marked historical); memory files `drawreport-build-state` and `drawreport-deploy`
-rewritten from V0.017-era text to current; `UseCasesData.md` gained #20-#23.
+rewritten from V0.017-era text to current; `DRAWREPORT_UseCasesData.md` gained #20-#23.
 
 ---
 
@@ -530,7 +530,7 @@ which is the rule with the least prior art behind it.
 
 ## Session — 2026-08-18 · Paid report **en-4.2**: the north star (V0.037)
 
-Implemented `projectSpec/TASK-paid-report-en-4.2-north-star.md` in full, then regenerated both
+Implemented `projectSpec/DrawReport-TASK-paid-report-en-4.2-north-star.md` in full, then regenerated both
 samples as **V2** and measured against the task's own acceptance table.
 **This is about WHAT the report talks about, not how the English sounds** (UseCase #30).
 
@@ -901,7 +901,7 @@ rather than as an error, so nobody goes looking.
 
 ## V0.048 — Legal pages out of DRAFT; the terms are finally shown at checkout (2026-08-19)
 
-Spec: `projectSpec/TASK-legal-pages-v1.md`. Owner decisions behind it: **US only** (so no GDPR
+Spec: `projectSpec/DrawReport-TASK-legal-pages-v1.md`. Owner decisions behind it: **US only** (so no GDPR
 section, no cookie-consent gate, no 14-day withdrawal right), **operating as an individual** (so the
 contracting party is a named person, not a company), contact `team@drawreport.com`.
 
@@ -1445,5 +1445,30 @@ forbidden key names across every endpoint). Run: `python -m unittest discover -s
 ⚠️ One SQLite lesson: `returning` is a reserved word (the RETURNING clause), so an alias
 `... END) returning` is a syntax error. Alias it `n_returning`.
 
-**Docs.** `growth/GROWTH_API.md` (contract + metric definitions + limitations),
+**Docs.** `growth/DRAWREPORT_GROWTH_API.md` (contract + metric definitions + limitations),
 `DRAWREPORT_GROWTH_API_IMPLEMENTATION_REPORT.md` (for the strategist).
+
+## 2026-09-10 — Every doc filename now carries the project name (V0.067)
+
+**Owner rule:** documentation is shared OUTSIDE the repo, where `GROWTH_API.md` or `README.md`
+says nothing about which project it belongs to. A parent directory that says "drawreport" does
+not count - the FILENAME has to.
+
+14 files renamed with `git mv` (history preserved). Root docs take `DRAWREPORT_`, matching the
+two reports already there; `projectSpec/` takes `DrawReport-`, matching
+`DrawReport-English-Copy-Repair-Report.md` already there. Notably
+`drawreportDeploy/README.md` -> `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` and
+`growth/GROWTH_API.md` -> `growth/DRAWREPORT_GROWTH_API.md`.
+
+⚠️ **`CLAUDE.md` is the one file that must NOT be renamed** - Claude Code loads project
+instructions from that exact name, so renaming it would stop it being read at all. The rule is
+written into CLAUDE.md itself with that exception stated.
+
+⚠️ The old names were referenced in more than markdown: comments in `app/__init__.py`,
+`app/admin_tasks.py`, `app/content.py`, `pipeline/lint.py`, `pipeline/prompt.py` and a visible
+string in `templates/admin/visits.html`. All rewritten; a grep for the old basenames now
+returns nothing. Public pages, `/llms.txt`, the sitemap and all four admin screens verified
+200, and the 17 growth tests still pass.
+
+No growth-change-log entry for this: a rename cannot move an acquisition or conversion metric,
+which is exactly the "do not log" case in the new rule.

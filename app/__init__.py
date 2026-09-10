@@ -62,7 +62,7 @@ def create_app() -> Flask:
     app.register_blueprint(bp_admin)  # /admin (own password, English-only)
     from app.growth import bp_growth
     # /internal/growth/* - read-only aggregated metrics for an external growth agent.
-    # Its own bearer token (GROWTH_AGENT_TOKEN); 503 until that is set. See growth/GROWTH_API.md.
+    # Its own bearer token (GROWTH_AGENT_TOKEN); 503 until that is set. See growth/DRAWREPORT_GROWTH_API.md.
     app.register_blueprint(bp_growth)
 
     @app.teardown_appcontext

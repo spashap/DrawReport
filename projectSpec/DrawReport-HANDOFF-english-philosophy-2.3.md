@@ -203,4 +203,4 @@ The Russian implementation is the reference for *structure and intent*; the Engl
 > grounded in the literature, NOT a recommendation or diagnosis. Wider HARD bans + ironclad "not a
 > diagnosis" still apply. Remember DrawReport's LLM is Anthropic Claude via `pipeline/llm.py`, not
 > Gemini — the prompt/linter concepts port unchanged; only the provider call differs.
-> See `projectSpec/TASK-apply-philosophy-2.3.md` for the executable to-do (what's done + what remains).
+> See `projectSpec/DrawReport-TASK-apply-philosophy-2.3.md` for the executable to-do (what's done + what remains).

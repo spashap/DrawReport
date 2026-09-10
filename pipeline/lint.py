@@ -148,7 +148,7 @@ HEDGE = {
 # report. EVERY form the prompt offers must match here. If it does not, _frame_scan reads a
 # correctly framed zone-3 sentence as unattributed, spends a repair call, and the repair
 # rewrites it back into the stock phrase - the fix would silently undo itself and cost a
-# paid call per report. See UseCasesData.md #24.
+# paid call per report. See DRAWREPORT_UseCasesData.md #24.
 ATTRIBUTION = {
     "en": re.compile(
         r"projective|tradition|approach|Machover|Lowenfeld|Vygotsky|Piaget|Kellogg|"

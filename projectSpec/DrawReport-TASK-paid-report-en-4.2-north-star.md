@@ -209,9 +209,9 @@ Not checked, on purpose: em-dash count, "not X, but Y", British spelling, senten
 
 - `PROMPT_VERSION = "en-4.2"` with a changelog comment in the existing style, noting: activities re-pointed at parent-and-child, materials capped at one, drills banned, activities named, directions 6-7 capped, no-recycling and length-follows-material rules, normality verdicts added to ALWAYS FORBIDDEN, linter extended for drills and normality verdicts. NO prose-style changes in this version.
 - Bump `VERSION` to 0.037.
-- Add a `UseCasesData.md` entry: **a prompt rule with no linter behind it holds on short output and collapses on long output** — measured at 1 em dash vs 58 from the same prompt on two reports generated the same day. The dashes themselves don't matter (report prose style is accepted); the lesson is that any rule that DOES matter needs enforcement in `lint.py`, not more prompt text.
+- Add a `DRAWREPORT_UseCasesData.md` entry: **a prompt rule with no linter behind it holds on short output and collapses on long output** — measured at 1 em dash vs 58 from the same prompt on two reports generated the same day. The dashes themselves don't matter (report prose style is accepted); the lesson is that any rule that DOES matter needs enforcement in `lint.py`, not more prompt text.
 - Also record the scope split: **strict native-US-English applies to the website front end, not to generated report prose.**
-- Append the session to `DevelopmentStatus.md` per convention.
+- Append the session to `DRAWREPORT_DevelopmentStatus.md` per convention.
 
 ## 7. Out of scope
 

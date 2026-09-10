@@ -5,7 +5,7 @@ Prepared for an external growth strategist. Read-only inspection of the reposito
 Nothing in the application was changed, installed, migrated or deployed to produce this document.
 
 Evidence hierarchy used throughout: **code > configuration > journal/docs**. Where a statement rests
-on the journal (`DevelopmentStatus.md`) or `CLAUDE.md` rather than on code, it is marked
+on the journal (`DRAWREPORT_DevelopmentStatus.md`) or `CLAUDE.md` rather than on code, it is marked
 "per docs". Where nothing was found, it says "Not found". No secrets, customer data or drawing
 images are reproduced here; the local `.env` was inspected only for *key names*.
 
@@ -843,7 +843,7 @@ Deployment
 - `drawreportDeploy/deploy.sh`, `drawreportDeploy/*.service`, `drawreportDeploy/nginx-drawreport-tls.conf`, root `deploy.sh`, `scripts/indexnow_submit.py` (outline)
 
 Docs used only for "per docs" statements
-- `CLAUDE.md` (AS-BUILT section), `DevelopmentStatus.md` (entries 2026-09-06 to 2026-09-08)
+- `CLAUDE.md` (AS-BUILT section), `DRAWREPORT_DevelopmentStatus.md` (entries 2026-09-06 to 2026-09-08)
 
 ---
 

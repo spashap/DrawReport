@@ -1,6 +1,6 @@
 """Per-locale landing content: FAQ + illustrative scenarios (Golos kept these as
 constants; DrawReport namespaces them by locale). English copy is a DRAFT for owner
-review (adapted from positioning-en.md / the Russian originals - not literal translations).
+review (adapted from DRAWREPORT_positioning-en.md / the Russian originals - not literal translations).
 
 Philosophy 2.3: we show ILLUSTRATIVE SCENARIOS (clearly examples, never real clients),
 not fabricated testimonials. Adding a locale = add its FAQ/SCENARIOS entries.

@@ -4,7 +4,7 @@
 finished product. Do NOT literal-translate the Russian; adapt to natural US English following the rules
 below. Mark all visible marketing copy as DRAFT.**
 
-> **⚠️ Governed by `projectSpec/HANDOFF-english-philosophy-2.3.md` (product pivot).** The page now sells
+> **⚠️ Governed by `projectSpec/DrawReport-HANDOFF-english-philosophy-2.3.md` (product pivot).** The page now sells
 > "understand your CHILD through their drawing" (personality-led), not "drawing-skill scores". The hero
 > stays; "what you learn" leads with personality; the old "we only read skills / not the child" block is
 > replaced by **anti-fortune-teller** positioning. US calibration (owner decision): KEEP the depth —

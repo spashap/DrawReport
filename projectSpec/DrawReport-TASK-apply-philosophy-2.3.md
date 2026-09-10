@@ -2,7 +2,7 @@
 
 Executable spec for Claude Code. Goal: bring the whole English product onto Philosophy 2.3
 ("portrait of the child as a person"), matching the Russian site's depth. Reference (READ-ONLY):
-`C:\projects\GolosRisunka` (already implements v4.0) and `projectSpec/HANDOFF-english-philosophy-2.3.md`.
+`C:\projects\GolosRisunka` (already implements v4.0) and `projectSpec/DrawReport-HANDOFF-english-philosophy-2.3.md`.
 
 ## ⚖️ Calibration decision (OWNER — overrides the handoff's "dial zone-3 down")
 Keep the **Russian level of depth** in English. Do NOT suppress zone-3. Safety comes from:
@@ -50,7 +50,7 @@ that **picks the upsell by drawing count** and passes the texts into render.
 - Acceptance: edit a text in `/admin/report-texts` → next rendered report shows it, no restart; empty
   fields show nothing; a 1-drawing order shows the "one moment, not the full picture" add-on.
 
-### T2 — Landing rework to Philosophy 2.3 (front end). Spec: `positioning-en.md` + handoff §9.
+### T2 — Landing rework to Philosophy 2.3 (front end). Spec: `DRAWREPORT_positioning-en.md` + handoff §9.
 `templates/landing.html` + `app/routes.py` (FAQ/meta/JSON-LD). All UI strings via i18n; copy as DRAFT.
 - **Hero stays** (it was right): eyebrow "Every drawing has a voice"; H1 ≈ "Children often say in drawings
   what they can't yet put into words."; lead = personality-led + "read carefully, by the developmental
@@ -87,7 +87,7 @@ call aborts → retries → fails cleanly instead of wedging the worker.
 - Render a full report end-to-end: PDF shows About-your-child, both recommendation sections, specialists,
   development directions, and the admin suffix blocks; **no fallback fonts** (no Segoe/Verdana); `$` ok.
 - Linter: ~0 false positives on a good framed report; catches a deliberately bad string.
-- Bump version, commit, append to `DevelopmentStatus.md` + `UseCasesData.md`.
+- Bump version, commit, append to `DRAWREPORT_DevelopmentStatus.md` + `DRAWREPORT_UseCasesData.md`.
 
 ## report_texts.json content (English draft — owner can tune in admin later)
 ```json
