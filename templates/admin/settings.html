@@ -10,7 +10,8 @@
   Search Console: {{ 'verified via meta tag' if google_verification else 'no meta tag (fine if verified by DNS)' }} ·
   Bing: {{ 'verified via meta tag' if bing_verification else 'no meta tag (fine if imported from Search Console)' }} ·
   Mail: {{ mail_backend }}{% if mail_backend == 'resend' %} (key {{ 'set' if resend_key else 'MISSING' }}){% endif %},
-  from {{ mail_from }} · Payment: {{ payment_backend }}</p>
+  from {{ mail_from }} · Payment: {{ payment_backend }} ·
+  Growth API: {{ 'token set' if growth_token_set else 'off (GROWTH_AGENT_TOKEN is empty, /internal/growth/* answers 503)' }}</p>
 <p class="hint">Edits are saved to <code>data/products.json</code> (the default is
   <code>config/products.json</code>). Prices live on their own page —
   <a href="{{ url_for('admin.prices') }}">Prices</a>.</p>

@@ -25,6 +25,7 @@ full-deploy `release.bat`, and a native-US-English copy pass.
 | **Price** | **NOT SETTLED and changes often — never quote a number from this file.** The owner edits it in `/admin` → Prices, which writes the server's `data/products.json` (overrides the git-tracked default `config/products.json`, UseCase #23). On 2026-09-06 it read $19 with a $39 strike-through; by the time you read this it may not. Every page, `/llms.txt` and the meta descriptions render whatever that file says, so **the only truth is the live site or the server file** — check there, and do not "correct" copy or docs to match a remembered price |
 | **Facebook** | Project page **https://www.facebook.com/profile.php?id=61594178430012** (opened 2026-09-06). `FACEBOOK_URL` in `config/settings.py` is a TRACKED default (public value, must survive a server rebuild), env-overridable; rendered in `_footer.html`, as `Organization.sameAs` in BOTH JSON-LD sources (`_seo_jsonld.html` for `_base` pages, `_schema_jsonld()` in `app/routes.py` for `/en/report`) and in `/llms.txt`. Empty string hides all three |
 | **Meta Pixel** | `META_PIXEL_ID` in `config/settings.py` (tracked public default, env-overridable, added V0.061 for the first paid FB test). Rendered by `_analytics.html` on public pages ONLY - never on `/free/r/`, `/<lang>/r/`, cabinet or admin, because the pixel reports the page URL and those are the unguessable links to a child's drawing. `track.js` mirrors goals into it: `free_upload_submit` -> `Lead`, `purchase` -> `Purchase`, other click goals as custom events. The Privacy Policy discloses it (Cookies section + processor list) - if the pixel goes, that text goes too |
+| **Growth API** | `/internal/growth/{summary,content,changes}` (`app/growth.py`, V0.065): read-only, aggregated, no PII, own bearer token `GROWTH_AGENT_TOKEN` in the SERVER `.env` (503 until set; `/admin/settings` shows whether it is). Docs `growth/GROWTH_API.md`, change log `growth/growth_changes.jsonl` (see the logging rule below), tests `tests/` (`python -m unittest discover -s tests -t .`) |
 | **Locales** | `LOCALES=en` only. The i18n plumbing is real but the `en` catalog is empty and uncompiled, so `_('...')` returns the msgid — **English source text lives inline in the templates** |
 
 ### Shared template partials — use them, do not re-inline (added V0.040)
@@ -394,6 +395,25 @@ Three workers/units, not two: `drawreport-web`, `drawreport-worker`, `drawreport
   `positioning-en.md` (do NOT literal-translate). **Mark visible copy as DRAFT for owner review** — the
   owner will refine wording on the finished product, not now.
 - When something is unclear, prefer the Golos implementation as the answer before inventing.
+
+## 📈 Growth change logging — PERMANENT RULE (added 2026-09-10, V0.065)
+`growth/growth_changes.jsonl` is an append-only, git-tracked log (one JSON object per line,
+ids `DR-CHG-NNNN`, sequential) that the Growth Data API serves at `/internal/growth/changes`
+so an external growth agent can read *what we changed* next to *what the numbers did*.
+**Whenever you make a change that could materially affect acquisition, SEO, attribution,
+analytics, landing-page behaviour, funnel conversion, pricing, social traffic, email capture,
+retention, product usage, checkout or revenue, you MUST append an entry in the SAME work
+session** — with the commit that ships the change, not later. Schema and allowed categories
+(`analytics attribution funnel landing_page pricing seo social content retention product
+email infrastructure`) are in `growth/GROWTH_API.md`; copy the shape of the last line.
+Timestamp in UTC (`Z`), `author` = `claude-code` (or the person), `expected_metrics` = the
+metric names from `/internal/growth/summary` you expect to move, `experiment_id` when the
+change belongs to a named test.
+**Do NOT log:** refactors with no behavioural effect, typo fixes, formatting, comments,
+routine dependency maintenance, purely internal engineering that cannot reasonably move a
+growth metric. **If in doubt, log it.** Never rewrite or delete historical lines except to
+correct a factual mistake (say so in `notes`). `tests/test_growth_api.py` asserts the file
+parses and the ids stay sequential, so a malformed line fails the suite.
 
 ## Keep your own journals (like Golos)
 Create and maintain:

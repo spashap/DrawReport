@@ -65,12 +65,23 @@ DOORS = [
 ]
 
 
-def _visit_types(db, since: str) -> dict[str, dict]:
+def _bound(column: str, since: str, until: str | None) -> tuple[str, tuple]:
+    """`column >= since` plus, when given, `column < until` (exclusive). `until` is the
+    Growth API's addition (app/growth.py): the admin asks "since N days ago", an external
+    agent asks for a closed from..to window, and both must count the same way."""
+    if until:
+        return f"{column} >= ? AND {column} < ?", (since, until)
+    return f"{column} >= ?", (since,)
+
+
+def _visit_types(db, since: str, until: str | None = None) -> dict[str, dict]:
     """{visit_id: {types, device, channel, screen_w}} for the period, bots excluded."""
     out: dict[str, dict] = {}
+    v_sql, v_params = _bound("v.started_at", since, until)
+    e_sql, e_params = _bound("created_at", since, until)
     for r in db.execute(
             "SELECT v.visit_id, v.device, v.channel, v.screen_w FROM web_visits v"
-            f" WHERE v.started_at >= ? AND {NOT_BOT}", (since,)):
+            f" WHERE {v_sql} AND {NOT_BOT}", v_params):
         out[r["visit_id"]] = {"types": set(), "device": r["device"] or "-",
                               "channel": r["channel"] or "direct",
                               "screen_w": r["screen_w"]}
@@ -78,23 +89,24 @@ def _visit_types(db, since: str) -> dict[str, dict]:
         return out
     for r in db.execute(
             "SELECT DISTINCT visit_id, type FROM events"
-            " WHERE visit_id IS NOT NULL AND created_at >= ?", (since,)):
+            f" WHERE visit_id IS NOT NULL AND {e_sql}", e_params):
         v = out.get(r["visit_id"])
         if v is not None:
             v["types"].add(r["type"])
     return out
 
 
-def _orders_by_visit(db, since: str) -> dict[str, dict]:
+def _orders_by_visit(db, since: str, until: str | None = None) -> dict[str, dict]:
     """Orders placed WITHIN a visit. Payment arrives later and outside the visit, so we
     take it from the order itself - "paid" does not depend on a browser being open."""
     out: dict[str, dict] = {}
+    o_sql, o_params = _bound("created_at", since, until)
     for r in db.execute(
             "SELECT visit_id, COUNT(*) n,"
             " SUM(CASE WHEN paid_at IS NOT NULL THEN 1 ELSE 0 END) paid,"
             " COALESCE(SUM(CASE WHEN paid_at IS NOT NULL THEN price_cents ELSE 0 END), 0) c"
-            " FROM orders WHERE visit_id IS NOT NULL AND created_at >= ?"
-            " GROUP BY visit_id", (since,)):
+            f" FROM orders WHERE visit_id IS NOT NULL AND {o_sql}"
+            " GROUP BY visit_id", o_params):
         out[r["visit_id"]] = {"n": r["n"], "paid": r["paid"] or 0,
                               "usd": (r["c"] or 0) // 100}
     return out
@@ -175,10 +187,11 @@ def _funnel(visits: dict, orders: dict, steps: list, entry_marker: str) -> dict:
     return {"steps": out, "visits": total, "revenue": revenue}
 
 
-def build(db, since: str) -> dict:
-    """Every door + a summary of visits for the period."""
-    visits = _visit_types(db, since)
-    orders = _orders_by_visit(db, since)
+def build(db, since: str, until: str | None = None) -> dict:
+    """Every door + a summary of visits for the period. `until` (exclusive ISO timestamp)
+    is optional so the admin keeps its open-ended "last N days" semantics."""
+    visits = _visit_types(db, since, until)
+    orders = _orders_by_visit(db, since, until)
 
     devices: dict[str, int] = {}
     channels: dict[str, dict] = {}

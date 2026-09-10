@@ -33,7 +33,8 @@ VISIT_MAX_AGE = 30 * 60          # visit window; extended on every request
 # active reading. Matched after the /<lang>/ prefix is stripped (see _bare_path).
 NON_PAGE_PREFIXES = ("/static/", "/t/e", "/track/", "/free/status/", "/free/img/",
                      "/pay/", "/cabinet/drawing/", "/admin",
-                     "/favicon.ico", "/robots.txt", "/sitemap.xml", "/healthz")
+                     "/favicon.ico", "/robots.txt", "/sitemap.xml", "/healthz",
+                     "/internal/")
 
 # Paths that must not create a VISIT ROW at all - stronger than NON_PAGE_PREFIXES
 # above, which only stops a request counting as a page WITHIN a visit.
@@ -41,7 +42,9 @@ NON_PAGE_PREFIXES = ("/static/", "/t/e", "/track/", "/free/status/", "/free/img/
 # cookies, so every single check looks like a brand-new visitor. At one check every
 # five minutes that is ~288 invented visits a day, per monitor, forever - which would
 # swamp the real traffic on the admin funnel and grow web_visits without limit.
-NO_VISIT_PREFIXES = ("/admin", "/static/", "/favicon", "/healthz")
+# /internal/ (the Growth API, app/growth.py) for the same reason: a polling agent sends
+# no cookies either.
+NO_VISIT_PREFIXES = ("/admin", "/static/", "/favicon", "/healthz", "/internal/")
 
 # Search engines and social networks, for classifying the channel by referer.
 _SEARCH_HOSTS = ("google.", "bing.com", "duckduckgo.com", "search.", "yahoo.",

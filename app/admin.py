@@ -783,6 +783,7 @@ def site_settings():
                    mail_backend=settings.MAIL_BACKEND, mail_from=settings.MAIL_FROM_EMAIL,
                    resend_key=bool(settings.RESEND_API_KEY),
                    payment_backend=settings.PAYMENT_BACKEND,
+                   growth_token_set=bool(settings.GROWTH_AGENT_TOKEN),
                    saved=request.args.get("saved"))
 
 

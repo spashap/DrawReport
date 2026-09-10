@@ -1408,3 +1408,42 @@ Known limit: `utm_medium=social` is identical for a paid click and an organic cl
 same boosted post, so this set cannot split the two. Fine for this test (organic reach of
 the page is near zero). For the next one, put `utm_medium=paid` in the ad's URL-parameters
 field in Ads Manager - it is appended per ad, so the post stays untouched.
+
+## 2026-09-10 — Growth Data API + growth change log (V0.065)
+
+**Why.** An external growth strategist (a ChatGPT connector) needs to ask three things without
+touching the admin or the database: what happened, which sources/content caused it, and what
+we changed meanwhile. `DRAWREPORT_GROWTH_TECHNICAL_REPORT.md` (V0.064) established that the
+first-party data can answer the first two today; the third had nowhere to live.
+
+**What.** `app/growth.py` — blueprint `/internal/growth/{summary,content,changes}`, read-only,
+aggregated, **no PII by construction** (nothing reads emails, names, tokens, paths or model
+text; ids are join keys in Python and never emitted). Own bearer token `GROWTH_AGENT_TOKEN`
+(server `.env`; 503 until set, 401 on a bad one; the admin password is NOT accepted). Every
+query is bounded by both ends of the window and the window is capped (`GROWTH_MAX_RANGE_DAYS`,
+400). Errors are logged under `growth` and answered opaquely. `/internal/` added to both
+prefix lists in `app/track.py` so a polling agent creates no visit rows.
+
+- **summary**: traffic (raw / non-bot / **engaged human as the named primary metric**, new vs
+  returning, device, country), the two per-visit door funnels from `admin_funnels.build()`
+  (which gained an optional `until`; the admin call is unchanged), the free funnel with
+  failure reasons and refused-upload reasons, free→paid transitions via
+  `admin_free_analytics._attribute_orders()`, orders/paid/delivered, gross revenue, AOV,
+  coupons — and **null with a warning** for ad spend, refunds, net revenue, PayPal fees.
+  **Attribution is returned as two named models, `last_touch` (visit tags, joined by
+  visit_id) and `first_touch` (the 1-year UTM cookie, joined by visitor), never merged.**
+- **content**: rows grouped by `(source, medium, campaign, content)` at content, campaign and
+  source level for BOTH models; a row exists only where the tag exists, the rest is `untagged`.
+- **changes**: serves `growth/growth_changes.jsonl` (append-only, `DR-CHG-NNNN`), entries
+  `>= since`, oldest first. CLAUDE.md gained the permanent logging rule.
+
+**Tests.** `tests/test_growth_api.py`, stdlib unittest (pytest is not a dependency), 17 tests
+on a temporary DB: 401/503/200, date and limit validation, change-log parsing and ordering,
+schema and exact counts for summary and content, and a PII sweep (forbidden strings AND
+forbidden key names across every endpoint). Run: `python -m unittest discover -s tests -t .`
+
+⚠️ One SQLite lesson: `returning` is a reserved word (the RETURNING clause), so an alias
+`... END) returning` is a syntax error. Alias it `n_returning`.
+
+**Docs.** `growth/GROWTH_API.md` (contract + metric definitions + limitations),
+`DRAWREPORT_GROWTH_API_IMPLEMENTATION_REPORT.md` (for the strategist).

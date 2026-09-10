@@ -117,6 +117,18 @@ SITEMAP_LASTMOD = os.getenv("SITEMAP_LASTMOD", "2026-09-08")
 # keyword. Empty = the key route is not registered and scripts/indexnow_submit.py
 # refuses to run.
 INDEXNOW_KEY = os.getenv("INDEXNOW_KEY", "")
+# --- Growth Data API (app/growth.py) ---
+# Read-only, aggregated growth metrics for an external growth agent (a ChatGPT connector).
+# Its OWN token, never the admin password: the admin cookie is for a person at a screen,
+# this is for a machine that must be revocable on its own. Empty = the endpoints answer
+# 503 and nothing else changes. Generate with: python -c "import secrets;print(secrets.token_urlsafe(32))"
+GROWTH_AGENT_TOKEN = os.getenv("GROWTH_AGENT_TOKEN", "")
+# Longest from..to window one request may ask for. The tables are indexed by date, but an
+# unbounded range is still a full scan of events, and a token holder should not be able to
+# make the box do that on demand.
+GROWTH_MAX_RANGE_DAYS = int(os.getenv("GROWTH_MAX_RANGE_DAYS", "400"))
+# The append-only growth change log (one JSON object per line), tracked in git.
+GROWTH_CHANGES_FILE = BASE_DIR / "growth" / "growth_changes.jsonl"
 # Dev cheat: on localhost this email is shown its login code right on the page.
 DEV_LOGIN_CODE_EMAIL = os.getenv("DEV_LOGIN_CODE_EMAIL", "spashap@gmail.com")
 
