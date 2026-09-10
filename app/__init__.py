@@ -4,7 +4,7 @@ Multi-language via Flask-Babel + /<lang>/ URL prefix (see app/i18n.py).
 Blueprints/services are wired in as each phase lands them; create_app stays the
 single composition point.
 """
-from flask import Flask, g, redirect, render_template, request
+from flask import Flask, g, jsonify, redirect, render_template, request
 from flask_babel import Babel
 
 from app import i18n, track
@@ -83,6 +83,17 @@ def create_app() -> Flask:
 
     @app.errorhandler(404)
     def not_found(e):
+        # A 404 for an UNMATCHED url is raised during routing, before any blueprint is
+        # chosen, so app/growth.py's own error handler never runs and an API client
+        # asking for a mistyped path used to get the site's HTML error page. A machine
+        # parsing JSON cannot read that. Anything under /internal/ therefore answers in
+        # the same envelope as every other growth error. Found by the production
+        # readiness check, not by a user.
+        if request.path.startswith("/internal/"):
+            from app.growth import PROJECT, SCHEMA_VERSION
+            return jsonify({"schema_version": SCHEMA_VERSION, "project": PROJECT,
+                            "error": {"code": "not_found",
+                                      "message": "no such endpoint"}}), 404
         return render_template("error.html", code=404), 404
 
     @app.errorhandler(500)

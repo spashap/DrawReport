@@ -465,6 +465,20 @@ class TestPrivacy(GrowthApiBase):
             self.assertEqual(r.status_code, 200, path)
             self.assert_no_pii(r)
 
+    def test_unknown_internal_path_answers_json_not_html(self):
+        """A mistyped path must not hand an API client the site's HTML error page."""
+        r = self.get("/internal/growth/nosuchthing")
+        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.headers["Content-Type"].split(";")[0], "application/json")
+        self.assertEqual(r.get_json()["error"]["code"], "not_found")
+        r = self.get("/internal/anything", headers={})
+        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.get_json()["project"], "drawreport")
+        # The public 404 page must stay HTML.
+        r = self.app.test_client().get("/en/no-such-page")
+        self.assertEqual(r.status_code, 404)
+        self.assertIn("text/html", r.headers["Content-Type"])
+
     def test_errors_are_opaque(self):
         r = self.get("/internal/growth/summary?from=bad&to=bad", headers={})
         # auth is checked before validation: an unauthenticated caller learns nothing
