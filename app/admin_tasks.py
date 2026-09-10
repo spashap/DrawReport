@@ -74,6 +74,38 @@ def _ga4_details() -> str:
     return "\n".join(lines)
 
 
+def _legal_identity_details() -> str:
+    return "\n".join([
+        "CLOSED 2026-09-10 by owner decision. Recorded rather than deleted so nobody",
+        "reopens it without knowing what was already established and accepted.",
+        "",
+        "THE DECISION. There is no company and none is planned. The legal pages name the",
+        "trading name DrawReport Team, the country, and a monitored contact mailbox",
+        "(LEGAL_CONTACT_EMAIL, currently team@drawreport.com). No personal legal name, no",
+        "home address, no governing-law state and no venue will be published.",
+        "",
+        "WHAT THAT COSTS, stated once so it is on the record. A trading name is not a legal",
+        "person: the contract names no counterparty who can sue or be sued. With no venue",
+        "there is no agreed forum for a dispute. Both were put to the owner and accepted.",
+        "",
+        "WHAT IS STILL CHECKED. app.legal.unfilled_placeholders() no longer reports the",
+        "address, state or venue - reporting a decision as a defect is how a check stops",
+        "being read. It still catches a genuinely BROKEN config: no name at all, or exactly",
+        "one of LEGAL_STATE / LEGAL_VENUE set, which silently publishes no governing-law",
+        "clause while whoever typed it believes otherwise.",
+        "",
+        "IF AN LLC IS EVER FORMED. Set these in the SERVER .env and restart",
+        "drawreport-web - no deploy needed, the values are read at render time:",
+        "  LEGAL_ENTITY_NAME=      the company name",
+        "  LEGAL_ENTITY_ADDRESS=   a contactable business address",
+        "  LEGAL_STATE=            governing law, e.g. Florida",
+        "  LEGAL_VENUE=            where a dispute is heard, e.g. Miami-Dade County, Florida",
+        "Set STATE and VENUE together or not at all.",
+        "",
+        "NOT closed by this: the attorney review, which is its own task (legal_review).",
+    ])
+
+
 _SEEDS = [
     ("env_prod",
      "Fill in the production .env (PUBLIC_BASE_URL, ADMIN_PASS)",
@@ -103,26 +135,8 @@ _SEEDS = [
      "'educational observation, not a diagnosis' framing that matters for FTC claims.\n"
      "They were written to be reviewed, not to be relied on. This is not legal advice."),
     ("legal_identity",
-     "Put your legal name and address on the legal pages (server .env)",
-     "The pages currently name 'DrawReport Team' - a TRADING name, not a legal\n"
-     "person. It cannot sue or be sued, so the contract names no real counterparty.\n"
-     "Anything still unset (address, state, venue) is OMITTED from the page rather\n"
-     "than printed, so the pages LOOK complete either way and nothing on them shows\n"
-     "the gap. app.legal.unfilled_placeholders() is the only thing that can tell.\n"
-     "\n"
-     "In the SERVER .env, then restart drawreport-web:\n"
-     "  LEGAL_ENTITY_NAME=      your full legal name (or the LLC, if you form one)\n"
-     "  LEGAL_ENTITY_ADDRESS=   a contactable business address\n"
-     "  LEGAL_STATE=            governing law, e.g. Florida\n"
-     "  LEGAL_VENUE=            where a dispute is heard, e.g. Miami-Dade County, Florida\n"
-     "  LEGAL_CONTACT_EMAIL=    defaults to team@drawreport.com; must be MONITORED\n"
-     "\n"
-     "WORTH A CONVERSATION FIRST. Operating as an individual means your own name and a\n"
-     "contactable address go on a public website, which for most people working from\n"
-     "home means a home address. A single-member LLC, or a registered-agent / virtual\n"
-     "business address, lets a business name appear instead and separates personal\n"
-     "assets from business liability - which matters more than usual for a service that\n"
-     "makes interpretive statements about children. Ask the attorney doing the review."),
+     "Legal identity - DECIDED, no company (owner, 2026-09-10)",
+     _legal_identity_details(), "done"),
     ("logo_art",
      "Drop the real logo artwork into data/Images/ and run build_logos.py",
      "Placeholders ship today. The hero image is already built from your artwork; only\n"
@@ -191,8 +205,34 @@ _SEEDS = [
 ]
 
 
+# Seeded keys whose answer was DECIDED after the row already existed on a live database.
+# _seed() creates a task once per database and never touches it again, which is correct for
+# a to-do but wrong for a question that has since been settled: production would keep
+# showing the old wording as OPEN work forever, and the owner would keep being asked for an
+# address they have decided not to publish. Listing a key here closes its row and rewrites
+# its text ONCE, on the next admin page load. Deliberately an explicit list rather than
+# "always refresh every seed": a blanket refresh would silently rewrite the owner's own
+# edits and reopen nothing, which is a different bug that is much harder to notice.
+_RESOLVED = ("legal_identity",)
+
+
 def _seed(db) -> None:
     """Idempotent: a task with a given key is created once in the life of the database."""
+    by_key = {s[0]: s for s in _SEEDS}
+    for key in _RESOLVED:
+        seed = by_key.get(key)
+        if seed is None:
+            continue
+        row = db.execute("SELECT id, status, title, details FROM admin_tasks"
+                         " WHERE key = ?", (key,)).fetchone()
+        # Compare before writing: _seed() runs on every admin page load, and an
+        # unconditional UPDATE would be a database write per page view forever.
+        if row is not None and (row["status"] != "done" or row["title"] != seed[1]
+                                or (row["details"] or "") != seed[2]):
+            db.execute(
+                "UPDATE admin_tasks SET title = ?, details = ?, status = 'done',"
+                " done_at = COALESCE(done_at, ?) WHERE key = ?",
+                (seed[1], seed[2], now(), key))
     for seed in _SEEDS:
         # A 4th element is an optional starting status. It exists so a step that was
         # already finished can be RECORDED here instead of appearing as outstanding

@@ -204,16 +204,21 @@ that line is the fastest check. See `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` 
    (announcing unfinished terms to a paying customer is a written admission), the pages now name a
    contracting party, disclose the actual processors (Anthropic, Brevo, PayPal, host), state
    retention, and Terms + Privacy + Refunds are LINKED AT CHECKOUT — before that, `order.html`
-   presented no terms at all, which is the weakest possible assent. **Two things are still open:**
-   the pages name **"DrawReport Team"**, a TRADING name that is not a legal person (owner decision,
-   V0.049) - a real name or an LLC still has to go in `LEGAL_ENTITY_NAME` / `_ADDRESS` /
-   `LEGAL_STATE` / `LEGAL_VENUE` in the SERVER `.env` - and the attorney review (COPPA, refunds,
-   PayPal, FTC "educational, not diagnosis") is still not booked.
+   presented no terms at all, which is the weakest possible assent.
+   ✅ **The identity question is CLOSED (owner, 2026-09-10, V0.069) — do not reopen it.** There is
+   no company and none is planned. The pages name the trading name **"DrawReport Team"**, the
+   country, and the monitored mailbox `LEGAL_CONTACT_EMAIL`; no personal name, home address,
+   governing-law state or venue will ever be published. The cost was put to the owner twice and
+   accepted: a trading name cannot sue or be sued, and with no venue a dispute has no agreed forum.
+   The `legal_identity` admin task is now seeded `done` and `_RESOLVED` in `app/admin_tasks.py`
+   closes the row that already exists on the live database. **Still open:** the attorney review
+   (COPPA, refunds, PayPal, FTC "educational, not diagnosis"), task `legal_review`.
    ⚠️ **Unset identity values are OMITTED from the page, never printed.** No address means the
-   sentence ends at the country; no state means the whole Governing law section disappears. So the
-   pages look finished whether or not anyone filled them in, and `app.legal.unfilled_placeholders()`
-   (admin task `legal_identity`) is the ONLY thing that can still see the gap. Never guess a state:
-   a wrong venue tells a customer the wrong place to sue.
+   sentence ends at the country; no state means the whole Governing law section disappears, which
+   is now the intended steady state rather than a gap. `app.legal.unfilled_placeholders()` no longer
+   reports them — it catches only a BROKEN config: no name at all, or exactly one of
+   `LEGAL_STATE` / `LEGAL_VENUE` set, which publishes no clause while looking filled in. **Never
+   guess a state or an address:** a wrong venue tells a customer the wrong place to sue.
    ⚠️ **Never publish a retention promise the code does not keep.** The 90-day free-photo deletion is
    real (`app/free_retention.py`, run daily by `free_worker.py`); the drafted "analytics purged at 24
    months" line was CUT because no such job exists.

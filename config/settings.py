@@ -140,17 +140,21 @@ PAYPAL_ENV = os.getenv("PAYPAL_ENV", "sandbox")          # 'sandbox' | 'live'
 PAYPAL_WEBHOOK_ID = os.getenv("PAYPAL_WEBHOOK_ID", "")
 
 # --- Legal identity (printed on the legal pages, app/legal.py) ---
-# The business is operated by an individual, so the contracting party is a named person
-# and an address rather than a company. These live in the ENVIRONMENT, not in git: the
-# owner's legal name and home address are not something to commit to a public repo, and
-# filling them in must not require a deploy.
+# SETTLED, owner decision 2026-09-10: the pages name the TRADING name "DrawReport Team",
+# the country, and a monitored contact mailbox. That is all the owner has and all that will
+# be published - there is no company, none is planned, and no personal name, home address,
+# governing-law state or venue is going on a public page.
 #
-# LEGAL_ENTITY_NAME defaults to the TRADING name "DrawReport Team" (owner decision,
-# 2026-08-19) so the live pages name someone instead of showing brackets. It is a stopgap:
-# a trading name is not a legal person, so it can neither sue nor be sued, and the pages
-# still need a real name or an LLC. The other three keep BRACKETED defaults, which
-# app/legal.py treats as "unset" and omits from the page entirely rather than printing.
-# app.legal.unfilled_placeholders() is the only thing that can still see the gap.
+# The three bracketed defaults below therefore stay bracketed on purpose. app/legal.py
+# treats a bracketed value as "unset" and OMITS it rather than printing it, so no address
+# means the sentence ends at the country and no state means the governing-law clause
+# disappears entirely. They are still read from the environment so that forming an LLC
+# later is an .env change on the server rather than a deploy.
+#
+# The trade-off was put to the owner twice and accepted: a trading name is not a legal
+# person, so the contract names no counterparty who can sue or be sued, and with no venue a
+# dispute has no agreed forum. Do not reopen this, and NEVER guess a state or an address -
+# a guessed venue tells a customer the wrong place to sue.
 LEGAL_ENTITY_NAME = os.getenv("LEGAL_ENTITY_NAME", "DrawReport Team")
 LEGAL_ENTITY_ADDRESS = os.getenv("LEGAL_ENTITY_ADDRESS", "[BUSINESS ADDRESS]")
 LEGAL_STATE = os.getenv("LEGAL_STATE", "[STATE]")            # governing law

@@ -2,18 +2,25 @@
 
 Two things about this file are load-bearing.
 
-**The contracting party is PROVISIONAL.** The pages currently name "DrawReport Team",
-which is a trading name, not a legal person - owner decision, taken so the pages could go
-live without brackets showing while the real identity is settled. The business is operated
-by an individual, so the eventual answer is a personal legal name (or an LLC) plus an
-address, and only the owner can supply those. They come from the environment (see
-`config/settings.py`), so filling them in is an .env change on the server, not a deploy.
+**The contracting party is SETTLED: "DrawReport Team" plus a contact email, and nothing
+else.** Owner decision, 2026-09-10, replacing the 2026-08-19 stopgap: there is no company
+and none is planned, and no personal name, home address, governing-law state or venue will
+be published. The pages name the trading name, the country, and a monitored mailbox, which
+is what the owner actually has.
 
-Anything still unset is OMITTED rather than printed as a bracket: no address means the
-sentence just ends at the country, and no state means the whole Governing law section
-disappears. A missing clause is a known gap; "[STATE]" on a live page is a broken page,
-and a GUESSED state would be worse than either. `unfilled_placeholders()` reports what is
-still missing, because nothing on the rendered page shows it any more.
+This was flagged as an open gap for three weeks, and the flag is now REMOVED rather than
+left to nag: a trading name is not a legal person, so the contract names no counterparty
+who can sue or be sued, and no governing-law clause means a dispute has no agreed forum.
+The owner has been told this twice and has decided. Do not reopen it, do not re-add the
+task, and above all do not "helpfully" invent a state, a venue or an address - a guessed
+venue tells a customer the wrong place to sue, which is worse than saying nothing.
+
+Values still come from the environment (see `config/settings.py`), so if an LLC is ever
+formed, filling them in is an .env change on the server rather than a deploy. Anything
+unset is OMITTED rather than printed as a bracket: no address means the sentence ends at
+the country, and no state means the whole Governing law section disappears.
+`unfilled_placeholders()` no longer reports those as missing; it now catches only a
+BROKEN configuration - a bracket left in a value, or a half-filled governing-law pair.
 
 **These pages have not been reviewed by a lawyer.** They used to say so, out loud, at the
 top of every page, while PayPal was live - which is a written admission to a paying
@@ -242,9 +249,11 @@ or refund you in full. Your choice.
 # module docstring for why a bracket on a live page is worse than a missing clause.
 _TOKENS = ("[DATE]", "[IDENTITY]", "[GOVERNING LAW]", "[CONTACT EMAIL]")
 
-# The name the pages carry until a real legal person is decided (owner, 2026-08-19).
-# It is a TRADING name, not a legal entity, so unfilled_placeholders() keeps flagging it.
-PROVISIONAL_ENTITY_NAME = "DrawReport Team"
+# The name the pages carry. A TRADING name, not a legal entity - and as of 2026-09-10 that
+# is the final answer, not a placeholder, so unfilled_placeholders() no longer flags it.
+# It stays a constant rather than a literal because settings.LEGAL_ENTITY_NAME can override
+# it from the environment the day there is a company to name.
+TRADING_NAME = "DrawReport Team"
 
 _GOVERNING_LAW = """### Governing law
 These terms are governed by the laws of {state}, United States, and you and we agree that
@@ -302,19 +311,26 @@ def _fill(body: str) -> str:
 
 
 def unfilled_placeholders(locale: str = settings.DEFAULT_LOCALE) -> list:
-    """Which pieces of the legal identity are still missing, by env var name.
+    """Legal identity values that are BROKEN, by env var name. Empty list = nothing wrong.
 
-    Reads the settings rather than the rendered page ON PURPOSE: unset values are now
-    omitted, so the pages look complete whether or not anyone has filled them in, and
-    this is the only thing that can still tell the difference. The provisional trading
-    name counts as missing - "DrawReport Team" is not a legal person and cannot be sued
-    or sue."""
+    What this used to do, and why it changed. It used to report the trading name, the
+    address, the state and the venue as missing, because they were. As of 2026-09-10 the
+    owner has decided there will be no company, no published address and no governing-law
+    clause, so reporting them would be reporting a decision as a defect - and a check that
+    cries wolf is a check nobody reads.
+
+    What it still catches, which is the part worth keeping:
+      * no name at all, or a bracket left in the name - the pages MUST name someone;
+      * exactly ONE of state/venue set - `_values()` drops the governing-law clause unless
+        both are present, so a half-filled pair silently publishes no clause while whoever
+        typed it believes they published one.
+    Reads the settings, not the rendered page: unset values are omitted, so the pages look
+    finished either way and nothing on them shows the difference."""
     gaps = []
-    if _unset(settings.LEGAL_ENTITY_NAME) or             settings.LEGAL_ENTITY_NAME.strip() == PROVISIONAL_ENTITY_NAME:
+    if _unset(settings.LEGAL_ENTITY_NAME):
         gaps.append("LEGAL_ENTITY_NAME")
-    for name in ("LEGAL_ENTITY_ADDRESS", "LEGAL_STATE", "LEGAL_VENUE"):
-        if _unset(getattr(settings, name)):
-            gaps.append(name)
+    if _unset(settings.LEGAL_STATE) != _unset(settings.LEGAL_VENUE):
+        gaps.append("LEGAL_STATE" if _unset(settings.LEGAL_STATE) else "LEGAL_VENUE")
     return gaps
 
 

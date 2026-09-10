@@ -1472,3 +1472,41 @@ returns nothing. Public pages, `/llms.txt`, the sitemap and all four admin scree
 
 No growth-change-log entry for this: a rename cannot move an acquisition or conversion metric,
 which is exactly the "do not log" case in the new rule.
+
+## 2026-09-10 — Legal identity CLOSED: no company, trading name + contact email (V0.069)
+
+**Owner decision, asked for directly:** "i dont plan to have any it should say draw report team
+and give the email to contact, thats all i have". So the three-week-old "put a real name or an
+LLC on the pages" item is not outstanding work - it is answered, and the answer is no.
+
+**Nothing on a rendered page changed.** `LEGAL_ENTITY_NAME` already defaulted to the trading
+name and the other three were bracketed, which `app/legal.py` omits rather than prints, so the
+live pages already said `DrawReport Team, United States` and carried `team@drawreport.com`.
+Verified on the RENDERED pages (UseCase #20), all three, with no `[PLACEHOLDER]` anywhere.
+That is also why there is **no growth-change-log entry**: a visitor sees exactly what they saw
+yesterday, so no metric can move.
+
+**What actually changed is that the code stops calling a decision a defect.**
+- `unfilled_placeholders()` no longer reports the address, state or venue, and no longer treats
+  the trading name as missing. It now catches only a BROKEN config - no name at all, or exactly
+  ONE of `LEGAL_STATE` / `LEGAL_VENUE` set. That last case is the one worth keeping: `_values()`
+  drops the governing-law clause unless BOTH are present, so a half-filled pair silently
+  publishes no clause while whoever typed it believes they published one.
+- `PROVISIONAL_ENTITY_NAME` is now `TRADING_NAME`, and the module docstring plus the
+  `config/settings.py` comment record the decision and its cost instead of describing a stopgap.
+- The `legal_identity` admin task is seeded `done` with the decision written out.
+
+⚠️ **The seed-once trap, finally handled.** `_seed()` creates a task once per database and never
+touches it again, so the LIVE admin would have kept showing the old OPEN row and its old wording
+forever - CLAUDE.md has complained about exactly this since V0.055. New `_RESOLVED` tuple in
+`app/admin_tasks.py`: listed keys get their row closed and their text rewritten once. It compares
+before writing, because `_seed()` runs on every admin page load and an unconditional UPDATE would
+be a database write per page view. Deliberately an explicit list, not "always refresh every
+seed", which would silently overwrite the owner's own edits.
+
+⚠️ **UseCase #31 caught me again**, in the same session that renamed the docs. Writing
+`"\n".join` into Python SOURCE through a non-raw generator string produced a real newline and an
+unterminated string literal. The log says to use `chr(10)`/`chr(92)` or a raw string; I used the
+Edit tool on the finished file instead, which sidesteps every escaping layer at once.
+
+**Still open:** the attorney review (`legal_review`). That is untouched and still not booked.
