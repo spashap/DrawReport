@@ -1510,3 +1510,24 @@ unterminated string literal. The log says to use `chr(10)`/`chr(92)` or a raw st
 Edit tool on the finished file instead, which sidesteps every escaping layer at once.
 
 **Still open:** the attorney review (`legal_review`). That is untouched and still not booked.
+
+### 2026-09-10 addendum — the attorney review is DONE
+
+Spotted while closing `legal_identity`: the `legal_review` row was already `done` on the LIVE
+admin while `CLAUDE.md` and the `app/legal.py` docstring both still said the review was unbooked.
+Owner confirmed: "its done". So the docs were the stale side, not the database.
+
+Recorded in three places that each claimed otherwise: the `legal.py` docstring, the `legal_review`
+seed (now `done` with the record kept rather than deleted), and CLAUDE.md item 9. Both legal tasks
+are now in `_RESOLVED`, so production gets the corrected wording on the next admin page load
+instead of keeping the "Have a lawyer review..." title forever.
+
+⚠️ Stated deliberately in all three: **no wording came back from the reviewer into the repo**, so
+what is published is what was reviewed, word for word. If changes ever arrive they belong in the
+page bodies in `app/legal.py` and `LEGAL_LAST_UPDATED` must move in the SAME commit. Nothing about
+the legal pages is outstanding now.
+
+⚠️ UseCase #31 for the second time in one session: `\n` written into Python SOURCE through a
+non-raw generator string. The assert caught it, the earlier two replacements in the same script
+had already been written, and the fix was the Edit tool on the finished file. **Stop generating
+Python string literals that contain escapes from inside another Python string.**

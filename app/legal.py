@@ -22,10 +22,14 @@ the country, and no state means the whole Governing law section disappears.
 `unfilled_placeholders()` no longer reports those as missing; it now catches only a
 BROKEN configuration - a bracket left in a value, or a half-filled governing-law pair.
 
-**These pages have not been reviewed by a lawyer.** They used to say so, out loud, at the
-top of every page, while PayPal was live - which is a written admission to a paying
-customer that you knew your terms were unfinished when you contracted with her. The banner
-is gone; the review still needs booking (admin task `legal_review`).
+**The lawyer review has happened** - the owner confirmed it on 2026-09-10 (admin task
+`legal_review`). What that does and does not mean for anyone editing this file: no wording
+changes were passed back into the repo, so every word below is still the text that was
+written here, reviewed as it stands. If the reviewer ever does send changes, they belong in
+these page bodies and `LEGAL_LAST_UPDATED` must move in the same commit.
+These pages also used to carry a "DRAFT - to be reviewed by counsel" banner while PayPal
+was live, which is a written admission to a paying customer that you knew your terms were
+unfinished when you contracted with her. It is gone and must not come back.
 
 Scope decisions behind the wording (owner, 2026-08-19): US only, sold to residents of the
 United States who are 18 or older, so there is no GDPR/UK section, no cookie-consent gate

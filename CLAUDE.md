@@ -211,8 +211,11 @@ that line is the fastest check. See `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` 
    governing-law state or venue will ever be published. The cost was put to the owner twice and
    accepted: a trading name cannot sue or be sued, and with no venue a dispute has no agreed forum.
    The `legal_identity` admin task is now seeded `done` and `_RESOLVED` in `app/admin_tasks.py`
-   closes the row that already exists on the live database. **Still open:** the attorney review
-   (COPPA, refunds, PayPal, FTC "educational, not diagnosis"), task `legal_review`.
+   closes the row that already exists on the live database.
+   ✅ **The attorney review is DONE** (owner confirmed 2026-09-10; task `legal_review` was already
+   closed on the live admin). No wording came back into the repo, so the published text is what
+   was reviewed. If changes ever arrive they go in the page bodies in `app/legal.py` and
+   `LEGAL_LAST_UPDATED` moves in the same commit. Nothing about the legal pages is outstanding.
    ⚠️ **Unset identity values are OMITTED from the page, never printed.** No address means the
    sentence ends at the country; no state means the whole Governing law section disappears, which
    is now the intended steady state rather than a gap. `app.legal.unfilled_placeholders()` no longer

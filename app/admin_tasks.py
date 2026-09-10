@@ -130,10 +130,16 @@ _SEEDS = [
      "Mark key events in GA4 - closed, not worth the effort",
      _ga4_details(), "done"),
     ("legal_review",
-     "Have a lawyer review the privacy policy and terms",
-     "The drafts cover children's data (COPPA), refunds and PayPal, and keep the\n"
+     "Lawyer review of the privacy policy and terms - DONE",
+     "DONE, confirmed by the owner on 2026-09-10. Kept as a record, not deleted.\n"
+     "\n"
+     "The pages cover children's data (COPPA), refunds and PayPal, and keep the\n"
      "'educational observation, not a diagnosis' framing that matters for FTC claims.\n"
-     "They were written to be reviewed, not to be relied on. This is not legal advice."),
+     "\n"
+     "No wording was passed back into the repo, so what is published is what was\n"
+     "reviewed. If the reviewer ever sends changes they go into the page bodies in\n"
+     "app/legal.py, and LEGAL_LAST_UPDATED moves in the SAME commit - a policy whose\n"
+     "date predates its own text is worse than no date at all.", "done"),
     ("legal_identity",
      "Legal identity - DECIDED, no company (owner, 2026-09-10)",
      _legal_identity_details(), "done"),
@@ -213,7 +219,7 @@ _SEEDS = [
 # its text ONCE, on the next admin page load. Deliberately an explicit list rather than
 # "always refresh every seed": a blanket refresh would silently rewrite the owner's own
 # edits and reopen nothing, which is a different bug that is much harder to notice.
-_RESOLVED = ("legal_identity",)
+_RESOLVED = ("legal_identity", "legal_review")
 
 
 def _seed(db) -> None:
