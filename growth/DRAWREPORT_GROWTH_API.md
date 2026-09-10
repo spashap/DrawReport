@@ -243,6 +243,32 @@ contributors is in `CLAUDE.md` ("Growth change logging").
 
 ---
 
+## Connecting a ChatGPT connector or custom GPT
+
+There is **no Vercel, Netlify or serverless layer in this project** and nothing to configure on
+one. DrawReport is a Flask application served by gunicorn behind nginx on its own VPS, and the
+API is part of that application. The token lives in one place only: `/var/www/DrawReport/.env`
+on the server.
+
+1. **Read the token** on the server, in a terminal rather than in a chat window:
+   `ssh root@<host> "grep '^GROWTH_AGENT_TOKEN=' /var/www/DrawReport/.env | cut -d= -f2-"`
+2. **Create the GPT** and open Configure, then Actions, then Create new action.
+3. **Paste the schema** from `growth/DRAWREPORT_GROWTH_OPENAPI.yaml` into the Schema box. It
+   already names `https://drawreport.com` as the server and declares all three operations.
+4. **Set Authentication** to API Key, Auth Type **Bearer**, and paste the token as the key.
+   Nothing else is needed; there is no OAuth flow and no callback URL.
+5. **Test** with the built-in tester on `getGrowthSummary`, `from` 2026-09-01, `to` 2026-09-10.
+   A 401 means the token is wrong or missing, a 503 means the server has no token configured.
+
+The schema file is deliberately **not served over HTTP**. It describes the shape of a
+token-protected endpoint, and there is no reason to publish that to anyone who asks; pasting it
+into the builder is enough. It is also tracked in git, so the token must never be written into
+it.
+
+The operation descriptions inside the schema carry the three rules that keep an agent from
+answering confidently and wrongly: use the engaged human count for people, never merge the two
+attribution models, and treat a null money field as absent rather than zero.
+
 ## Known measurement limitations
 
 1. **Bots.** Detection is user-agent only. Raw visits are dominated by scanners and by

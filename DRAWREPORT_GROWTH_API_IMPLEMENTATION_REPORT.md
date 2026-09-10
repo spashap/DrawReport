@@ -62,6 +62,7 @@ New:
 | `app/growth.py` | The whole API: auth, validation, envelope, aggregation, attribution folding, change-log reader. |
 | `growth/growth_changes.jsonl` | The append-only change log, tracked in git. |
 | `growth/DRAWREPORT_GROWTH_API.md` | The API contract, metric definitions, limitations, curl examples. |
+| `growth/DRAWREPORT_GROWTH_OPENAPI.yaml` | OpenAPI 3.1 schema to paste into a ChatGPT custom GPT Action. Carries the three interpretation rules in its operation descriptions. Never contains the token. |
 | `tests/test_growth_api.py`, `tests/__init__.py` | 17 tests against a temporary database. |
 | `DRAWREPORT_GROWTH_TECHNICAL_REPORT.md` | The prior audit, added to the repository. |
 | `DRAWREPORT_GROWTH_API_IMPLEMENTATION_REPORT.md` | This document. |
