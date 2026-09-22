@@ -444,3 +444,56 @@ probes; one probe (a Wikimedia anycast address) "failed" and was the probe's fau
 ⚠️ **Restart after building**: `geoip.py` checks for the file ONCE per process and caches the miss,
 so a gunicorn that started without it keeps returning None however good the file is.
 Related: [[#35]] (a watched row nobody writes — same family: a reader with no writer).
+
+## #37 · A `Disallow` path is matched from the SITE ROOT — a blueprint prefix makes it match nothing
+`robots.txt` matching is a literal prefix from the root of the site (RFC 9309). `SEO_DISALLOW` read
+`["/admin", "/cabinet", "/r/", "/order", "/free"]`, but `bp` is registered with
+`url_prefix="/<lang_code>"`, so the live URLs are `/en/cabinet`, `/en/order`, `/en/r/<token>`.
+**Three of the five rules matched nothing at all** and had never done anything since the i18n
+rebuild; only `/admin` and `/free`, whose blueprints really do sit at the root, worked. Found while
+auditing crawl budget on 2026-09-22: 14 days of nginx logs showed bingbot, GPTBot, Amazonbot,
+AhrefsBot and Bytespider all fetching `/en/login` and `/en/order`.
+
+**Nothing leaked, and that is the trap.** Every one of those pages carries its own
+`noindex, nofollow`, so none was ever indexed — which is exactly why a dead rule survived for
+months. **A robots rule that matches no URL looks identical to one that works**: same file, same
+syntax, no error, and the outcome is masked by the second layer of defence. Assert the rule against
+the URL the router actually produces, not against the path written in the route decorator.
+
+**`Disallow` and `noindex` are not the same tool.** `Disallow` stops the fetch; `noindex` only
+discards it afterwards. On a site Googlebot visits ~9 times a day, the fetch is the scarce thing —
+and `/en/login` is linked from the header of EVERY page, which made it the most crawlable dead end
+on the site. Their combination has one real cost: a URL already in the index can freeze there,
+because the crawler can no longer fetch it to see the `noindex`. Check that none of the paths is
+indexed before adding both.
+
+Fix: `SEO_DISALLOW_ROOT` + `SEO_DISALLOW_LOCALE`, expanded per live locale by `seo_disallow()`.
+`tests/test_seo_routes.py` asserts every locale path is present AND that no bare locale path is —
+the second half is what catches the regression, since the first passes either way.
+Related: [[#34]], [[#38]].
+
+## #38 · A blanket host redirect in nginx silently defeats an app redirect that was written absolute
+The URL Google actually had indexed for the best-performing article was
+`https://www.drawreport.com/blog/<old>.html`, and reaching the live page cost **two 301s**: nginx
+sent www to the apex keeping the path, then the app sent the legacy path on to `/en/blog/<slug>`.
+`legacy_blog_post` already built an ABSOLUTE target on the canonical host, and its comment said
+why — "so a hit on www.drawreport.com lands on the canonical host in the same hop". **The www
+server block simply got there first, so that intent had never once taken effect.**
+
+**A redirect written to be single-hop is only single-hop if nothing redirects ahead of it.** The
+correctness of `legacy_blog_post` is unverifiable from `app/` alone; it is a contract split across
+Python and nginx, and only one half has tests. Check the chain end to end with `curl -sIL`, from
+the URL that is actually indexed — not from the tidy one.
+
+**Fix shape:** the www block proxies exactly the two URL shapes that are indexed on www (`/` and
+`/blog...`) and redirects everything else as before, and `/`'s redirect became absolute too.
+⚠️ **`return` in the `server` context runs in the rewrite phase, BEFORE a location is chosen**, so a
+server-level `return 301` beats every `location` in the same block and would have silently undone
+the whole change. The catch-all must move into `location /`.
+⚠️ **Proxying a second host to the app has a consequence away from nginx:** a non-canonical host now
+reaches `app/track.py`, and the visit row it creates can never be completed — the cookie is set on
+`www.`, the browser's next request goes to the apex, and a cookie does not cross hosts. Every www
+arrival would have booked a dead row PLUS the real one. That is [[#35]]'s uptime-monitor failure
+reached by a different road; `_on_canonical_host()` gates visit creation, verified by counting rows
+before and after ten live www requests.
+Related: [[#34]], [[#35]], [[#37]].

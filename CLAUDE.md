@@ -182,9 +182,21 @@ that line is the fastest check. See `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` 
    `app/__init__.py` sends **301 while `len(LOCALES) == 1`, 302 as soon as there are more** —
    the browser-cache footgun (a cached 301 bypasses locale negotiation for returning visitors)
    disarms itself the day a second locale ships, instead of relying on someone remembering.
-   nginx: one canonical host. `www.drawreport.com` has its own 443 block that only
-   `return 301`s, and port 80 goes straight to `https://drawreport.com` in ONE hop for both
-   names. ⚠️ The live vhost is `drawreportDeploy/nginx-drawreport-tls.conf`;
+   nginx: one canonical host. `www.drawreport.com` has its own 443 block, and port 80 goes
+   straight to `https://drawreport.com` in ONE hop for both names.
+   ⚠️ **UPDATED V0.073 (UseCase #38) — the www block no longer `return 301`s everything.**
+   It PROXIES the two URL shapes Google actually has indexed on www (`/` and `/blog...`) to
+   the app and redirects the rest, because for those two a blanket host redirect was only the
+   FIRST of two hops: www→apex kept the path, then the app sent the legacy path on to
+   `/en/blog/<slug>`. The app's redirects are absolute on the canonical host (`legacy_blog_post`
+   always was; `/` joined it), so proxying collapses the chain to one hop. Two traps, both
+   already paid for: (1) `return` in the `server` context runs in the rewrite phase, BEFORE a
+   location is chosen, so the catch-all MUST live in `location /` or it silently beats every
+   proxy block; (2) a second host reaching the app means `app/track.py` would book a visit row
+   that can never complete (the cookie cannot cross hosts) — `_on_canonical_host()` gates that.
+   `tests/test_seo_routes.py` covers the Python half; the nginx half is only verifiable with
+   `curl -sIL` against the live site. **www must never return 200** — that was the V0.052 bug.
+   ⚠️ The live vhost is `drawreportDeploy/nginx-drawreport-tls.conf`;
    `nginx-drawreport.conf` is the pre-TLS bootstrap ONLY (it must serve both names on port 80
    for certbot's challenge) and must be replaced after certbot runs — leaving the bootstrap
    in place is what made www serve a 200 copy of every page.
@@ -249,11 +261,14 @@ that line is the fastest check. See `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` 
 Admin `/admin/login` (pass = `ADMIN_PASS`). The footer version badge shows on localhost and is
 hidden in production — `settings.SHOW_VERSION`, derived from `PUBLIC_BASE_URL`.
 
-**Resume pointers:** journal `DRAWREPORT_DevelopmentStatus.md` · solved problems `DRAWREPORT_UseCasesData.md` (#1–#36 —
+**Resume pointers:** journal `DRAWREPORT_DevelopmentStatus.md` · solved problems `DRAWREPORT_UseCasesData.md` (#1–#38 —
 **#24/#27 prompt↔linter coupling, #29 unenforced rules collapse on long output, #30 the two English
 standards, #31 an escape written through a non-raw Python string, #33 a 404 that was our own
 dead URL, #34 a 302 hands Google your canonical, #35 an uptime monitor sees only the unit that
-answers HTTP, #36 graceful degradation hid a never-built GeoIP db**) · copy tasks
+answers HTTP, #36 graceful degradation hid a never-built GeoIP db, #37 a robots.txt
+Disallow is matched from the SITE ROOT, so a blueprint's locale prefix made three rules
+match nothing, #38 a blanket www redirect in nginx defeated an app redirect written to be
+single-hop**) · copy tasks
 `projectSpec/drawreportcopyfixtask.md`, `projectSpec/DrawReport-English-Copy-Repair-Report.md`,
 `projectSpec/DrawReport-TASK-paid-report-en-4.2-north-star.md` · plan `DRAWREPORT_development-plan.md`.
 

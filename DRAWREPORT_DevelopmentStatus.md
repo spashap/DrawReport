@@ -1531,3 +1531,72 @@ the legal pages is outstanding now.
 non-raw generator string. The assert caught it, the earlier two replacements in the same script
 had already been written, and the fix was the Edit tool on the finished file. **Stop generating
 Python string literals that contain escapes from inside another Python string.**
+
+## 2026-09-22 — Traffic/SEO audit, and the three defects it found (V0.073–V0.075)
+
+Owner asked for an analysis of traffic and of Google/Bing visibility. Measured from the live
+analytics DB, the Growth API, 14 days of nginx logs and live HTTP checks. **No GSC or Bing
+Webmaster query data** — that needs the owner's login, so no impressions, CTR or average position
+appear anywhere below. Analytics only begins **2026-08-17**, so every "90 day" figure is really 36.
+
+### What the numbers said
+- **163 engaged humans / 155 unique in 36 days** out of 60,740 raw visits. 99.7% of raw traffic is
+  bots and scanners. Last 7 days: 15.
+- Weekly engaged humans **16 → 18 → 56 → 52 → 20**. The peak was the Facebook ad; it stopped, and
+  organic fell with it (3 → 14 → 21 → **31** → 15), so organic has roughly halved from its peak.
+- Channels: organic **85 (52%)**, ads 48, direct 21. Within organic **Google 76, Bing 2**,
+  DuckDuckGo 4. Bing crawls MORE than Google (198 vs 132 hits/14d) and sends nothing.
+- **0 orders, $0, ever.** 6 free readings. 101 opened `/en/report`, 6 opened the order form,
+  **0 typed a character**. 1,634 opened home, 4 finished a free reading, **0 clicked upgrade**.
+- Best-converting source in the whole dataset is **chatgpt.com**: 6 visits → 1 upload → 1 completion.
+- ⚠️ **4,474 hits spoof the Googlebot user-agent** from `94.154.46.0/24` while probing `.env` and
+  `.git/config`. Filter Googlebot by IP (`66.249.`) before reading any crawl number. Also: the
+  nginx access log is SHARED with cosmyday and has no `$host` field, so `/analytics/event`,
+  `/order/pricing` and `/content/daily` in a "Googlebot" grep are the co-tenant's, not ours.
+
+### Three real defects, all shipped
+1. **UseCase #38 — www + a legacy article cost TWO 301s.** The indexed URL is
+   `www.drawreport.com/blog/<old>.html`; nginx sent www to the apex, then the app sent the legacy
+   path to `/en/blog/<slug>`. `legacy_blog_post` was already written absolute for exactly this
+   reason and had never once had the chance to work. www now proxies `/` and `/blog...` to the app
+   (catch-all moved into `location /`, because a server-level `return` beats every location), and
+   the root redirect became absolute too. **Verified one hop on all three shapes; www still never
+   returns 200, so the V0.052 duplicate-host bug has not come back.**
+2. **UseCase #37 — three of five `robots.txt` Disallow rules matched no URL.** `bp` is mounted at
+   `/<lang_code>`, so `/cabinet`, `/order` and `/r/` matched nothing; only `/admin` and `/free`
+   ever worked. Nothing leaked (all carry `noindex`), but bingbot, GPTBot, Amazonbot, AhrefsBot and
+   Bytespider were all fetching `/en/login` and `/en/order`. Split into `SEO_DISALLOW_ROOT` +
+   `SEO_DISALLOW_LOCALE`; `/login` and `/pay/` added, since `/en/login` is linked from every header.
+3. **Phantom visit rows from www** — a consequence of (1), shipped BEFORE it so the app was safe
+   whenever nginx landed. `_on_canonical_host()` in `app/track.py`. Verified in production by
+   counting `web_visits` before and after ten live www requests: delta 0.
+
+### `/llms.txt` is now discoverable
+It existed with nothing pointing at it, and llmstxt.org specifies no discovery mechanism at all.
+In 14 days ClaudeBot made 185 requests, ChatGPT-User 162, OAI-SearchBot 49, GPTBot 39 — and **not
+one fetched it** (the 9 hits it did get were BuiltWith, Dataprovider and the like). Now linked from
+every page `<head>` via `_verification.html` — which is included by BOTH `_base.html` and
+`landing.html`, and a test asserts both halves render it — and pointed at from `robots.txt` as a
+COMMENT, not an invented directive. **Deliberately not in the footer:** "llms.txt" is developer
+jargon on a parenting site and would breach the copy standard.
+
+### What was proposed and deliberately NOT done
+- ⚠️ **No IndexNow submission.** Google does not participate; Bing already crawls the new
+  `/en/blog/*` URLs fine (its problem is ranking, not indexing); and no page content changed — so
+  a submission would be precisely the routine re-announcement the script's own docstring says gets
+  a host throttled.
+- ⚠️ **`SITEMAP_LASTMOD` not bumped.** Nothing a reader sees changed. Moving it for an invisible
+  head tag is the same lie V0.043 removed.
+- ⚠️ **"Add internal links to `/en/report`" was a MISDIAGNOSIS on my part** and is recorded so
+  nobody redoes it: that page is already linked **7×** from every blog post plus the header nav
+  sitewide, sits in the sitemap at priority 0.9, and has a correct canonical and `index, follow`.
+  It is not crawled often because the domain has almost no authority, not because of plumbing.
+
+### Still open, for the owner only
+Google is the engine still serving the old `.html` URLs and has no API for this. GSC → URL
+Inspection → **Request indexing** on the three articles carrying the legacy traffic:
+`kids-drawings-missing-body-parts-meaning`, `my-child-only-draws-in-black`,
+`child-draws-alone-figures-meaning`.
+
+**Funnel work (0 orders) was explicitly deferred by the owner — "it requires planning before
+doing". Do not start it as a code change.**
