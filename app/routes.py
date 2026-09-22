@@ -742,9 +742,17 @@ SEO_DISALLOW = ["/admin", "/cabinet", "/r/", "/order", "/free"]
 @bp_root.get("/robots.txt")
 def robots():
     base = settings.PUBLIC_BASE_URL.rstrip("/")
+    # The llms.txt line is a COMMENT, not a directive. RFC 9309 says a crawler must
+    # ignore lines it does not recognise, so an invented "Llms-txt:" field would be
+    # harmless too - but it would also look like a directive to a human reading this
+    # file, and there is no such directive. A comment claims nothing it cannot back up.
+    # robots.txt is the one file every one of these fetchers actually asks for
+    # (14 days: ClaudeBot 359, AhrefsBot 313, bingbot 102, Googlebot 94), which is why
+    # the pointer goes here as well as in the page <head>.
     lines = ["User-agent: *", "Allow: /",
              *(f"Disallow: {d}" for d in SEO_DISALLOW),
-             "", f"Sitemap: {base}/sitemap.xml", ""]
+             "", f"Sitemap: {base}/sitemap.xml",
+             f"# llms.txt (what this site is, for AI assistants): {base}/llms.txt", ""]
     return Response("\n".join(lines), mimetype="text/plain")
 
 

@@ -46,10 +46,17 @@ def create_app() -> Flask:
     # stop working for exactly the people who already visited. Keying off
     # len(LOCALES) means that footgun disarms itself the day a locale is added,
     # instead of depending on someone remembering this comment.
+    # The target is ABSOLUTE, built from PUBLIC_BASE_URL, for the same reason
+    # legacy_blog_post's is: a hit on www.drawreport.com then lands on the canonical
+    # host in the SAME hop. With a relative target, www/ went to www/en/ and nginx
+    # had to bounce it again - two 301s for the single most-linked URL on the site.
+    # nginx's www block proxies "/" here instead of redirecting it, so this is now
+    # the only redirect in that path.
     @app.route("/")
     def root():
         code = 301 if len(settings.LOCALES) == 1 else 302
-        return redirect(f"/{i18n.resolve_locale()}/", code=code)
+        base = settings.PUBLIC_BASE_URL.rstrip("/")
+        return redirect(f"{base}/{i18n.resolve_locale()}/", code=code)
 
     from app.routes import bp, bp_root
     app.register_blueprint(bp, url_prefix="/<lang_code>")
