@@ -736,7 +736,35 @@ def legacy_blog_post(slug: str):
 # /free is disallowed and kept out of the sitemap. Two separate reasons, both sufficient:
 # a result page carries a real child's first name and their drawing, and an indexable free
 # page would compete with the home page for the same queries.
-SEO_DISALLOW = ["/admin", "/cabinet", "/r/", "/order", "/free"]
+#
+# THE LIST IS SPLIT BY MOUNT POINT, and it is not cosmetic. robots.txt matches a path
+# prefix from the ROOT of the site (RFC 9309), and `bp` is registered with
+# url_prefix="/<lang_code>" - so the live URL is /en/cabinet, and a bare "/cabinet" line
+# matched NOTHING. Three of the five original rules were dead for that reason:
+# /cabinet, /order and /r/. Only /admin and /free, whose blueprints really do sit at the
+# root, ever did anything.
+#
+# Found by a traffic audit on 2026-09-22, not by a report: in 14 days of logs bingbot,
+# GPTBot, Amazonbot, AhrefsBot and Bytespider all crawled /en/login and /en/order.
+# Nothing leaked - every one of these pages carries its own "noindex, nofollow" and that
+# is what actually kept them out of the index - but a Disallow stops the fetch, where
+# noindex only discards it afterwards, and this site gets about 9 Googlebot hits a day
+# to spend. /login and /pay/ are added here for the same reason: /en/login is linked
+# from the header of every page, so it is the most crawlable dead end on the site.
+#
+# The trade-off of Disallow + noindex together is that a URL Google has ALREADY indexed
+# can freeze there, because the crawler can no longer fetch the page to see the noindex.
+# That is safe here: none of these paths is indexed (a /r/ token is unguessable and the
+# rest are noindex and were never linked from outside), and it is checked by
+# tests/test_seo_routes.py rather than assumed.
+SEO_DISALLOW_ROOT = ["/admin", "/free"]
+SEO_DISALLOW_LOCALE = ["/cabinet", "/login", "/order", "/pay/", "/r/"]
+
+
+def seo_disallow() -> list[str]:
+    """Every robots.txt Disallow path, expanded for the locales that are live."""
+    return SEO_DISALLOW_ROOT + [f"/{loc}{p}" for loc in settings.LOCALES
+                                for p in SEO_DISALLOW_LOCALE]
 
 
 @bp_root.get("/robots.txt")
@@ -750,7 +778,7 @@ def robots():
     # (14 days: ClaudeBot 359, AhrefsBot 313, bingbot 102, Googlebot 94), which is why
     # the pointer goes here as well as in the page <head>.
     lines = ["User-agent: *", "Allow: /",
-             *(f"Disallow: {d}" for d in SEO_DISALLOW),
+             *(f"Disallow: {d}" for d in seo_disallow()),
              "", f"Sitemap: {base}/sitemap.xml",
              f"# llms.txt (what this site is, for AI assistants): {base}/llms.txt", ""]
     return Response("\n".join(lines), mimetype="text/plain")

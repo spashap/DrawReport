@@ -127,8 +127,36 @@ class SeoRoutesTest(unittest.TestCase):
         body = self.client().get("/robots.txt").get_data(as_text=True)
         self.assertIn(f"Sitemap: {self.base}/sitemap.xml", body)
         self.assertIn(f"{self.base}/llms.txt", body)
-        for path in ("/admin", "/cabinet", "/free"):
-            self.assertIn(f"Disallow: {path}", body)
+
+    def test_every_disallow_line_matches_a_url_that_really_exists(self):
+        """The bug this replaces: `bp` is mounted at /<lang_code>, so "Disallow:
+        /cabinet" matched nothing - the live URL is /en/cabinet. A Disallow rule that
+        matches no URL is indistinguishable from one that works."""
+        from app.routes import SEO_DISALLOW_LOCALE, SEO_DISALLOW_ROOT
+        body = self.client().get("/robots.txt").get_data(as_text=True)
+        lines = [ln.split(":", 1)[1].strip() for ln in body.splitlines()
+                 if ln.startswith("Disallow:")]
+        for path in SEO_DISALLOW_ROOT:
+            self.assertIn(path, lines)
+        for loc in settings.LOCALES:
+            for path in SEO_DISALLOW_LOCALE:
+                self.assertIn(f"/{loc}{path}", lines,
+                              f"{path} is not disallowed for locale {loc}")
+        # No rule may be locale-blind: a bare locale path would match nothing.
+        for path in SEO_DISALLOW_LOCALE:
+            self.assertNotIn(path, lines,
+                             f"bare {path} matches no live URL - it needs the locale")
+
+    def test_disallowed_pages_also_carry_noindex(self):
+        """Disallow stops the fetch; noindex is what removes an already-indexed page.
+        Dropping either one alone is a silent regression, so both are asserted."""
+        loc = settings.DEFAULT_LOCALE
+        c = self.client()
+        for path in (f"/{loc}/login", f"/{loc}/order"):
+            with self.subTest(path=path):
+                r = c.get(path, follow_redirects=True)
+                self.assertEqual(r.status_code, 200)
+                self.assertIn("noindex", r.get_data(as_text=True))
 
     def test_both_page_frames_link_llms_txt(self):
         """_base.html and landing.html are separate <head>s; one of them WILL be
@@ -153,11 +181,11 @@ class SeoRoutesTest(unittest.TestCase):
 
     def test_sitemap_lists_nothing_that_robots_disallows(self):
         """A URL in both files is a contradiction, and Search Console reports it."""
-        from app.routes import SEO_DISALLOW
+        from app.routes import seo_disallow
         xml = self.client().get("/sitemap.xml").get_data(as_text=True)
         for url in re.findall(r"<loc>(.*?)</loc>", xml):
             path = url[len(self.base):]
-            for bad in SEO_DISALLOW:
+            for bad in seo_disallow():
                 self.assertFalse(path.startswith(bad), f"{url} is disallowed in robots.txt")
 
     def test_sitemap_lastmod_is_a_real_date_not_today(self):
