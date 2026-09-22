@@ -1600,3 +1600,44 @@ Inspection → **Request indexing** on the three articles carrying the legacy tr
 
 **Funnel work (0 orders) was explicitly deferred by the owner — "it requires planning before
 doing". Do not start it as a code change.**
+
+### 2026-09-22 addendum — reindex requested, and the BASELINE to judge it against
+
+Owner requested indexing in Search Console for the three articles carrying the legacy traffic:
+`kids-drawings-missing-body-parts-meaning`, `my-child-only-draws-in-black`,
+`child-draws-alone-figures-meaning`. That was the one item only the owner could do — Google does
+not take part in IndexNow, so URL Inspection is the only lever. Logged as `DR-CHG-0005`.
+
+**The baseline, measured the same day** from `entry_path` on engaged human visits (the analytics
+DB starts 2026-08-17, so this is the whole history there is):
+
+| article | legacy `.html` landings | new `/en/blog/` landings |
+|---|---|---|
+| kids-drawings-missing-body-parts-meaning | 24 | 14 |
+| my-child-only-draws-in-black | 9 | 15 |
+| child-draws-alone-figures-meaning | 3 | 3 |
+| **total** | **36** | **32** → **legacy share 53%** |
+
+Google-referred engaged humans overall: 35 landed on a legacy URL, 42 on a new one.
+
+⚠️ **Google already serves BOTH URL forms.** This is a partial consolidation being finished, not a
+migration that never started — which is a much better position than the original audit implied,
+and it means the fix is expected to complete something already in motion rather than start it.
+
+**The success metric is the legacy share trending to zero, NOT organic volume rising.** Those are
+different claims and only the first one is attributable here. Measure it from our own DB —
+`entry_path LIKE '/blog/%'` versus `'/en/blog/%'` on engaged non-bot visits — so it needs no GSC
+login and no API.
+
+⚠️ **Do not read a result before mid-October.** Real Googlebot hits this site ~9 times a day, and
+the window is confounded by the Facebook ad stopping mid-September (organic fell alongside it:
+weekly organic engaged humans ran 3 → 14 → 21 → 31 → 15).
+
+**Funnel work remains deferred — and is now measurably unmeasurable.** 84 non-bot visits reached
+`/en/report` in 36 days, 5 engaged, 0 orders: with zero conversions in 84 trials the 95% upper
+bound on the true purchase rate is ~3.5%, so a perfectly healthy 1–2% is inside the band and
+"broken" is indistinguishable from "no traffic". The one tempting signal — mobile 0/34 engaged on
+the paid page against desktop 5/50 — tests at **p ≈ 0.069** (Fisher, one-tailed) and does not hold.
+⚠️ **`visits_non_bot` is not a usable denominator**: desktop shows 11,842 non-bot visits at a 0.53%
+engagement rate against mobile's 1,299 at 7.54%, so the desktop column is almost entirely bots that
+pass user-agent detection. Use `visits_engaged_human`, as the Growth API's own warning says.
