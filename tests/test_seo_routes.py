@@ -2,7 +2,7 @@
 
 Run:  venv\\Scripts\\python.exe -m unittest discover -s tests -t .
 
-These cover the three things a live audit on 2026-09-22 found or nearly missed:
+These cover what a live traffic and SEO audit on 2026-09-22 found:
 
   1. www + a legacy article URL cost TWO 301s. Google's indexed URL for the
      best-performing article is https://www.drawreport.com/blog/<old>.html, and it
@@ -16,7 +16,16 @@ These cover the three things a live audit on 2026-09-22 found or nearly missed:
      page frames: landing.html has its own <head> and does not extend _base.html,
      and that exact split is how the footer lost its legal links once already.
 
-  3. The sitemap must keep listing the commercial page and every article.
+  3. Three of the five robots.txt Disallow rules matched no live URL: `bp` is mounted
+     at /<lang_code>, so the real paths are /en/cabinet, /en/order and /en/r/<token>
+     while the rules read /cabinet, /order and /r/. A rule that matches nothing looks
+     exactly like one that works.
+
+  4. Proxying www to the app means a non-canonical host now reaches track.py, where a
+     visit row would be booked that can never be completed.
+
+  5. The sitemap must keep listing the commercial page and every article, and must
+     never list something robots.txt forbids.
 """
 from __future__ import annotations
 
@@ -168,6 +177,35 @@ class SeoRoutesTest(unittest.TestCase):
                 self.assertIn('href="/llms.txt"', html,
                               f"{path} has no pointer to /llms.txt")
 
+    # --- www must not book a visit it can never finish --------------------
+
+    def _visit_count(self) -> int:
+        from app.db import connect
+        with connect() as c:
+            return c.execute("SELECT COUNT(*) FROM web_visits").fetchone()[0]
+
+    def test_www_request_creates_no_visit_row(self):
+        """nginx proxies "/" and "/blog..." on www to the app so those redirects cost
+        one hop, which means a non-canonical host now reaches track.py. The cookie it
+        would set lives on www.drawreport.com and the browser's next request goes to
+        drawreport.com, so the row could never record a page or an engagement: every
+        www arrival would book a dead row plus the real one."""
+        from urllib.parse import urlparse
+        host = urlparse(settings.PUBLIC_BASE_URL).hostname
+        before = self._visit_count()
+        self.client().get("/", headers={"Host": f"www.{host}"})
+        self.assertEqual(self._visit_count(), before,
+                         "a www request booked a visit row that can never be completed")
+
+    def test_canonical_host_request_still_creates_a_visit_row(self):
+        """The guard must not switch analytics off."""
+        from urllib.parse import urlparse
+        host = urlparse(settings.PUBLIC_BASE_URL).hostname
+        before = self._visit_count()
+        self.client().get(f"/{settings.DEFAULT_LOCALE}/", headers={"Host": host})
+        self.assertGreater(self._visit_count(), before)
+
+
     # --- sitemap ----------------------------------------------------------
 
     def test_sitemap_lists_the_commercial_page_and_every_article(self):
@@ -198,7 +236,6 @@ class SeoRoutesTest(unittest.TestCase):
             dt.date.fromisoformat(s)  # raises if malformed
         self.assertNotEqual(stamps, {dt.date.today().isoformat()},
                             "every lastmod is today - the stale-lastmod bug is back")
-
 
 if __name__ == "__main__":
     unittest.main()

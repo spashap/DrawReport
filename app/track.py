@@ -46,6 +46,28 @@ NON_PAGE_PREFIXES = ("/static/", "/t/e", "/track/", "/free/status/", "/free/img/
 # no cookies either.
 NO_VISIT_PREFIXES = ("/admin", "/static/", "/favicon", "/healthz", "/internal/")
 
+
+def _on_canonical_host() -> bool:
+    """False for a request to a host we are only going to redirect away from (www).
+
+    nginx hands the app "/" and "/blog..." on www.drawreport.com so those redirects
+    cost ONE hop instead of two (see drawreportDeploy/nginx-drawreport-tls.conf).
+    That means non-canonical hosts now reach this module, and a visit row created
+    here could never be completed: the cookie is set on www.drawreport.com, the
+    browser's next request goes to drawreport.com, and a cookie does not cross
+    hosts. Every www arrival would therefore book TWO visits - one dead row that can
+    never record a page or an engagement, plus the real one - inflating visits_raw,
+    visits_non_bot and visitors_unique_non_bot. Exactly the /healthz failure above,
+    reached by a different road.
+    """
+    from urllib.parse import urlparse
+
+    from config import settings
+    want = urlparse(settings.PUBLIC_BASE_URL).hostname
+    if not want:                       # nothing configured - do not start dropping rows
+        return True
+    return request.host.split(":")[0].lower() == want.lower()
+
 # Search engines and social networks, for classifying the channel by referer.
 _SEARCH_HOSTS = ("google.", "bing.com", "duckduckgo.com", "search.", "yahoo.",
                  "ecosia.org", "brave.com", "startpage.com", "baidu.com", "yandex.")
@@ -149,7 +171,8 @@ def after_request(response):
     # visit. Static is skipped entirely: one page pulls a dozen files, and each of them
     # would write a timestamp to the database without making the visit any more alive.
     bare = _bare_path()
-    if getattr(g, "visit_id", None) and not bare.startswith(NO_VISIT_PREFIXES):
+    if (getattr(g, "visit_id", None) and not bare.startswith(NO_VISIT_PREFIXES)
+            and _on_canonical_host()):
         response.set_cookie(VISIT_COOKIE, g.visit_id, max_age=VISIT_MAX_AGE,
                             httponly=True, samesite="Lax")
         try:
