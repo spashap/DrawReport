@@ -39,7 +39,9 @@ PAID_STEPS: list[tuple[str, str, str]] = [
     ("Scrolled halfway", "click:scroll_50", PATH),
     ("Reached the pricing", "click:sec_pricing", PATH),
     ("Opened the order form", "order_form_view", GATE),
-    ("Started filling it in", "form_started", GATE),
+    # click:form_started - a drGoal beacon like every other goal. Until V0.078 this read
+    # "form_started", a name nothing ever stored, so the step was always 0.
+    ("Started filling it in", "click:form_started", GATE),
     ("Created an order", "order_created", GATE),
     ("Reached checkout", "checkout_view", GATE),
 ]

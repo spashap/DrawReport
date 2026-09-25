@@ -174,6 +174,9 @@
         .then(function (res) {
           go.disabled = false;
           if (res.s === 200 && res.j.ok) {
+            // The one place the lead goal fires: the server accepted the drawing.
+            // One accepted upload = one free_upload_submit = one Meta Lead.
+            if (window.drGoal) { window.drGoal("free_upload_submit"); }
             startWait(token, box.getAttribute("data-wait-hint"), f);
             return;
           }

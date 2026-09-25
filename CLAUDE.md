@@ -261,14 +261,14 @@ that line is the fastest check. See `drawreportDeploy/DRAWREPORT_DEPLOY_KIT.md` 
 Admin `/admin/login` (pass = `ADMIN_PASS`). The footer version badge shows on localhost and is
 hidden in production — `settings.SHOW_VERSION`, derived from `PUBLIC_BASE_URL`.
 
-**Resume pointers:** journal `DRAWREPORT_DevelopmentStatus.md` · solved problems `DRAWREPORT_UseCasesData.md` (#1–#38 —
+**Resume pointers:** journal `DRAWREPORT_DevelopmentStatus.md` · solved problems `DRAWREPORT_UseCasesData.md` (#1–#39 —
 **#24/#27 prompt↔linter coupling, #29 unenforced rules collapse on long output, #30 the two English
 standards, #31 an escape written through a non-raw Python string, #33 a 404 that was our own
 dead URL, #34 a 302 hands Google your canonical, #35 an uptime monitor sees only the unit that
 answers HTTP, #36 graceful degradation hid a never-built GeoIP db, #37 a robots.txt
 Disallow is matched from the SITE ROOT, so a blueprint's locale prefix made three rules
 match nothing, #38 a blanket www redirect in nginx defeated an app redirect written to be
-single-hop**) · copy tasks
+single-hop, #39 a funnel marker that matched no stored event name read as a real zero**) · copy tasks
 `projectSpec/drawreportcopyfixtask.md`, `projectSpec/DrawReport-English-Copy-Repair-Report.md`,
 `projectSpec/DrawReport-TASK-paid-report-en-4.2-north-star.md` · plan `DRAWREPORT_development-plan.md`.
 

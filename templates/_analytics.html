@@ -7,8 +7,18 @@
    analytics silently switched off entirely - including the admin funnel.
    window.gtag is the only bridge: if GA is on the page track.js mirrors the goal
    into it, otherwise it only reports to us. #}
+{# Private pages: /free/r/<token>, /<lang>/r/<token> and the cabinet are unguessable
+   links to a child's drawing and name. BOTH third-party tags report the page URL (GA4
+   as page_location, Meta as dl), so NEITHER renders there. Until V0.078 only the pixel
+   was excluded and GA4 received every reading URL. First-party track.js still runs.
+   Keep this list in step with the Privacy Policy (app/legal.py, Cookies). #}
+{% set _private = ("/free/r/", "/" ~ locale ~ "/r/", "/" ~ locale ~ "/cabinet") %}
+{# third_party_off: a page that is public by URL but private by content for this visitor -
+   the order form continuing a free reading shows that reading's drawing and the child's
+   name. The Privacy Policy promises the pixel is not loaded where a drawing is shown. #}
+{% set _no_third_party = request.path.startswith(_private) or (third_party_off|default(false)) %}
 {% if not request.path.startswith('/admin') %}
-{% if ga_id %}
+{% if ga_id and not _no_third_party %}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_id }}"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -22,9 +32,8 @@
    NOT on private pages: the pixel reports the page URL to Meta, and /free/r/<token>,
    /<lang>/r/<token> and the cabinet are unguessable links to a child's drawing and name.
    The Lead event fires on /free/ (upload submitted), so nothing is lost by skipping the
-   result page. Keep this list in step with the Privacy Policy (app/legal.py, Cookies). #}
-{% set _private = ("/free/r/", "/" ~ locale ~ "/r/", "/" ~ locale ~ "/cabinet") %}
-{% if meta_pixel_id and not request.path.startswith(_private) %}
+   result page. Private-page list: see the top of this file. #}
+{% if meta_pixel_id and not _no_third_party %}
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;

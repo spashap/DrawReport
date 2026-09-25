@@ -77,8 +77,10 @@
   <p class="hint">{{ _('By uploading you agree to our') }}
     <a href="{{ url_for('main.legal', page='privacy') }}">{{ _('Privacy Policy') }}</a>.</p>
 
-  <button class="btn btn--primary offer__cta" id="f-go"
-          data-goal="free_upload_submit">{{ texts.UPLOAD_BUTTON }}</button>
+  {# No data-goal: free_upload_submit (= Meta Lead) is fired by free.js only once the
+     server has ACCEPTED the upload. A click goal fired on every press, including ones
+     the form then rejected for a missing email or file. #}
+  <button class="btn btn--primary offer__cta" id="f-go">{{ texts.UPLOAD_BUTTON }}</button>
   <p class="offer__note">{{ offer.free_note }}</p>
   <p class="hint">{{ texts.UPLOAD_NOSPAM }} {{ texts.STORAGE_NOTICE }}</p>
   <p class="err" id="f-uperr" hidden></p>

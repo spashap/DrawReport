@@ -331,6 +331,26 @@ html.dk .btn { color: #241A12; }
               border-radius: var(--radius-pill); padding: 12px 26px; font-weight: 700; }
 .btn--ghost:hover { border-color: var(--accent); background: var(--paper); color: var(--accent); }
 .add-row { margin: 6px 0 28px; }   /* воздух между кнопкой добавления и блоком email */
+
+/* Order form page (DrawReport). The page column, the form-level error banner and the
+   two file-drop states the order form needs beyond the Golos set. */
+.wrap--form { max-width: 720px; }
+.form-alert { margin: 0 0 20px; padding: 14px 18px; border-radius: 12px; font-weight: 600;
+              color: #8E2B20; background: color-mix(in srgb, var(--danger) 8%, var(--paper));
+              border: 2px solid color-mix(in srgb, var(--danger) 35%, var(--paper)); }
+.order-form__sub { margin: 8px 0 14px; }
+.file-drop--static { cursor: default; }
+.file-drop--static:hover { border-color: var(--badge); }
+.file-drop--error { border-color: var(--danger); }
+.field .err { color: var(--danger); }
+.order-submit .hint { text-align: center; }
+.order-submit .btn { margin: 14px 0 10px; }
+@media (max-width: 480px) {
+  .form-card { padding: 20px 16px; }
+  .file-drop { padding: 16px; }
+  .ym-row select:first-child { flex: 0 0 55%; }
+  .db-remove { top: 16px; right: 16px; }
+}
 .add-msg { margin: 10px 0 0; padding: 10px 16px; border-radius: 12px; font-size: 14px;
            background: color-mix(in srgb, #C0392B 8%, var(--paper));
            border: 2px solid color-mix(in srgb, #C0392B 30%, var(--paper));

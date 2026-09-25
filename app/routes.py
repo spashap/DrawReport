@@ -277,13 +277,18 @@ def hosted_report(token):
 
 # --- Order flow ------------------------------------------------------------
 
-def _render_order_form(values, errors, status=200):
+def _render_order_form(values, errors, status=200, handoff=None, photos_lost=False):
     locale = g.lang_code
     products = settings.get_products()
     code = (request.args.get("product") or values.get("product") or "snapshot")
     if code not in products or not products[code]["enabled"]:
         code = "snapshot"
     import datetime
+    from app.free import handoff_thumb
+    reused = None
+    if handoff:
+        # The token itself is never rendered: not in a hidden field, not in an <img src>.
+        reused = {"name": handoff["name"], "thumb": handoff_thumb(handoff)}
     html = render_template(
         "order.html",
         product_code=code, product=products[code],
@@ -291,21 +296,63 @@ def _render_order_form(values, errors, status=200):
         child_fields=child_fields(locale), drawing_fields=drawing_fields(locale),
         email_field=email_field(locale), coupon_field=coupon_field(locale),
         months=MONTHS_EN, current_year=datetime.date.today().year,
-        values=values, errors=errors,
+        values=values, errors=errors, reused=reused,
+        third_party_off=bool(handoff), photos_lost=photos_lost,
     )
     return (html, status)
 
 
+def _handoff_prefill(handoff: dict) -> dict:
+    """Only what the free reading actually knows. Birth month/year is NOT prefilled: the
+    wizard asks for an age BAND, and a guessed birth date would silently skew every
+    age-relative line of the paid report."""
+    values = {"child_name": handoff["name"]}
+    if handoff["gender"]:
+        values["child_gender"] = handoff["gender"]
+    if handoff["email"]:
+        values["email"] = handoff["email"]
+    return values
+
+
 @bp.get("/order")
 def order():
+    from app import free as F
+    # A legacy /order?free=<token> link: move the token into the cookie and drop it from
+    # the URL with a server redirect, BEFORE any page (and so any analytics tag) loads.
+    legacy = request.args.get("free")
+    if legacy is not None:
+        args = {k: v for k, v in request.args.items() if k != "free"}
+        resp = redirect(url_for("main.order", **args))
+        if F.valid_token_shape(legacy):
+            F.set_order_free_cookie(resp, legacy)
+        return resp
+    # "Use a different drawing": forget the free reading and start a clean form.
+    if request.args.get("fresh"):
+        args = {k: v for k, v in request.args.items() if k != "fresh"}
+        return F.clear_order_free_cookie(redirect(url_for("main.order", **args)))
+
     track_event("order_form_view", {"product": request.args.get("product", "snapshot")})
+    handoff = F.order_handoff(F.order_free_token())
+    if handoff:
+        track_event("order_form_from_free")
+        return _render_order_form(values=_handoff_prefill(handoff), errors={},
+                                  handoff=handoff)
     return _render_order_form(values={}, errors={})
 
 
 @bp.post("/order")
 def order_submit():
+    from app import free as F
     files = [request.files[f"d{i}_file"] for i in (1, 2, 3)
              if request.files.get(f"d{i}_file") and request.files[f"d{i}_file"].filename]
+    chose_photos = bool(files)
+    # The free drawing, reused from our own storage. Re-validated here on every POST (the
+    # cookie is the only input, and it names a token, never a file). It goes FIRST so it
+    # takes drawing 1's context fields, which is the block that shows its thumbnail.
+    free_token = F.order_free_token()
+    handoff = F.order_handoff(free_token)
+    if handoff:
+        files.insert(0, F.materialize_free_drawing(handoff))
     try:
         order_id = validate_and_create_order(
             request.form, files,
@@ -315,19 +362,24 @@ def order_submit():
         )
     except FormError as e:
         track_event("order_form_errors", {"fields": list(e.errors)})
-        return _render_order_form(values=request.form.to_dict(), errors=e.errors, status=400)
+        return _render_order_form(values=request.form.to_dict(), errors=e.errors,
+                                  status=400, handoff=handoff, photos_lost=chose_photos)
     # Attribution "free reading -> purchase". The indirect joins (email, visitor_id)
     # remain available but are guesswork; the token carried through from /free/to-order is
-    # the only exact link, and without storing it here it was simply lost.
-    free_token = (request.form.get("free") or request.args.get("free") or "").strip()[:64]
+    # the only exact link. It is attributed even when nothing was reused (another device),
+    # but only if it names a reading that exists.
+    if free_token and not get_db().execute(
+            "SELECT 1 FROM free_analyses WHERE token = ?", (free_token,)).fetchone():
+        free_token = None
     if free_token:
         get_db().execute("UPDATE orders SET free_token = ? WHERE id = ?",
                          (free_token, order_id))
         get_db().commit()
     track_event("order_created", {"order_id": order_id, "drawings": len(files),
-                                  "from_free": bool(free_token)})
+                                  "from_free": bool(free_token),
+                                  "free_drawing_reused": bool(handoff)})
     order = get_db().execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
-    return redirect(create_payment(order_id, order["price_cents"]))
+    return F.clear_order_free_cookie(redirect(create_payment(order_id, order["price_cents"])))
 
 
 @bp.get("/pay/stub/<int:order_id>")

@@ -497,3 +497,19 @@ arrival would have booked a dead row PLUS the real one. That is [[#35]]'s uptime
 reached by a different road; `_on_canonical_host()` gates visit creation, verified by counting rows
 before and after ten live www requests.
 Related: [[#34]], [[#35]], [[#37]].
+
+## #39 · A funnel marker that matches nothing reads as "nobody did it"
+The paid funnel showed **6 opened the order form, 0 started filling it in**. `order.html` sent
+`form_started` as a raw `sendBeacon`, `/t/e` stores every `g=` beacon as `click:<goal>`, and
+`admin_funnels.PAID_STEPS` matched the bare `form_started` — a name nothing ever wrote. The step
+could only light up by gate fill-in from `order_created`, which never happened. (A read of the
+live DB then showed the zero was ALSO true — one `click:form_started` row in total, from a QA
+test — which is exactly why the mismatch was invisible: a broken counter and a real zero look
+the same.)
+
+**Rule: one naming convention, and the funnel must name what the beacon stores.** Every client
+goal goes through `window.drGoal()` (it adds the page path and mirrors to GA4/Meta) and is stored
+as `click:<goal>`; server events are bare names. A funnel marker without `click:` must be a server
+`track_event`. `tests/test_pre_traffic_fixes.py` sends the beacon end to end and counts it through
+`admin_funnels.build()`, so a mismatch fails a test instead of printing 0.
+Related: [[#37]] (a rule that matches nothing looks exactly like one that works).

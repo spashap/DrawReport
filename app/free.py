@@ -350,6 +350,106 @@ def vote(interp_id: int):
 def to_order(token: str):
     """Move from the free reading into the paid order form, carrying the token so the
     purchase can be attributed to the analysis it came from. The indirect joins (email,
-    visitor_id) stay, but they are guesswork; this is the only exact link."""
+    visitor_id) stay, but they are guesswork; this is the only exact link.
+
+    The token travels in a first-party httponly cookie, NOT in the query string. It used
+    to be /en/order?free=<token>, and that URL went to GA4 and the Meta Pixel as the page
+    location: the token is the only key to the page showing the child's drawing."""
     track_event("free_to_order")
-    return redirect(url_for("main.order", free=token))
+    resp = redirect(url_for("main.order"))
+    if get_db().execute("SELECT 1 FROM free_analyses WHERE token = ?",
+                        (token,)).fetchone():
+        set_order_free_cookie(resp, token)
+    return resp
+
+
+# --- Free -> paid handoff ----------------------------------------------------------
+
+ORDER_FREE_COOKIE = "dr_order_free"     # which free reading the order form continues
+ORDER_FREE_MAX_AGE = 6 * 3600
+_TOKEN_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
+
+
+def valid_token_shape(token: str | None) -> bool:
+    return bool(token) and len(token) <= 64 and set(token) <= _TOKEN_CHARS
+
+
+def set_order_free_cookie(resp, token: str):
+    resp.set_cookie(ORDER_FREE_COOKIE, token, max_age=ORDER_FREE_MAX_AGE,
+                    httponly=True, samesite="Lax", secure=request.is_secure)
+    return resp
+
+
+def clear_order_free_cookie(resp):
+    resp.delete_cookie(ORDER_FREE_COOKIE)
+    return resp
+
+
+def order_free_token() -> str | None:
+    """The free-reading token the order form continues, from the cookie only. Only its
+    SHAPE is checked here; what it may unlock is decided by order_handoff()."""
+    t = request.cookies.get(ORDER_FREE_COOKIE)
+    return t if valid_token_shape(t) else None
+
+
+def order_handoff(token: str | None) -> dict | None:
+    """What the paid order form may reuse from a free reading, or None.
+
+    Gated exactly like the drawing itself (free.image): only the browser that uploaded it
+    (_owns), because the prefill shows the drawing and the parent's email. A token alone -
+    say a forwarded result link on another device - still attributes the order, but
+    reuses nothing. Only a finished reading qualifies: an image rejected as 'not a
+    drawing' must not become the basis of a paid report.
+
+    The file path comes from our own DB row and must resolve inside FREE_DIR; nothing
+    from the request ever names a file."""
+    if not valid_token_shape(token) or not _owns(token):
+        return None
+    row = get_db().execute(
+        "SELECT child_name, address_form, email, image_path, status FROM free_analyses"
+        " WHERE token = ?", (token,)).fetchone()
+    if row is None or row["status"] != "done" or not row["image_path"]:
+        return None
+    p = Path(row["image_path"]).resolve()
+    try:
+        p.relative_to(Path(settings.FREE_DIR).resolve())
+    except ValueError:
+        return None
+    if not p.is_file() or p.suffix.lower() not in ALLOWED_EXT:
+        return None
+    gender = {"she": "f", "he": "m"}.get(row["address_form"] or "")
+    return {"token": token, "name": row["child_name"], "gender": gender,
+            "email": row["email"] or "", "path": p}
+
+
+def handoff_thumb(handoff: dict) -> str | None:
+    """A small inline JPEG of the reused drawing. Inline on purpose: a /free/img/<token>
+    src would put the token back into the order page's markup."""
+    import base64
+    from pipeline.images import prepare_image
+    try:
+        jpeg = prepare_image(handoff["path"], max_side=480)
+    except Exception:          # HEIC without a decoder, a damaged file: say so in text
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(jpeg).decode("ascii")
+
+
+def materialize_free_drawing(handoff: dict):
+    """The saved free drawing as an upload, so validate_and_create_order() treats it
+    exactly like a file the parent chose (same size and format checks, same save path).
+    Ported from Golos app/free.py: orders.py needs no change."""
+    import io
+    from werkzeug.datastructures import FileStorage
+    p: Path = handoff["path"]
+    return FileStorage(stream=io.BytesIO(p.read_bytes()), name="d1_file",
+                       filename=f"drawing{p.suffix.lower()}")
+
+
+@bp_free.after_request
+def _no_referrer_from_private(resp):
+    """A reading's URL is its only key. Without this, the next page's document.referrer
+    (sent to GA4 as `dr` and to Meta as `rl`) would be /free/r/<token>."""
+    if request.path.startswith(("/free/r/", "/free/to-order/", "/free/img/",
+                                "/free/status/")):
+        resp.headers["Referrer-Policy"] = "no-referrer"
+    return resp

@@ -1641,3 +1641,29 @@ the paid page against desktop 5/50 — tests at **p ≈ 0.069** (Fisher, one-tai
 ⚠️ **`visits_non_bot` is not a usable denominator**: desktop shows 11,842 non-bot visits at a 0.53%
 engagement rate against mobile's 1,299 at 7.54%, so the desktop column is almost entirely bots that
 pass user-agent detection. Use `visits_engaged_human`, as the Growth API's own warning says.
+
+## 2026-09-25 — V0.078: pre-traffic fixes from the technical sanity check
+
+From `growth/DRAWREPORT_TECHNICAL_SANITY_CHECK_2026-09-25.md` (not committed: the repo is public).
+Change log DR-CHG-0006..0010; tests `tests/test_pre_traffic_fixes.py` (16 new, 58 total pass).
+1. **`form_started`** now goes through `drGoal` (`static/js/order.js`), funnel marker is
+   `click:form_started` (UseCase #39). Historic rows recount with no backfill.
+2. **Order form** ported to the design-system classes (`.field/.input/.ym-row/.file-drop/.form-card`,
+   from Golos `order.html`): 16px inputs, blocks 2–3 hidden until added, red errors, a form-level
+   banner. `static/js/order.js` is a PARTIAL Golos port — deliberately without the localStorage
+   draft, the email-typo suggester and the custom combobox (behaviour changes, not fixes).
+3. **Free → paid handoff** is real now: `/free/to-order/<token>` sets an httponly cookie
+   `dr_order_free` and redirects to a clean `/en/order`; `order_handoff()` reuses the free drawing
+   and prefills name, pronoun and email ONLY for the uploading browser (`_owns`, same gate as
+   `free.image`) and only for a `done` reading whose file resolves inside `FREE_DIR`. Birth date,
+   drawing date and subject stay manual (the wizard only has an age band). `?free=` legacy links
+   are moved into the cookie by a server redirect. `?fresh=1` drops the handoff.
+4. **Privacy:** GA4 is no longer rendered on `/free/r/`, `/<lang>/r/` or the cabinet (only the
+   pixel was excluded before); the handoff order page loads neither tag (it shows a drawing — the
+   Privacy Policy promise); private `/free/*` responses send `Referrer-Policy: no-referrer`.
+   ⚠️ The Privacy Policy does not name Google Analytics at all — pre-existing gap, owner decision.
+5. **Meta Lead** (`free_upload_submit`) fires only after `/free/upload/<token>` returns 200 —
+   break in series on 2026-09-25.
+**Mobile question settled (read-only prod query):** all 36 mobile `/en/report` visits in
+2026-08-17..09-24 have `screen_w IS NULL` (no JS ever ran), all channel `direct`, 0 engaged. Not a
+tracking bug; non-JS clients with a mobile UA. Not changed.
